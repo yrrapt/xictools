@@ -154,6 +154,7 @@ sES::sES(GRobject caller)
     es_meas = 0;
 
     wb_shell = gtk_NewPopup(0, "Path Selection Control", es_cancel_proc, 0);
+    wb_window = gtk_widget_get_window(wb_shell);
     if (!wb_shell)
         return;
     gtk_window_set_resizable(GTK_WINDOW(wb_shell), false);
@@ -174,31 +175,31 @@ sES::sES(GRobject caller)
     gtk_widget_set_name(button, "gnsel");
     gtk_widget_show(button);
     es_gnsel = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     button = gtk_toggle_button_new_with_label("Select Path");
     gtk_widget_set_name(button, "paths");
     gtk_widget_show(button);
     es_paths = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     button = gtk_toggle_button_new_with_label("\"Quick\" Path");
     gtk_widget_set_name(button, "qpath");
     gtk_widget_show(button);
     es_qpath = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     button = gtk_button_new_with_label("Help");
     gtk_widget_set_name(button, "help");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, rowcnt, rowcnt+1,
@@ -217,7 +218,7 @@ sES::sES(GRobject caller)
     gtk_misc_set_padding(GTK_MISC(label), 2, 2);
     gtk_box_pack_start(GTK_BOX(hbox), label, true, true, 0);
 
-    es_gpmnu = gtk_option_menu_new();
+    es_gpmnu = gtk_combo_box_text_new();
     gtk_widget_set_name(es_gpmnu, "qpgp");
     gtk_widget_show(es_gpmnu);
     GtkWidget *menu = gtk_menu_new();
@@ -227,25 +228,25 @@ sES::sES(GRobject caller)
         "Use ground plane if available");
     gtk_widget_set_name(mi, "menu0");
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(es_menu_proc), (void*)0);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(es_menu_proc), (void*)0);
 
     mi = gtk_menu_item_new_with_label("Create and use ground plane");
     gtk_widget_set_name(mi, "menu1");
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(es_menu_proc), (void*)1);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(es_menu_proc), (void*)1);
 
     mi = gtk_menu_item_new_with_label("Never use ground plane");
     gtk_widget_set_name(mi, "menu2");
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(es_menu_proc), (void*)2);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(es_menu_proc), (void*)2);
 
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(es_gpmnu), menu);
+    // gtk_option_menu_set_menu(GTK_OPTION_MENU(es_gpmnu), menu);
     gtk_box_pack_start(GTK_BOX(hbox), es_gpmnu, false, false, 0);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, rowcnt, rowcnt+1,
@@ -264,29 +265,29 @@ sES::sES(GRobject caller)
     gtk_box_pack_start(GTK_BOX(hbox), label, false, false, 0);
 
     GtkWidget *sb = sb_depth.init(CDMAXCALLDEPTH, 0.0, CDMAXCALLDEPTH, 0);
-    sb_depth.connect_changed(GTK_SIGNAL_FUNC(es_val_changed), 0);
-    gtk_widget_set_usize(sb, 50, -1);
+    // (es_val_changed, 0);
+    gtk_widget_set_size_request(sb, 50, -1);
     gtk_box_pack_start(GTK_BOX(hbox), sb, false, false, 0);
 
     button = gtk_button_new_with_label("0");
     gtk_widget_set_name(button, "d0");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
 
     button = gtk_button_new_with_label("all");
     gtk_widget_set_name(button, "all");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
 
     button = gtk_check_button_new_with_label("\"Quick\" Path use Conductor");
     gtk_widget_show(button);
     gtk_widget_set_name(button, "QPCndr");
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action_proc), 0);
     gtk_box_pack_end(GTK_BOX(hbox), button, false, false, 0);
     es_qpconn = button;
 
@@ -305,16 +306,16 @@ sES::sES(GRobject caller)
     gtk_widget_set_name(button, "blink");
     gtk_widget_show(button);
     es_blink = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     button = gtk_check_button_new_with_label("Enable sub-path selection");
     gtk_widget_set_name(button, "subpath");
     gtk_widget_show(button);
     es_subpath = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action_proc), 0);
     gtk_box_pack_end(GTK_BOX(hbox), button, true, true, 0);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, rowcnt, rowcnt+1,
@@ -332,24 +333,24 @@ sES::sES(GRobject caller)
     gtk_widget_set_name(button, "antenna");
     gtk_widget_show(button);
     es_antenna = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     button = gtk_button_new_with_label("To trapezoids");
     gtk_widget_set_name(button, "zoid");
     gtk_widget_show(button);
     es_zoid = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     button = gtk_button_new_with_label("Save path to file");
     gtk_widget_set_name(button, "tofile");
     gtk_widget_show(button);
     es_tofile = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, rowcnt, rowcnt+1,
@@ -367,8 +368,8 @@ sES::sES(GRobject caller)
     gtk_widget_set_name(button, "vias");
     gtk_widget_show(button);
     es_vias = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     button = gtk_check_button_new_with_label(
@@ -376,8 +377,8 @@ sES::sES(GRobject caller)
     gtk_widget_set_name(button, "vtree");
     gtk_widget_show(button);
     es_vtree = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action_proc), 0);
     gtk_box_pack_end(GTK_BOX(hbox), button, true, true, 0);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, rowcnt, rowcnt+1,
@@ -401,16 +402,16 @@ sES::sES(GRobject caller)
     gtk_widget_set_name(button, "terms");
     gtk_widget_show(button);
     es_terms = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     button = gtk_button_new_with_label("Measure");
     gtk_widget_set_name(button, "meas");
     gtk_widget_show(button);
     es_meas = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, rowcnt, rowcnt+1,
@@ -431,8 +432,8 @@ sES::sES(GRobject caller)
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_cancel_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_cancel_proc), 0);
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -459,16 +460,16 @@ sES::~sES()
     SCD()->PopUpNodeMap(0, MODE_UPD);
 
     if (wb_shell)
-        gtk_signal_disconnect_by_func(GTK_OBJECT(wb_shell),
-            GTK_SIGNAL_FUNC(es_cancel_proc), wb_shell);
+        g_signal_handlers_disconnect_by_func(G_OBJECT(wb_shell),
+            (gpointer)es_cancel_proc, wb_shell);
 }
 
 
 void
 sES::update()
 {
-    gtk_option_menu_set_history(GTK_OPTION_MENU(es_gpmnu),
-        EX()->quickPathMode());
+    // gtk_option_menu_set_history(GTK_OPTION_MENU(es_gpmnu),
+    //    EX()->quickPathMode());
     GRX->SetStatus(es_qpconn, EX()->isQuickPathUseConductor());
     GRX->SetStatus(es_blink, EX()->isBlinkSelections());
     if (GRX->GetStatus(es_gnsel))

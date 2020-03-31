@@ -89,8 +89,8 @@ sAsmPage::sAsmPage(sAsm *mt)
         (GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_HIGHLIGHT);
     gtk_drag_dest_set(pg_path, DD, sAsm::target_table, sAsm::n_targets,
         GDK_ACTION_COPY);
-    gtk_signal_connect_after(GTK_OBJECT(pg_path), "drag-data-received",
-        GTK_SIGNAL_FUNC(sAsm::asm_drag_data_received), 0);
+    g_signal_connect_after(G_OBJECT(pg_path), "drag-data-received",
+        G_CALLBACK(sAsm::asm_drag_data_received), 0);
 
     gtk_table_attach(GTK_TABLE(table), pg_path, 0, 3, row, row + 1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -109,7 +109,7 @@ sAsmPage::sAsmPage(sAsm *mt)
         (GtkAttachOptions)0, 2, 2);
 
     GtkWidget *sb = sb_scale.init(1.0, CDSCALEMIN, CDSCALEMAX, ASM_NUMD);
-    gtk_widget_set_usize(sb, ASM_NFW, -1);
+    gtk_widget_set_size_request(sb, ASM_NFW, -1);
 
     gtk_table_attach(GTK_TABLE(table), sb, 0, 1, row+1, row+2,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -133,7 +133,7 @@ sAsmPage::sAsmPage(sAsm *mt)
 
     pg_prefix = gtk_entry_new();
     gtk_widget_show(pg_prefix);
-    gtk_widget_set_usize(pg_prefix, 60, -1);
+    gtk_widget_set_size_request(pg_prefix, 60, -1);
     gtk_box_pack_start(GTK_BOX(hbox), pg_prefix, false, false, 2);
 
     gtk_table_attach(GTK_TABLE(table), hbox, 1, 2, row+1, row+2,
@@ -150,7 +150,7 @@ sAsmPage::sAsmPage(sAsm *mt)
 
     pg_suffix = gtk_entry_new();
     gtk_widget_show(pg_suffix);
-    gtk_widget_set_usize(pg_suffix, 60, -1);
+    gtk_widget_set_size_request(pg_suffix, 60, -1);
     gtk_box_pack_start(GTK_BOX(hbox), pg_suffix, false, false, 2);
 
     pg_to_lower = gtk_check_button_new_with_label("To Lower");
@@ -265,12 +265,12 @@ sAsmPage::sAsmPage(sAsm *mt)
     gtk_widget_show(swin);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swin),
         GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-    pg_toplevels = gtk_list_new();
+    pg_toplevels = gtk_tree_view_new();
     gtk_widget_show(pg_toplevels);
-    gtk_signal_connect(GTK_OBJECT(pg_toplevels), "select-child",
-        GTK_SIGNAL_FUNC(pg_selection_proc), this);
-    gtk_signal_connect(GTK_OBJECT(pg_toplevels), "unselect-child",
-        GTK_SIGNAL_FUNC(pg_unselection_proc), this);
+    g_signal_connect(G_OBJECT(pg_toplevels), "select-child",
+        G_CALLBACK(pg_selection_proc), this);
+    g_signal_connect(G_OBJECT(pg_toplevels), "unselect-child",
+        G_CALLBACK(pg_unselection_proc), this);
     gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(swin),
         pg_toplevels);
     gtk_box_pack_start(GTK_BOX(vbox), swin, true, true, 2);
@@ -278,8 +278,8 @@ sAsmPage::sAsmPage(sAsm *mt)
     // drop site
     gtk_drag_dest_set(pg_toplevels, GTK_DEST_DEFAULT_ALL,
         sAsm::target_table, sAsm::n_targets, GDK_ACTION_COPY);
-    gtk_signal_connect_after(GTK_OBJECT(pg_toplevels), "drag-data-received",
-        GTK_SIGNAL_FUNC(pg_drag_data_received), this);
+    g_signal_connect_after(G_OBJECT(pg_toplevels), "drag-data-received",
+        G_CALLBACK(pg_drag_data_received), this);
 
     gtk_table_attach(GTK_TABLE(table), vbox, 0, 1, 0, 1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -302,8 +302,8 @@ sAsmPage::sAsmPage(sAsm *mt)
 sAsmPage::~sAsmPage()
 {
     // avoid signal, may crash otherwise
-    gtk_signal_disconnect_by_func(GTK_OBJECT(pg_toplevels),
-        GTK_SIGNAL_FUNC(pg_unselection_proc), this);
+    g_signal_handlers_disconnect_by_func(G_OBJECT(pg_toplevels),
+        (gpointer)pg_unselection_proc, this);
     delete pg_tx;
     for (unsigned int i = 0; i < pg_numtlcells; i++)
         delete pg_cellinfo[i];
@@ -331,8 +331,8 @@ sAsmPage::reset()
     gtk_entry_set_text(GTK_ENTRY(pg_prefix), "");
     gtk_entry_set_text(GTK_ENTRY(pg_suffix), "");
 
-    gtk_list_clear_items(
-        GTK_LIST(pg_toplevels), 0, pg_numtlcells);
+    // gtk_list_clear_items(
+    //     GTK_LIST(pg_toplevels), 0, pg_numtlcells);
     for (unsigned int j = 0; j < pg_numtlcells; j++) {
         delete pg_cellinfo[j];
         pg_cellinfo[j] = 0;
@@ -363,12 +363,12 @@ sAsmPage::add_instance(const char *cname)
     }
     tlinfo *tl = new tlinfo(cname);
     pg_cellinfo[pg_numtlcells] = tl;
-    GtkWidget *item = gtk_list_item_new_with_label(cname ? cname : ASM_TOPC);
-    gtk_widget_show(item);
-    gtk_list_append_items(GTK_LIST(pg_toplevels), g_list_append(0, item));
-    pg_numtlcells++;
-    pg_curtlcell = -1;
-    gtk_list_select_item(GTK_LIST(pg_toplevels), pg_numtlcells-1);
+    // GtkWidget *item = gtk_list_item_new_with_label(cname ? cname : ASM_TOPC);
+    // gtk_widget_show(item);
+    // gtk_list_append_items(GTK_LIST(pg_toplevels), g_list_append(0, item));
+    // pg_numtlcells++;
+    // pg_curtlcell = -1;
+    // gtk_list_select_item(GTK_LIST(pg_toplevels), pg_numtlcells-1);
     upd_sens();
     return (tl);
 }
@@ -386,8 +386,8 @@ sAsmPage::pg_selection_proc(GtkWidget *caller, GtkWidget *child, void *srcp)
 {
     sAsmPage *src = static_cast<sAsmPage*>(srcp);
     src->pg_owner->store_tx_params();
-    unsigned int n = gtk_list_child_position(GTK_LIST(caller), child);
-    src->pg_owner->show_tx_params(n);
+    // unsigned int n = gtk_list_child_position(GTK_LIST(caller), child);
+    // src->pg_owner->show_tx_params(n);
 }
 
 
@@ -412,9 +412,9 @@ sAsmPage::pg_drag_data_received(GtkWidget*, GdkDragContext *context,
     gint, gint, GtkSelectionData *data, guint, guint time, void *srcp)
 {
     sAsmPage *src = static_cast<sAsmPage*>(srcp);
-    if (data->length >= 0 && data->format == 8 && data->data) {
-        char *s = (char*)data->data;
-        if (data->target == gdk_atom_intern("TWOSTRING", true)) {
+    if (gtk_selection_data_get_length(data) >= 0 && gtk_selection_data_get_format(data) == 8 && gtk_selection_data_get_data(data)) {
+        char *s = (char*)gtk_selection_data_get_data(data);
+        if (gtk_selection_data_get_target(data) == gdk_atom_intern("TWOSTRING", true)) {
             // Drops from content lists may be in the form
             // "fname_or_chd\ncellname".  Keep the cellname.
             char *t = strchr(s, '\n');

@@ -170,7 +170,7 @@ namespace gtkinterf {
         static int h_ntop_timeout(void*);
 
         GtkWidget *h_parent;            // transient for...
-        GtkItemFactory *h_item_factory; // menu item factory
+        GtkUIManager *h_item_factory; // menu item factory
         gtk_viewer *h_viewer;           // viewer class
         HLPparams *h_params;            // default parameters
         HLPtopic *h_root_topic;         // root (original) topic
@@ -195,7 +195,7 @@ namespace gtkinterf {
 #endif
 
         static GtkWindow *h_transient_for;
-        static GtkItemFactoryEntry h_help_menu_items[];
+        // static GtkUIManagerEntry h_help_menu_items[];
     };
 }
 

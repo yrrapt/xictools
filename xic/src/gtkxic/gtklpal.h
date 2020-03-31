@@ -96,7 +96,7 @@ private:
 
     sGbag lp_gbag;              // private drawing context
 
-    GdkPixmap *lp_pixmap;
+    cairo_surface_t *lp_pixmap;
     int lp_pmap_width;  
     int lp_pmap_height;
     bool lp_pmap_dirty;

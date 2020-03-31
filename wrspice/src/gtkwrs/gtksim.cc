@@ -84,7 +84,7 @@ GTKtoolbar::PopUpSimDefs(int x, int y)
     sd_shell = gtk_NewPopup(0, "Simulation Options", si_cancel_proc, 0);
     if (x || y) {
         FixLoc(&x, &y);
-        gtk_widget_set_uposition(sd_shell, x, y);
+        gtk_widget_set_size_request(sd_shell, x, y);
     }
 
     GtkWidget *form = gtk_table_new(1, 2, false);
@@ -105,14 +105,14 @@ GTKtoolbar::PopUpSimDefs(int x, int y)
 
     GtkWidget *button = gtk_button_new_with_label("Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        (GtkSignalFunc)si_cancel_proc, sd_shell);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(si_cancel_proc), sd_shell);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 2);
 
     button = gtk_toggle_button_new_with_label("Help");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "toggled",
-        (GtkSignalFunc)si_help_proc, sd_shell);
+    g_signal_connect(G_OBJECT(button), "toggled",
+        G_CALLBACK(si_help_proc), sd_shell);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 2);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 0, 1,
@@ -1104,8 +1104,8 @@ GTKtoolbar::PopDownSimDefs()
     SetLoc(ntb_simdefs, sd_shell);
 
     GRX->Deselect(tb_simdefs);
-    gtk_signal_disconnect_by_func(GTK_OBJECT(sd_shell),
-        GTK_SIGNAL_FUNC(si_cancel_proc), sd_shell);
+    g_signal_handlers_disconnect_by_func(G_OBJECT(sd_shell),
+        (gpointer)si_cancel_proc, sd_shell);
 
     for (int i = 0; KW.sim(i)->word; i++) {
         xKWent *ent = static_cast<xKWent*>(KW.sim(i));
@@ -1175,7 +1175,7 @@ namespace {
                 i = 0;
             }
             else {
-                if (gtk_object_get_data(GTK_OBJECT(caller), "down")) {
+                if (g_object_get_data(G_OBJECT(caller), "down")) {
                     i--;
                     if (i < 0) {
                         i = 0;
@@ -1205,7 +1205,7 @@ namespace {
                 i = 0;
             }
             else {
-                if (gtk_object_get_data(GTK_OBJECT(caller), "down")) {
+                if (g_object_get_data(G_OBJECT(caller), "down")) {
                     i--;
                     if (i < 0) {
                         i = 0;
@@ -1235,7 +1235,7 @@ namespace {
                 i = 0;
             }
             else {
-                if (gtk_object_get_data(GTK_OBJECT(caller), "down")) {
+                if (g_object_get_data(G_OBJECT(caller), "down")) {
                     i--;
                     if (i < 0) {
                         i = 0;
@@ -1265,7 +1265,7 @@ namespace {
                 i = 0;
             }
             else {
-                if (gtk_object_get_data(GTK_OBJECT(caller), "down")) {
+                if (g_object_get_data(G_OBJECT(caller), "down")) {
                     i--;
                     if (i < 0) {
                         i = 0;

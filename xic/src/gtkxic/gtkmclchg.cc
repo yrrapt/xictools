@@ -147,8 +147,8 @@ sLcg::sLcg()
     GtkWidget *button = gtk_button_new_with_label("Help");
     gtk_widget_set_name(button, "Help");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(lcg_help), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(lcg_help), 0);
     gtk_box_pack_end(GTK_BOX(row), button, false, false, 0);
 
     gtk_table_attach(GTK_TABLE(form), row, 0, 1, rowcnt, rowcnt+1,
@@ -159,9 +159,9 @@ sLcg::sLcg()
     lcg_none = gtk_radio_button_new_with_label(0, "Don't allow layer change.");
     gtk_widget_set_name(lcg_none, "none");
     gtk_widget_show(lcg_none);
-    GSList *group = gtk_radio_button_group(GTK_RADIO_BUTTON(lcg_none));
-    gtk_signal_connect(GTK_OBJECT(lcg_none), "clicked",
-        GTK_SIGNAL_FUNC(lcg_action), 0);
+    GSList *group = gtk_radio_button_get_group(GTK_RADIO_BUTTON(lcg_none));
+    g_signal_connect(G_OBJECT(lcg_none), "clicked",
+        G_CALLBACK(lcg_action), 0);
 
     gtk_table_attach(GTK_TABLE(form), lcg_none, 0, 1, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -172,9 +172,9 @@ sLcg::sLcg()
         "Allow layer change for objects on current layer.  ");
     gtk_widget_set_name(lcg_cur, "norm");
     gtk_widget_show(lcg_cur);
-    group = gtk_radio_button_group(GTK_RADIO_BUTTON(lcg_cur));
-    gtk_signal_connect(GTK_OBJECT(lcg_cur), "clicked",
-        GTK_SIGNAL_FUNC(lcg_action), 0);
+    group = gtk_radio_button_get_group(GTK_RADIO_BUTTON(lcg_cur));
+    g_signal_connect(G_OBJECT(lcg_cur), "clicked",
+        G_CALLBACK(lcg_action), 0);
 
     gtk_table_attach(GTK_TABLE(form), lcg_cur, 0, 1, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -185,8 +185,8 @@ sLcg::sLcg()
         "Allow layer change for all objects.");
     gtk_widget_set_name(lcg_all, "all");
     gtk_widget_show(lcg_all);
-    gtk_signal_connect(GTK_OBJECT(lcg_all), "clicked",
-        GTK_SIGNAL_FUNC(lcg_action), 0);
+    g_signal_connect(G_OBJECT(lcg_all), "clicked",
+        G_CALLBACK(lcg_action), 0);
 
     gtk_table_attach(GTK_TABLE(form), lcg_all, 0, 1, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -203,9 +203,9 @@ sLcg::sLcg()
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(lcg_cancel_proc), 0);
-    gtk_widget_set_usize(button, 250, -1);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(lcg_cancel_proc), 0);
+    gtk_widget_set_size_request(button, 250, -1);
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),

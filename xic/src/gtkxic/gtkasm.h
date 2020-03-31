@@ -241,7 +241,7 @@ private:
     static bool asm_do_run(const char*);
 
     GRobject asm_caller;                // calling button
-    GtkItemFactory *asm_item_factory;   // menu item factory
+    GtkUIManager *asm_item_factory;   // menu item factory
     GtkWidget *asm_notebook;            // pages, one per source file
     GtkWidget *asm_outfile;             // output file name entry
     GtkWidget *asm_topcell;             // new top level cell name entry

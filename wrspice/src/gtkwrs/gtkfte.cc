@@ -209,7 +209,7 @@ GTKtoolbar::PopUpPlots(int x, int y)
     }
     FixLoc(&x, &y);
     sPlots plts(x, y, s);
-    pl_text = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(pl_shell), "text");
+    pl_text = (GtkWidget*)g_object_get_data(G_OBJECT(pl_shell), "text");
     delete [] s;
     SetActive(ntb_plots, true);
 }
@@ -224,14 +224,14 @@ GTKtoolbar::PopDownPlots()
         return;
     SetLoc(ntb_plots, pl_shell);
 
-    GtkWidget *confirm = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(pl_shell),
+    GtkWidget *confirm = (GtkWidget*)g_object_get_data(G_OBJECT(pl_shell),
         "confirm");
     if (confirm)
         gtk_widget_destroy(confirm);
 
     GRX->SetStatus(tb_plots, false);
-    gtk_signal_disconnect_by_func(GTK_OBJECT(pl_shell),
-        GTK_SIGNAL_FUNC(tp_cancel_proc), pl_shell);
+    g_signal_handlers_disconnect_by_func(G_OBJECT(pl_shell),
+        (gpointer)tp_cancel_proc, pl_shell);
     gtk_widget_destroy(pl_shell);
     pl_shell = 0;
 
@@ -557,7 +557,7 @@ GTKtoolbar::PopUpVectors(int x, int y)
         return;
     FixLoc(&x, &y);
     sVectors vec(x, y, "");
-    ve_text = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(ve_shell), "text");
+    ve_text = (GtkWidget*)g_object_get_data(G_OBJECT(ve_shell), "text");
     sVectors::update();
     SetActive(ntb_vectors, true);
 }
@@ -572,14 +572,14 @@ GTKtoolbar::PopDownVectors()
         return;
     SetLoc(ntb_vectors, ve_shell);
 
-    GtkWidget *confirm = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(ve_shell),
+    GtkWidget *confirm = (GtkWidget*)g_object_get_data(G_OBJECT(ve_shell),
         "confirm");
     if (confirm)
         gtk_widget_destroy(confirm);
 
     GRX->SetStatus(tb_vectors, false);
-    gtk_signal_disconnect_by_func(GTK_OBJECT(ve_shell),
-        GTK_SIGNAL_FUNC(tp_cancel_proc), ve_shell);
+    g_signal_handlers_disconnect_by_func(G_OBJECT(ve_shell),
+        (gpointer)tp_cancel_proc, ve_shell);
     gtk_widget_destroy(ve_shell);
     ve_shell = 0;
 
@@ -724,7 +724,7 @@ GTKtoolbar::PopUpCircuits(int x, int y)
     char *s = sCircuits::ci_str();
     FixLoc(&x, &y);
     sCircuits ckts(x, y, s);
-    ci_text = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(ci_shell), "text");
+    ci_text = (GtkWidget*)g_object_get_data(G_OBJECT(ci_shell), "text");
     delete [] s;
     SetActive(ntb_circuits, true);
 }
@@ -739,14 +739,14 @@ GTKtoolbar::PopDownCircuits()
         return;
     SetLoc(ntb_circuits, ci_shell);
 
-    GtkWidget *confirm = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(ci_shell),
+    GtkWidget *confirm = (GtkWidget*)g_object_get_data(G_OBJECT(ci_shell),
         "confirm");
     if (confirm)
         gtk_widget_destroy(confirm);
 
     GRX->SetStatus(tb_circuits, false);
-    gtk_signal_disconnect_by_func(GTK_OBJECT(ci_shell),
-        GTK_SIGNAL_FUNC(tp_cancel_proc), ci_shell);
+    g_signal_handlers_disconnect_by_func(G_OBJECT(ci_shell),
+        (gpointer)tp_cancel_proc, ci_shell);
     gtk_widget_destroy(ci_shell);
     ci_shell = 0;
 
@@ -1201,7 +1201,7 @@ GTKtoolbar::PopUpTrace(int x, int y)
         return;
     FixLoc(&x, &y);
     sTraces traces(x, y, "");
-    tr_text = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(tr_shell), "text");
+    tr_text = (GtkWidget*)g_object_get_data(G_OBJECT(tr_shell), "text");
     sTraces::update();
     SetActive(ntb_trace, true);
 }
@@ -1216,14 +1216,14 @@ GTKtoolbar::PopDownTrace()
         return;
     SetLoc(ntb_trace, tr_shell);
 
-    GtkWidget *confirm = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(tr_shell),
+    GtkWidget *confirm = (GtkWidget*)g_object_get_data(G_OBJECT(tr_shell),
         "confirm");
     if (confirm)
         gtk_widget_destroy(confirm);
 
     GRX->SetStatus(tb_trace, false);
-    gtk_signal_disconnect_by_func(GTK_OBJECT(tr_shell),
-        GTK_SIGNAL_FUNC(tp_cancel_proc), tr_shell);
+    g_signal_handlers_disconnect_by_func(G_OBJECT(tr_shell),
+        (gpointer)tp_cancel_proc, tr_shell);
     gtk_widget_destroy(tr_shell);
     tr_shell = 0;
 
@@ -1270,7 +1270,7 @@ GTKtoolbar::PopUpVariables(int x, int y)
     Sp.VarPrint(&s);
     FixLoc(&x, &y);
     sVariables vars(x, y, s);
-    va_text = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(va_shell), "text");
+    va_text = (GtkWidget*)g_object_get_data(G_OBJECT(va_shell), "text");
     delete [] s;
     SetActive(ntb_variables, true);
 }
@@ -1286,8 +1286,8 @@ GTKtoolbar::PopDownVariables()
     SetLoc(ntb_variables, va_shell);
 
     GRX->SetStatus(tb_variables, false);
-    gtk_signal_disconnect_by_func(GTK_OBJECT(va_shell),
-        GTK_SIGNAL_FUNC(tp_cancel_proc), va_shell);
+    g_signal_handlers_disconnect_by_func(G_OBJECT(va_shell),
+        (gpointer)tp_cancel_proc, va_shell);
     gtk_widget_destroy(va_shell);
     va_shell = 0;
 
@@ -1363,7 +1363,7 @@ sTextPop::sTextPop(const char *title, const char *lstring, const char *textstr,
     tp_ly = 0;
     tp_callback = btn_hdlr;
 
-    gtk_object_set_data_full(GTK_OBJECT(tp_shell), "textpop", this, tp_destroy);
+    g_object_set_data_full(G_OBJECT(tp_shell), "textpop", this, tp_destroy);
 
     GtkWidget *form = gtk_table_new(1, 3, false);
     gtk_widget_show(form);
@@ -1386,9 +1386,9 @@ sTextPop::sTextPop(const char *title, const char *lstring, const char *textstr,
 
     GtkWidget *button = gtk_button_new_with_label("Help");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        (GtkSignalFunc)tp_help_proc, tp_shell);
-    gtk_misc_set_padding(GTK_MISC(GTK_BIN(button)->child), 4, 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(tp_help_proc), tp_shell);
+    gtk_misc_set_padding(GTK_MISC(gtk_bin_get_child(GTK_BIN(button))), 4, 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 2);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 0, 1,
@@ -1400,21 +1400,21 @@ sTextPop::sTextPop(const char *title, const char *lstring, const char *textstr,
     //
     text_scrollable_new(&hbox, &tp_text, FNT_FIXED);
 
-    gtk_object_set_data(GTK_OBJECT(tp_shell), "text", tp_text);
+    g_object_set_data(G_OBJECT(tp_shell), "text", tp_text);
     text_set_chars(tp_text, textstr);
 
     gtk_widget_add_events(tp_text,
         GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
-    gtk_signal_connect(GTK_OBJECT(tp_text), "button_press_event",
-        GTK_SIGNAL_FUNC(tp_btn_hdlr), this);
-    gtk_signal_connect(GTK_OBJECT(tp_text), "button_release_event",
-        GTK_SIGNAL_FUNC(tp_btn_hdlr), this);
+    g_signal_connect(G_OBJECT(tp_text), "button_press_event",
+        G_CALLBACK(tp_btn_hdlr), this);
+    g_signal_connect(G_OBJECT(tp_text), "button_release_event",
+        G_CALLBACK(tp_btn_hdlr), this);
 
-    gtk_widget_set_usize(tp_text, DEF_TWIDTH, DEF_THEIGHT);
+    gtk_widget_set_size_request(tp_text, DEF_TWIDTH, DEF_THEIGHT);
 
     // This will provide an arrow cursor.
-    gtk_signal_connect_after(GTK_OBJECT(tp_text), "realize",
-        GTK_SIGNAL_FUNC(text_realize_proc), 0);
+    g_signal_connect_after(G_OBJECT(tp_text), "realize",
+        G_CALLBACK(text_realize_proc), 0);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 1, 2,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -1429,15 +1429,15 @@ sTextPop::sTextPop(const char *title, const char *lstring, const char *textstr,
     for (int n = 0; n < numbuttons; n++) {
         button = gtk_toggle_button_new_with_label(buttons[n]);
         gtk_widget_show(button);
-        gtk_signal_connect(GTK_OBJECT(button), "clicked",
-            (GtkSignalFunc)action_proc, (void*)(long)(n+1));
+        g_signal_connect(G_OBJECT(button), "clicked",
+            G_CALLBACK(action_proc), (void*)(long)(n+1));
         gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 2);
     }
 
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        (GtkSignalFunc)tp_cancel_proc, tp_shell);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(tp_cancel_proc), tp_shell);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 2);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 2, 3,
@@ -1450,7 +1450,7 @@ GtkWidget *
 sTextPop::show(int x, int y)
 {
     if (x || y)
-        gtk_widget_set_uposition(tp_shell, x, y);
+        gtk_widget_set_size_request(tp_shell, x, y);
     gtk_window_set_transient_for(GTK_WINDOW(tp_shell),
         GTK_WINDOW(TB()->context->Shell()));
     gtk_widget_show(tp_shell);
@@ -1539,16 +1539,16 @@ namespace {
     ru_sure_proc(GtkWidget *caller, void *client_data)
     {
         void (*yesfunc)() = caller ?
-            (void(*)())gtk_object_get_data(GTK_OBJECT(caller), "yesfunc") : 0;
+            (void(*)())g_object_get_data(G_OBJECT(caller), "yesfunc") : 0;
         GtkWidget *popup = (GtkWidget*)client_data;
 
-        GtkWidget *parent = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(popup),
+        GtkWidget *parent = (GtkWidget*)g_object_get_data(G_OBJECT(popup),
             "parent");
         if (parent)
-            gtk_object_set_data(GTK_OBJECT(parent), "confirm", 0);
+            g_object_set_data(G_OBJECT(parent), "confirm", 0);
 
-        gtk_signal_disconnect_by_func(GTK_OBJECT(popup),
-            GTK_SIGNAL_FUNC(ru_sure_proc), popup);
+        g_signal_handlers_disconnect_by_func(G_OBJECT(popup),
+            (gpointer)ru_sure_proc, popup);
         gtk_widget_destroy(popup);
         if (yesfunc)
             (*yesfunc)();
@@ -1560,15 +1560,15 @@ void
 GTKtoolbar::RUsure(GtkWidget *parent, void(*yesfunc)())
 {
     
-    GtkWidget *popup = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(parent),
+    GtkWidget *popup = (GtkWidget*)g_object_get_data(G_OBJECT(parent),
         "confirm");
     if (popup)
         return;
 
     // The widget name is the same as used in PopUpError()
     popup = gtk_NewPopup(0, "Confirm", ru_sure_proc, 0);
-    gtk_object_set_data(GTK_OBJECT(parent), "confirm", popup);
-    gtk_object_set_data(GTK_OBJECT(popup), "parent", parent);
+    g_object_set_data(G_OBJECT(parent), "confirm", popup);
+    g_object_set_data(G_OBJECT(popup), "parent", parent);
 
     GtkWidget *form = gtk_vbox_new(false, 2);
     gtk_widget_show(form);
@@ -1590,18 +1590,18 @@ GTKtoolbar::RUsure(GtkWidget *parent, void(*yesfunc)())
 
     GtkWidget *button = gtk_button_new_with_label("Yes, Delete");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        (GtkSignalFunc)ru_sure_proc, popup);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(ru_sure_proc), popup);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
-    gtk_object_set_data(GTK_OBJECT(button), "yesfunc", (void*)yesfunc);
-    gtk_misc_set_padding(GTK_MISC(GTK_BIN(button)->child), 4, 0);
+    g_object_set_data(G_OBJECT(button), "yesfunc", (void*)yesfunc);
+    gtk_misc_set_padding(GTK_MISC(gtk_bin_get_child(GTK_BIN(button))), 4, 0);
 
     button = gtk_button_new_with_label("Abort");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        (GtkSignalFunc)ru_sure_proc, popup);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(ru_sure_proc), popup);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
-    gtk_misc_set_padding(GTK_MISC(GTK_BIN(button)->child), 4, 0);
+    gtk_misc_set_padding(GTK_MISC(gtk_bin_get_child(GTK_BIN(button))), 4, 0);
 
     GRX->SetPopupLocation(GRloc(), popup, parent);
     gtk_window_set_transient_for(GTK_WINDOW(popup),

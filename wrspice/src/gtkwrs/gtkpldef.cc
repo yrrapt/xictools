@@ -75,7 +75,7 @@ GTKtoolbar::PopUpPlotDefs(int x, int y)
     pd_shell = gtk_NewPopup(0, "Plot Options", pl_cancel_proc, 0);
     if (x || y) {
         FixLoc(&x, &y);
-        gtk_widget_set_uposition(pd_shell, x, y);
+        gtk_widget_set_size_request(pd_shell, x, y);
     }
 
     GtkWidget *form = gtk_table_new(1, 2, false);
@@ -96,14 +96,14 @@ GTKtoolbar::PopUpPlotDefs(int x, int y)
 
     GtkWidget *button = gtk_button_new_with_label("Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        (GtkSignalFunc)pl_cancel_proc, pd_shell);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(pl_cancel_proc), pd_shell);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 2);
 
     button = gtk_toggle_button_new_with_label("Help");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "toggled",
-        (GtkSignalFunc)pl_help_proc, pd_shell);
+    g_signal_connect(G_OBJECT(button), "toggled",
+        G_CALLBACK(pl_help_proc), pd_shell);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 2);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 0, 1,
@@ -682,8 +682,8 @@ GTKtoolbar::PopDownPlotDefs()
     SetLoc(ntb_plotdefs, pd_shell);
 
     GRX->Deselect(tb_plotdefs);
-    gtk_signal_disconnect_by_func(GTK_OBJECT(pd_shell),
-        GTK_SIGNAL_FUNC(pl_cancel_proc), pd_shell);
+    g_signal_handlers_disconnect_by_func(G_OBJECT(pd_shell),
+        (gpointer)pl_cancel_proc, pd_shell);
 
     for (int i = 0; KW.plot(i)->word; i++) {
         xKWent *ent = static_cast<xKWent*>(KW.plot(i));
@@ -753,7 +753,7 @@ namespace {
                 i = 0;
             }
             else {
-                if (gtk_object_get_data(GTK_OBJECT(caller), "down")) {
+                if (g_object_get_data(G_OBJECT(caller), "down")) {
                     i--;
                     if (i < 0) {
                         i = 0;
@@ -782,7 +782,7 @@ namespace {
                 i = 0;
             }
             else {
-                if (gtk_object_get_data(GTK_OBJECT(caller), "down")) {
+                if (g_object_get_data(G_OBJECT(caller), "down")) {
                     i--;
                     if (i < 0) {
                         i = 0;
@@ -811,7 +811,7 @@ namespace {
                 i = 0;
             }
             else {
-                if (gtk_object_get_data(GTK_OBJECT(caller), "down")) {
+                if (g_object_get_data(G_OBJECT(caller), "down")) {
                     i--;
                     if (i < 0) {
                         i = 0;
@@ -834,7 +834,7 @@ namespace {
             if (i < 0)
                 i = wrsHCcb.format;
             else {
-                if (gtk_object_get_data(GTK_OBJECT(caller), "down")) {
+                if (g_object_get_data(G_OBJECT(caller), "down")) {
                     i--;
                     if (i < 0) {
                         i = 0;
@@ -884,13 +884,13 @@ namespace {
                 if (ent->entry2) {
                     sprintf(buf, "%d", val2);
                     gtk_entry_set_text(GTK_ENTRY(ent->entry2), buf);
-                    gtk_entry_set_editable(GTK_ENTRY(ent->entry2), false);
+                    // gtk_editable_set_editable(GTK_EDITABLE(ent->entry2), false);
                     gtk_widget_set_sensitive(ent->entry2, false);
                 }
             }
             else {
                 if (ent->entry2) {
-                    gtk_entry_set_editable(GTK_ENTRY(ent->entry2), true);
+                    // gtk_editable_set_editable(GTK_EDITABLE(ent->entry2), true);
                     gtk_widget_set_sensitive(ent->entry2, true);
                 }
             }
@@ -927,13 +927,13 @@ namespace {
                 if (ent->entry2) {
                     sprintf(buf, "%g", dval2);
                     gtk_entry_set_text(GTK_ENTRY(ent->entry2), buf);
-                    gtk_entry_set_editable(GTK_ENTRY(ent->entry2), false);
+                    // gtk_editable_set_editable(GTK_EDITABLE(ent->entry2), false);
                     gtk_widget_set_sensitive(ent->entry2, false);
                 }
             }
             else {
                 if (ent->entry2) {
-                    gtk_entry_set_editable(GTK_ENTRY(ent->entry2), true);
+                    // gtk_editable_set_editable(GTK_EDITABLE(ent->entry2), true);
                     gtk_widget_set_sensitive(ent->entry2, true);
                 }
             }

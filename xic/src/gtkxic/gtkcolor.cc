@@ -281,7 +281,7 @@ sClr::sClr(GRobject c)
     //
     // Physical/Electrical mode selector
     //
-    GtkWidget *entry = gtk_option_menu_new();
+    GtkWidget *entry = gtk_combo_box_text_new();
     c_modemenu = entry;
     gtk_widget_set_name(entry, "ModeMenu");
     if (ScedIf()->hasSced())
@@ -296,26 +296,26 @@ sClr::sClr(GRobject c)
         GtkWidget *mi = gtk_menu_item_new_with_label("Physical");
         gtk_widget_set_name(mi, "ph");
         gtk_widget_show(mi);
-        gtk_menu_append(GTK_MENU(menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(c_mode_menu_proc), (void*)(long)Physical);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(c_mode_menu_proc), (void*)(long)Physical);
 
         mi = gtk_menu_item_new_with_label("Electrical");
         gtk_widget_set_name(mi, "ph");
         gtk_widget_show(mi);
-        gtk_menu_append(GTK_MENU(menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(c_mode_menu_proc), (void*)(long)Electrical);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(c_mode_menu_proc), (void*)(long)Electrical);
 
-        gtk_option_menu_set_menu(GTK_OPTION_MENU(c_modemenu), menu);
-        gtk_option_menu_set_history(GTK_OPTION_MENU(c_modemenu),
-            c_display_mode);
+        // gtk_option_menu_set_menu(GTK_OPTION_MENU(c_modemenu), menu);
+        // gtk_option_menu_set_history(GTK_OPTION_MENU(c_modemenu),
+            // c_display_mode);
     }
 
     //
     // Categories menu
     //
-    entry = gtk_option_menu_new();
+    entry = gtk_combo_box_text_new();
     c_categmenu = entry;
     gtk_widget_set_name(entry, "CategMenu");
     gtk_widget_show(entry);
@@ -327,17 +327,17 @@ sClr::sClr(GRobject c)
         GtkWidget *mi = gtk_menu_item_new_with_label("Attributes");
         gtk_widget_set_name(mi, "at");
         gtk_widget_show(mi);
-        gtk_menu_append(GTK_MENU(menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(c_categ_menu_proc),
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(c_categ_menu_proc),
             (void*)(long)CATEG_ATTR);
 
         mi = gtk_menu_item_new_with_label("Prompt Line");
         gtk_widget_set_name(mi, "pl");
         gtk_widget_show(mi);
-        gtk_menu_append(GTK_MENU(menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(c_categ_menu_proc),
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(c_categ_menu_proc),
             (void*)(long)CATEG_PROMPT);
 
         mi = gtk_menu_item_new_with_label("Plot Marks");
@@ -347,24 +347,24 @@ sClr::sClr(GRobject c)
             gtk_widget_show(mi);
         else
             gtk_widget_hide(mi);
-        gtk_menu_append(GTK_MENU(menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(c_categ_menu_proc),
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(c_categ_menu_proc),
             (void*)(long)CATEG_PLOT);
 
-        gtk_option_menu_set_menu(GTK_OPTION_MENU(c_categmenu), menu);
-        gtk_option_menu_set_history(GTK_OPTION_MENU(c_categmenu), 0);
+        // gtk_option_menu_set_menu(GTK_OPTION_MENU(c_categmenu), menu);
+        // gtk_option_menu_set_history(GTK_OPTION_MENU(c_categmenu), 0);
     }
 
     //
     // Attribute selection menu
     //
-    entry = gtk_option_menu_new();
+    entry = gtk_combo_box_text_new();
     c_entry = entry;
     gtk_widget_set_name(entry, "AttrMenu");
     gtk_widget_show(entry);
     gtk_box_pack_start(GTK_BOX(hbox), entry, false, false, 0);
-    gtk_widget_set_usize(entry, 180, -1);
+    gtk_widget_set_size_request(entry, 180, -1);
     c_categ_menu_proc(0, (void*)(long)CATEG_ATTR);
 
     //
@@ -375,8 +375,8 @@ sClr::sClr(GRobject c)
     gtk_widget_set_name(button, "Colors");
     gtk_widget_show(button);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(c_list_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(c_list_btn_proc), 0);
 
     int rowcnt = 0;
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, rowcnt, rowcnt + 1,
@@ -402,8 +402,8 @@ sClr::sClr(GRobject c)
     gtk_color_selection_set_has_palette(GTK_COLOR_SELECTION(c_sel),
         true);
 
-    gtk_signal_connect(GTK_OBJECT(c_sel), "color-changed",
-        GTK_SIGNAL_FUNC(c_change_proc), 0);
+    g_signal_connect(G_OBJECT(c_sel), "color-changed",
+        G_CALLBACK(c_change_proc), 0);
     update_color();
 
     if (fix256) {
@@ -414,7 +414,7 @@ sClr::sClr(GRobject c)
         c_sample = da;
         gtk_widget_show(da);
         gtk_container_add(GTK_CONTAINER(frame), da);
-        gtk_drawing_area_size(GTK_DRAWING_AREA(da), 150, -1);
+        gtk_widget_set_size_request(da, 150, -1);
         hbox = gtk_hbox_new(false, 2);
         gtk_widget_show(hbox);
         gtk_box_pack_start(GTK_BOX(hbox), frame, false, true, 2);
@@ -446,22 +446,22 @@ sClr::sClr(GRobject c)
     button = gtk_button_new_with_label("Apply");
     gtk_widget_set_name(button, "Apply");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(c_apply_proc), c_shell);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(c_apply_proc), c_shell);
     gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
 
     button = gtk_button_new_with_label("Help");
     gtk_widget_set_name(button, "Help");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(c_btn_proc), c_shell);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(c_btn_proc), c_shell);
     gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
 
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(c_cancel_proc), c_shell);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(c_cancel_proc), c_shell);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, rowcnt, rowcnt + 1,
@@ -493,10 +493,10 @@ sClr::update()
         // Rebuild the ATTR menu if current, since the visibility of
         // the Current Layer item will have changed.
         //
-        if (gtk_option_menu_get_history(
-                GTK_OPTION_MENU(Clr->c_categmenu)) == CATEG_ATTR) {
-            sClr::c_categ_menu_proc(0, (void*)CATEG_ATTR);
-        }
+        // if (gtk_option_menu_get_history(
+        //         GTK_OPTION_MENU(Clr->c_categmenu)) == CATEG_ATTR) {
+        //     sClr::c_categ_menu_proc(0, (void*)CATEG_ATTR);
+        // }
         c_ref_mode = DSP()->CurMode();
     }
     else {
@@ -523,7 +523,7 @@ sClr::update_color()
         rgb[1] = g/255.0;
         rgb[2] = b/255.0;
         rgb[3] = 0.0;
-        gtk_color_selection_set_color(GTK_COLOR_SELECTION(c_sel), rgb);
+        // gtk_color_selection_set_current_rgba(GTK_COLOR_SELECTION(c_sel), (GdkRGBA)rgb);
         set_sample_bg();
     }
 }
@@ -546,7 +546,7 @@ sClr::set_sample_bg()
         else
             clr.pixel = DSP()->Color(c_mode);
         gtk_widget_hide(c_sample);
-        gdk_window_set_background(c_sample->window, &clr);
+        gdk_window_set_background(gtk_widget_get_window(c_sample), &clr);
         gtk_widget_show(c_sample);
     }
 }
@@ -558,7 +558,7 @@ sClr::c_change_proc(GtkWidget*, void*)
 {
     if (Clr) {
         double rgb[4];
-        gtk_color_selection_get_color(GTK_COLOR_SELECTION(Clr->c_sel), rgb);
+        // gtk_color_selection_get_color(GTK_COLOR_SELECTION(Clr->c_sel), rgb);
         int r = 0xff & (int)(rgb[0] * 255);
         int g = 0xff & (int)(rgb[1] * 255);
         int b = 0xff & (int)(rgb[2] * 255);
@@ -595,11 +595,11 @@ sClr::c_mode_menu_proc(GtkWidget*, void *arg)
         gtk_widget_show(Clr->c_pmmi);
     else {
         // The plot marks are available when showing Electrical only.
-        if (gtk_option_menu_get_history(
-                GTK_OPTION_MENU(Clr->c_categmenu)) == CATEG_PLOT) {
-            sClr::c_categ_menu_proc(0, (void*)CATEG_ATTR);
-            atupd = true;
-        }
+        // if (gtk_option_menu_get_history(
+        //         GTK_OPTION_MENU(Clr->c_categmenu)) == CATEG_PLOT) {
+        //     sClr::c_categ_menu_proc(0, (void*)CATEG_ATTR);
+        //     atupd = true;
+        // }
         gtk_widget_hide(Clr->c_pmmi);
     }
 
@@ -607,10 +607,10 @@ sClr::c_mode_menu_proc(GtkWidget*, void *arg)
     // Current Layer item will have changed.  Don't need to call this
     // if already done above.
     //
-    if (!atupd && gtk_option_menu_get_history(
-            GTK_OPTION_MENU(Clr->c_categmenu)) == CATEG_ATTR) {
-        sClr::c_categ_menu_proc(0, (void*)CATEG_ATTR);
-    }
+    // if (!atupd && gtk_option_menu_get_history(
+    //         GTK_OPTION_MENU(Clr->c_categmenu)) == CATEG_ATTR) {
+    //     sClr::c_categ_menu_proc(0, (void*)CATEG_ATTR);
+    // }
     Clr->update_color();
 }
 
@@ -636,17 +636,17 @@ sClr::c_categ_menu_proc(GtkWidget*, void *arg)
                 GtkWidget *mi = gtk_menu_item_new_with_label(c->descr);
                 gtk_widget_set_name(mi, c->descr);
                 gtk_widget_show(mi);
-                gtk_menu_append(GTK_MENU(menu), mi);
-                gtk_signal_connect(GTK_OBJECT(mi), "activate",
-                    GTK_SIGNAL_FUNC(sClr::c_attr_menu_proc),
+                gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+                g_signal_connect(G_OBJECT(mi), "activate",
+                    G_CALLBACK(sClr::c_attr_menu_proc),
                     (void*)(long)c->tab_indx);
             }
             if (Clr->c_display_mode == DSP()->CurMode())
                 Clr->c_mode = Menu1[0].tab_indx;
             else
                 Clr->c_mode = Menu1[1].tab_indx;
-            gtk_option_menu_set_menu(GTK_OPTION_MENU(Clr->c_entry), menu);
-            gtk_option_menu_set_history(GTK_OPTION_MENU(Clr->c_entry), 0);
+            // gtk_option_menu_set_menu(GTK_OPTION_MENU(Clr->c_entry), menu);
+            // gtk_option_menu_set_history(GTK_OPTION_MENU(Clr->c_entry), 0);
             Clr->update_color();
         }
         break;
@@ -658,14 +658,14 @@ sClr::c_categ_menu_proc(GtkWidget*, void *arg)
                 GtkWidget *mi = gtk_menu_item_new_with_label(c->descr);
                 gtk_widget_set_name(mi, c->descr);
                 gtk_widget_show(mi);
-                gtk_menu_append(GTK_MENU(menu), mi);
-                gtk_signal_connect(GTK_OBJECT(mi), "activate",
-                    GTK_SIGNAL_FUNC(sClr::c_attr_menu_proc),
+                gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+                g_signal_connect(G_OBJECT(mi), "activate",
+                    G_CALLBACK(sClr::c_attr_menu_proc),
                     (void*)(long)c->tab_indx);
             }
             Clr->c_mode = Menu2[0].tab_indx;
-            gtk_option_menu_set_menu(GTK_OPTION_MENU(Clr->c_entry), menu);
-            gtk_option_menu_set_history(GTK_OPTION_MENU(Clr->c_entry), 0);
+            // gtk_option_menu_set_menu(GTK_OPTION_MENU(Clr->c_entry), menu);
+            // gtk_option_menu_set_history(GTK_OPTION_MENU(Clr->c_entry), 0);
             Clr->update_color();
         }
         break;
@@ -677,14 +677,14 @@ sClr::c_categ_menu_proc(GtkWidget*, void *arg)
                 GtkWidget *mi = gtk_menu_item_new_with_label(c->descr);
                 gtk_widget_set_name(mi, c->descr);
                 gtk_widget_show(mi);
-                gtk_menu_append(GTK_MENU(menu), mi);
-                gtk_signal_connect(GTK_OBJECT(mi), "activate",
-                    GTK_SIGNAL_FUNC(sClr::c_attr_menu_proc),
+                gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+                g_signal_connect(G_OBJECT(mi), "activate",
+                    G_CALLBACK(sClr::c_attr_menu_proc),
                     (void*)(long)c->tab_indx);
             }
             Clr->c_mode = Menu3[0].tab_indx;
-            gtk_option_menu_set_menu(GTK_OPTION_MENU(Clr->c_entry), menu);
-            gtk_option_menu_set_history(GTK_OPTION_MENU(Clr->c_entry), 0);
+            // gtk_option_menu_set_menu(GTK_OPTION_MENU(Clr->c_entry), menu);
+            // gtk_option_menu_set_history(GTK_OPTION_MENU(Clr->c_entry), 0);
             Clr->update_color();
         }
         break;
@@ -868,8 +868,8 @@ sClr::c_list_callback(const char *string, void*)
             rgb[1] = (double)g/255.0;
             rgb[2] = (double)b/255.0;
             rgb[3] = 0.0;
-            gtk_color_selection_set_color(
-                GTK_COLOR_SELECTION(Clr->c_sel), rgb);
+            // gtk_color_selection_set_color(
+            //     GTK_COLOR_SELECTION(Clr->c_sel), rgb);
             sClr::c_set_rgb(r, g, b);
         }
     }
@@ -950,7 +950,7 @@ namespace {
                 colorcell.blue = blue << 8;
 
                 colorcell.pixel = DSP()->SelectPixel();
-                gdk_color_change(GRX->Colormap(), &colorcell);
+                // gdk_color_change(GRX->Colormap(), &colorcell);
 
                 CDl *ld;
                 CDlgen lgen(DSP()->CurMode());
@@ -968,7 +968,7 @@ namespace {
                             colorcell.green = 192 * lp->green();
                             colorcell.blue = 192 * lp->blue();
                         }
-                        gdk_color_change(GRX->Colormap(), &colorcell);
+                        // gdk_color_change(GRX->Colormap(), &colorcell);
                     }
                 }
             }
@@ -987,7 +987,7 @@ namespace {
     colortimer(void*)
     {
         if (!idle_id)
-            idle_id = gtk_idle_add(idlefunc, 0);
+            idle_id = g_idle_add(idlefunc, 0);
         return (true);
     }
 }

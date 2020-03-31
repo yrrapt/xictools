@@ -139,7 +139,7 @@ struct grbits : public http_monitor
             g_jbuf_set = false;
 
             // Die after the interval.
-            gtk_timeout_add(2000, (GtkFunction)terminate, 0);
+            g_timeout_add(2000, terminate, 0);
         }
 
     bool graphics_enabled()
@@ -196,18 +196,18 @@ grbits::start(Transaction *t)
 
     gb->g_popup = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(gb->g_popup), "Download");
-    gtk_signal_connect(GTK_OBJECT(gb->g_popup), "destroy",
-        GTK_SIGNAL_FUNC(grbits::g_dl_cancel_proc), gb);
+    // g_signal_connect(G_OBJECT(gb->g_popup), "destroy",
+    //     grbits::g_dl_cancel_proc, gb);
     GtkWidget *form = gtk_table_new(1, 2, false);
     gtk_widget_show(form);
     gtk_container_add(GTK_CONTAINER(gb->g_popup), form);
     GtkWidget *frame = gtk_frame_new(t->url());
     gtk_widget_show(frame);
     gb->g_text_area = gtk_drawing_area_new();
-    gtk_signal_connect(GTK_OBJECT(gb->g_text_area), "expose-event",
-        GTK_SIGNAL_FUNC(grbits::g_da_expose), gb);
+    // g_signal_connect(G_OBJECT(gb->g_text_area), "expose-event",
+    //     grbits::g_da_expose, gb);
     gtk_widget_show(gb->g_text_area);
-    gtk_drawing_area_size(GTK_DRAWING_AREA(gb->g_text_area), 320, 30);
+    // gtk_widget_set_size_request(gb->g_text_area, 320, 30);
     gtk_container_add(GTK_CONTAINER(frame), gb->g_text_area);
     gtk_table_attach(GTK_TABLE(form), frame, 0, 1, 0, 1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -217,8 +217,8 @@ grbits::start(Transaction *t)
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, 1, 2,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(grbits::g_cancel_btn_proc), gb);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     grbits::g_cancel_btn_proc, gb);
     if (t->xpos() >= 0 && t->ypos() >= 0) {
         GdkScreen *scrn = gdk_screen_get_default();
         int x, y;
@@ -226,11 +226,11 @@ grbits::start(Transaction *t)
         int pmon = gdk_screen_get_monitor_at_point(scrn, x, y);
         GdkRectangle r;
         gdk_screen_get_monitor_geometry(scrn, pmon, &r);
-        gtk_widget_set_uposition(gb->g_popup, t->xpos() + r.x, t->ypos() + r.y);
+        // gtk_widget_set_size_request(gb->g_popup, t->xpos() + r.x, t->ypos() + r.y);
     }
     gtk_widget_show(gb->g_popup);
 
-    gtk_idle_add((GtkFunction)grbits::g_idle_proc, t);
+    g_idle_add(grbits::g_idle_proc, t);
     gtk_main();
 }
 
@@ -264,7 +264,7 @@ namespace {
 bool
 grbits::widget_print(const char *buf)
 {
-    if (g_text_area && g_text_area->window) {
+    if (g_text_area && gtk_widget_get_window(g_text_area)) {
         char *str = lstring::copy(buf ? buf : g_textbuf);
         if (str) {
             char *e = str + strlen(str) - 1;
@@ -278,10 +278,10 @@ grbits::widget_print(const char *buf)
                     delete [] g_textbuf;
                     g_textbuf = lstring::copy(s);  // for expose
                 }
-                gdk_window_clear(g_text_area->window);
-                GdkFont *fnt = gtk_style_get_font(g_text_area->style);
-                gdk_draw_string(g_text_area->window, fnt,
-                    g_text_area->style->black_gc, 2, fnt->ascent + 2, s);
+                // gdk_window_clear(gtk_widget_get_window(g_text_area));
+                // PangoFont *fnt = gtk_style_get_font(g_text_area->style);
+                // gdk_draw_string(gtk_widget_get_window(g_text_area), fnt,
+                //     g_text_area->style->black_gc, 2, fnt->ascent + 2, s);
             }
             delete [] str;
         }
@@ -299,8 +299,8 @@ void
 grbits::g_dl_cancel_proc(GtkWidget*, void *data)
 {
     grbits *gb = (grbits*)data;
-    gtk_signal_disconnect_by_func(GTK_OBJECT(gb->g_popup),
-        GTK_SIGNAL_FUNC(g_dl_cancel_proc), data);
+    // gtk_signal_disconnect_by_func(G_OBJECT(gb->g_popup),
+    //     g_dl_cancel_proc, data);
     gtk_widget_destroy(GTK_WIDGET(gb->g_popup));
     delete [] gb->g_textbuf;
     gb->g_textbuf = 0;
@@ -316,8 +316,8 @@ void
 grbits::g_cancel_btn_proc(GtkWidget*, void *data)
 {
     grbits *gb = (grbits*)data;
-    gtk_signal_disconnect_by_func(GTK_OBJECT(gb->g_popup),
-        GTK_SIGNAL_FUNC(g_dl_cancel_proc), gb);
+    // gtk_signal_disconnect_by_func(G_OBJECT(gb->g_popup),
+    //     g_dl_cancel_proc, gb);
     gtk_widget_destroy(GTK_WIDGET(gb->g_popup));
     delete [] gb->g_textbuf;
     gb->g_textbuf = 0;

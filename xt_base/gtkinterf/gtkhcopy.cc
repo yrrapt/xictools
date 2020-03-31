@@ -338,7 +338,7 @@ gtk_bag::HCupdate(HCcb *cb, GRobject caller)
 
     double d;
     if (wb_hc->hc_left)
-        d = gtk_spin_button_get_value_as_float(GTK_SPIN_BUTTON(wb_hc->hc_left));
+        d = gtk_spin_button_get_value(GTK_SPIN_BUTTON(wb_hc->hc_left));
     else
         d = wb_hc->hc_lft_val;
     if (wb_hc->hc_metric)
@@ -346,7 +346,7 @@ gtk_bag::HCupdate(HCcb *cb, GRobject caller)
     cb->left = d;
 
     if (wb_hc->hc_top)
-        d = gtk_spin_button_get_value_as_float(GTK_SPIN_BUTTON(wb_hc->hc_top));
+        d = gtk_spin_button_get_value(GTK_SPIN_BUTTON(wb_hc->hc_top));
     else
         d = wb_hc->hc_top_val;
     if (wb_hc->hc_metric)
@@ -354,7 +354,7 @@ gtk_bag::HCupdate(HCcb *cb, GRobject caller)
     cb->top = d;
 
     if (wb_hc->hc_wid)
-        d = gtk_spin_button_get_value_as_float(GTK_SPIN_BUTTON(wb_hc->hc_wid));
+        d = gtk_spin_button_get_value(GTK_SPIN_BUTTON(wb_hc->hc_wid));
     else
         d = wb_hc->hc_wid_val;
     if (wb_hc->hc_metric)
@@ -362,7 +362,7 @@ gtk_bag::HCupdate(HCcb *cb, GRobject caller)
     cb->width = d;
 
     if (wb_hc->hc_hei)
-        d = gtk_spin_button_get_value_as_float(GTK_SPIN_BUTTON(wb_hc->hc_hei));
+        d = gtk_spin_button_get_value(GTK_SPIN_BUTTON(wb_hc->hc_hei));
     else
         d = wb_hc->hc_hei_val;
     if (wb_hc->hc_metric)
@@ -532,23 +532,23 @@ GTKprintPopup::hc_hcpopup(GRobject caller, gtk_bag *wb, HCcb *cb,
                         hc->hc_context);
 
                 // in graphics mode, leave popup alive but hidden if we can
-                if (hc->hc_textmode != HCgraphical || !hc->hc_popup->window ||
+                if (hc->hc_textmode != HCgraphical || !gtk_widget_get_window(hc->hc_popup) ||
                         IsIconic(hc->hc_popup)) {
                     // window is 0 if "delete window" event
-                    gtk_signal_disconnect_by_func(GTK_OBJECT(hc->hc_popup),
-                        GTK_SIGNAL_FUNC(hc_cancel_proc), wb);
+                    // gtk_signal_disconnect_by_func(G_OBJECT(hc->hc_popup),
+                    //     hc_cancel_proc, wb);
                     if (hc->hc_left)
-                        hc->hc_lft_val = gtk_spin_button_get_value_as_float(
+                        hc->hc_lft_val = gtk_spin_button_get_value(
                             GTK_SPIN_BUTTON(hc->hc_left));
                     if (hc->hc_top)
-                        hc->hc_top_val = gtk_spin_button_get_value_as_float(
+                        hc->hc_top_val = gtk_spin_button_get_value(
                             GTK_SPIN_BUTTON(hc->hc_top));
                     if (hc->hc_wid) {
                         if (hc->hc_wlabel && GRX->GetStatus(hc->hc_wlabel))
                             hc->hc_wid_val = 0.0;
                         else
                             hc->hc_wid_val =
-                                gtk_spin_button_get_value_as_float(
+                                gtk_spin_button_get_value(
                                     GTK_SPIN_BUTTON(hc->hc_wid));
                     }
                     if (hc->hc_hei) {
@@ -556,7 +556,7 @@ GTKprintPopup::hc_hcpopup(GRobject caller, gtk_bag *wb, HCcb *cb,
                             hc->hc_hei_val = 0.0;
                         else
                             hc->hc_hei_val =
-                                gtk_spin_button_get_value_as_float(
+                                gtk_spin_button_get_value(
                                     GTK_SPIN_BUTTON(hc->hc_hei));
                     }
                     if (hc->hc_cmdtxtbox) {
@@ -699,8 +699,8 @@ GTKprintPopup::hc_hcpopup(GRobject caller, gtk_bag *wb, HCcb *cb,
     int rcnt = 0;
     if (textmode != HCgraphical) {
         // Handle Return, same as pressing Print.
-        gtk_signal_connect(GTK_OBJECT(hc->hc_popup), "key-press-event",
-            GTK_SIGNAL_FUNC(hc_key_hdlr), wb);
+        // g_signal_connect(G_OBJECT(hc->hc_popup), "key-press-event",
+        //     hc_key_hdlr, wb);
 
         if (textmode == HCtextPS) {
             GtkWidget *row1 = gtk_hbox_new(false, 2);
@@ -712,25 +712,26 @@ GTKprintPopup::hc_hcpopup(GRobject caller, gtk_bag *wb, HCcb *cb,
             gtk_box_pack_start(GTK_BOX(row1), button, false, false, 0);
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), true);
 
-            GSList *group = gtk_radio_button_group(GTK_RADIO_BUTTON(button));
+            GSList *group;
+            gtk_radio_button_set_group(GTK_RADIO_BUTTON(button), group);
             button = gtk_radio_button_new_with_label(group, "Letter");
             gtk_widget_set_name(button, "Letter");
             gtk_widget_show(button);
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), true);
             gtk_box_pack_start(GTK_BOX(row1), button, false, false, 0);
-            gtk_signal_connect(GTK_OBJECT(button), "clicked",
-                GTK_SIGNAL_FUNC(hc_pagesize_proc), wb);
+            // g_signal_connect(G_OBJECT(button), "clicked",
+            //     hc_pagesize_proc, wb);
 
             hc->hc_textfmt = PStimes;  // default postscript times
 
-            GtkWidget *entry = gtk_option_menu_new();
-            gtk_widget_set_name(entry, "TextFmt");
-            gtk_widget_show(entry);
-            gtk_box_pack_start(GTK_BOX(row1), entry, true, true, 0);
-            GtkWidget *menu = gtk_menu_new();
-            gtk_widget_set_name(menu, "TextFmt");
-            gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
-            hc->hc_fontmenu = entry;
+            // GtkWidget *entry = gtk_combo_box_text_new();
+            // gtk_widget_set_name(entry, "TextFmt");
+            // gtk_widget_show(entry);
+            // gtk_box_pack_start(GTK_BOX(row1), entry, true, true, 0);
+            // GtkWidget *menu = gtk_menu_new();
+            // gtk_widget_set_name(menu, "TextFmt");
+            // // gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
+            // hc->hc_fontmenu = entry;
 
             hc_update_menu(hc);
 
@@ -767,8 +768,8 @@ GTKprintPopup::hc_hcpopup(GRobject caller, gtk_bag *wb, HCcb *cb,
     gtk_widget_set_name(button, "ToFile");
     gtk_widget_show(button);
     gtk_box_pack_end(GTK_BOX(row), button, false, false, 0);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(hc_tofile_proc), wb);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     hc_tofile_proc, wb);
     if (hc->hc_tofile)
         GRX->Select(button);
     hc->hc_tofbtn = button;
@@ -780,8 +781,8 @@ GTKprintPopup::hc_hcpopup(GRobject caller, gtk_bag *wb, HCcb *cb,
     GtkWidget *helpbutton = gtk_button_new_with_label("Help");
     gtk_widget_set_name(helpbutton, "Help");
     gtk_widget_show(helpbutton);
-    gtk_signal_connect(GTK_OBJECT(helpbutton), "clicked",
-        GTK_SIGNAL_FUNC(hc_help_proc), wb);
+    // g_signal_connect(G_OBJECT(helpbutton), "clicked",
+    //     hc_help_proc, wb);
 
     row = gtk_hbox_new(false, 2);
     gtk_widget_show(row);
@@ -801,7 +802,7 @@ GTKprintPopup::hc_hcpopup(GRobject caller, gtk_bag *wb, HCcb *cb,
         hc->hc_tofile ? hc->hc_tofilename : hc->hc_cmdtext);
     gtk_box_pack_start(GTK_BOX(row), hc->hc_cmdtxtbox, true, true, 0);
 #ifdef WIN32
-    hc->hc_prntmenu = gtk_option_menu_new();
+    hc->hc_prntmenu = gtk_combo_box_text_new();
     gtk_widget_show(hc->hc_prntmenu);
     gtk_box_pack_start(GTK_BOX(row), hc->hc_prntmenu, true, true, 0);
 #endif
@@ -823,331 +824,331 @@ GTKprintPopup::hc_hcpopup(GRobject caller, gtk_bag *wb, HCcb *cb,
         GtkWidget *hbox = gtk_hbox_new(false, 2);
         gtk_widget_show(hbox);
 
-        GtkWidget *entry = gtk_option_menu_new();
-        gtk_widget_set_name(entry, "Orient");
-        gtk_widget_show(entry);
-        hc->hc_orientmenu = entry;
+        // GtkWidget *entry = gtk_combo_box_text_new();
+        // gtk_widget_set_name(entry, "Orient");
+        // gtk_widget_show(entry);
+        // hc->hc_orientmenu = entry;
 
-        GtkWidget *menu = gtk_menu_new();
-        gtk_widget_set_name(menu, "Orient");
-        GtkWidget *mi = gtk_menu_item_new_with_label("Portrait");
-        gtk_widget_set_name(mi, "Portrait");
-        gtk_widget_show(mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(hc_port_proc), wb);
-        gtk_menu_append(GTK_MENU(menu), mi);
-        mi = gtk_menu_item_new_with_label("Landscape");
-        gtk_widget_set_name(mi, "Landscape");
-        gtk_widget_show(mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(hc_port_proc), wb);
-        gtk_menu_append(GTK_MENU(menu), mi);
-        gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
-        gtk_box_pack_start(GTK_BOX(hbox), entry, false, false, 0);
+        // GtkWidget *menu = gtk_menu_new();
+        // gtk_widget_set_name(menu, "Orient");
+        // GtkWidget *mi = gtk_menu_item_new_with_label("Portrait");
+        // gtk_widget_set_name(mi, "Portrait");
+        // gtk_widget_show(mi);
+        // g_signal_connect(G_OBJECT(mi), "activate",
+        //     hc_port_proc, wb);
+        // gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        // mi = gtk_menu_item_new_with_label("Landscape");
+        // gtk_widget_set_name(mi, "Landscape");
+        // gtk_widget_show(mi);
+        // g_signal_connect(G_OBJECT(mi), "activate",
+        //     hc_port_proc, wb);
+        // gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        // // gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
+        // gtk_box_pack_start(GTK_BOX(hbox), entry, false, false, 0);
 
-        button = gtk_check_button_new_with_label("Best Fit");
-        gtk_widget_set_name(button, "BestFit");
-        gtk_widget_show(button);
-        gtk_signal_connect(GTK_OBJECT(button), "clicked",
-            GTK_SIGNAL_FUNC(hc_fit_proc), wb);
-        hc->hc_fitbtn = button;
-        gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
+        // button = gtk_check_button_new_with_label("Best Fit");
+        // gtk_widget_set_name(button, "BestFit");
+        // gtk_widget_show(button);
+        // g_signal_connect(G_OBJECT(button), "clicked",
+        //     hc_fit_proc, wb);
+        // hc->hc_fitbtn = button;
+        // gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
 
-        if (!cb || cb->legend != HClegNone) {
-            button = gtk_check_button_new_with_label("Legend");
-            gtk_widget_set_name(button, "Legend");
-            gtk_widget_show(button);
-            gtk_signal_connect(GTK_OBJECT(button), "clicked",
-                GTK_SIGNAL_FUNC(hc_legend_proc), wb);
-            hc->hc_legbtn = button;
-            gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
-        }
-        gtk_table_attach(GTK_TABLE(row), hbox, 0, 1, 0, 1,
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-            (GtkAttachOptions)0, 2, 2);
+        // if (!cb || cb->legend != HClegNone) {
+        //     button = gtk_check_button_new_with_label("Legend");
+        //     gtk_widget_set_name(button, "Legend");
+        //     gtk_widget_show(button);
+        //     g_signal_connect(G_OBJECT(button), "clicked",
+        //         hc_legend_proc, wb);
+        //     hc->hc_legbtn = button;
+        //     gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
+        // }
+        // gtk_table_attach(GTK_TABLE(row), hbox, 0, 1, 0, 1,
+        //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+        //     (GtkAttachOptions)0, 2, 2);
 
-        entry = gtk_option_menu_new();
-        gtk_widget_set_name(entry, "Format");
-        gtk_widget_show(entry);
-        hc->hc_fmtmenu = entry;
+        // entry = gtk_combo_box_text_new();
+        // gtk_widget_set_name(entry, "Format");
+        // gtk_widget_show(entry);
+        // hc->hc_fmtmenu = entry;
 
-        menu = gtk_menu_new();
-        gtk_widget_set_name(menu, "Format");
-        for (int i = 0; GRpkgIf()->HCof(i); i++) {
-            if (hc->hc_drvrmask & (1 << i))
-                continue;
-            HCdesc *hcdesc = GRpkgIf()->HCof(i);
-            mi = gtk_menu_item_new_with_label(hcdesc->descr);
-            gtk_widget_set_name(mi, hcdesc->descr);
-            gtk_widget_show(mi);
-            gtk_menu_append(GTK_MENU(menu), mi);
-            gtk_object_set_user_data(GTK_OBJECT(mi), (void*)(long)i);
-            gtk_signal_connect(GTK_OBJECT(mi), "activate",
-                GTK_SIGNAL_FUNC(hc_formenu_proc), wb);
-        }
-        gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
-        gtk_option_menu_set_history(GTK_OPTION_MENU(entry), hc->hc_fmt);
+        // menu = gtk_menu_new();
+        // gtk_widget_set_name(menu, "Format");
+        // for (int i = 0; GRpkgIf()->HCof(i); i++) {
+        //     if (hc->hc_drvrmask & (1 << i))
+        //         continue;
+        //     HCdesc *hcdesc = GRpkgIf()->HCof(i);
+        //     mi = gtk_menu_item_new_with_label(hcdesc->descr);
+        //     gtk_widget_set_name(mi, hcdesc->descr);
+        //     gtk_widget_show(mi);
+        //     gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        //     gtk_object_set_user_data(G_OBJECT(mi), (void*)(long)i);
+        //     g_signal_connect(G_OBJECT(mi), "activate",
+        //         hc_formenu_proc, wb);
+        // }
+        // // gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
+        // // gtk_option_menu_set_history(GTK_OPTION_MENU(entry), hc->hc_fmt);
 
-        gtk_table_attach(GTK_TABLE(row), entry, 0, 1, 1, 2,
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-            (GtkAttachOptions)0, 2, 2);
+        // gtk_table_attach(GTK_TABLE(row), entry, 0, 1, 1, 2,
+        //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+        //     (GtkAttachOptions)0, 2, 2);
 
-        // resolution select buttom and display label
-        GtkWidget *label = gtk_label_new("Resolution");
-        gtk_widget_show(label);
-        gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
-        gtk_misc_set_padding(GTK_MISC(label), 2, 2);
-        frame = gtk_frame_new(0);
-        gtk_widget_show(frame);
-        gtk_container_add(GTK_CONTAINER(frame), label);
-        gtk_table_attach(GTK_TABLE(row), frame, 1, 2, 0, 1,
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-            (GtkAttachOptions)0, 2, 2);
+        // // resolution select buttom and display label
+        // GtkWidget *label = gtk_label_new("Resolution");
+        // gtk_widget_show(label);
+        // gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
+        // gtk_misc_set_padding(GTK_MISC(label), 2, 2);
+        // frame = gtk_frame_new(0);
+        // gtk_widget_show(frame);
+        // gtk_container_add(GTK_CONTAINER(frame), label);
+        // gtk_table_attach(GTK_TABLE(row), frame, 1, 2, 0, 1,
+        //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+        //     (GtkAttachOptions)0, 2, 2);
 
-        entry = gtk_option_menu_new();
-        gtk_widget_set_name(entry, "Resolution");
-        gtk_widget_show(entry);
-        hc->hc_resmenu = entry;
+        // entry = gtk_combo_box_text_new();
+        // gtk_widget_set_name(entry, "Resolution");
+        // gtk_widget_show(entry);
+        // hc->hc_resmenu = entry;
 
-        menu = gtk_menu_new();
-        gtk_widget_set_name(menu, "Resolution");
-        const char **s = GRpkgIf()->HCof(hc->hc_fmt) ?
-            GRpkgIf()->HCof(hc->hc_fmt)->limits.resols : 0;
-        if (s && *s) {
-            for (int i = 0; s[i]; i++) {
-                mi = gtk_menu_item_new_with_label(s[i]);
-                gtk_widget_set_name(mi, s[i]);
-                gtk_widget_show(mi);
-                gtk_menu_append(GTK_MENU(menu), mi);
-                gtk_object_set_user_data(GTK_OBJECT(mi), (void*)(long)i);
-                gtk_signal_connect(GTK_OBJECT(mi), "activate",
-                    GTK_SIGNAL_FUNC(hc_resol_proc), wb);
-            }
-        }
-        else {
-            mi = gtk_menu_item_new_with_label("fixed");
-            gtk_widget_set_name(mi, "fixed");
-            gtk_widget_show(mi);
-            gtk_menu_append(GTK_MENU(menu), mi);
-        }
-        gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
-        gtk_option_menu_set_history(GTK_OPTION_MENU(entry), hc->hc_resol);
+        // menu = gtk_menu_new();
+        // gtk_widget_set_name(menu, "Resolution");
+        // const char **s = GRpkgIf()->HCof(hc->hc_fmt) ?
+        //     GRpkgIf()->HCof(hc->hc_fmt)->limits.resols : 0;
+        // if (s && *s) {
+        //     for (int i = 0; s[i]; i++) {
+        //         mi = gtk_menu_item_new_with_label(s[i]);
+        //         gtk_widget_set_name(mi, s[i]);
+        //         gtk_widget_show(mi);
+        //         gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        //         gtk_object_set_user_data(G_OBJECT(mi), (void*)(long)i);
+        //         g_signal_connect(G_OBJECT(mi), "activate",
+        //             hc_resol_proc, wb);
+        //     }
+        // }
+        // else {
+        //     mi = gtk_menu_item_new_with_label("fixed");
+        //     gtk_widget_set_name(mi, "fixed");
+        //     gtk_widget_show(mi);
+        //     gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        // }
+        // // gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
+        // // gtk_option_menu_set_history(GTK_OPTION_MENU(entry), hc->hc_resol);
 
-        gtk_table_attach(GTK_TABLE(row), entry, 1, 2, 1, 2,
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-            (GtkAttachOptions)0, 2, 2);
+        // gtk_table_attach(GTK_TABLE(row), entry, 1, 2, 1, 2,
+        //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+        //     (GtkAttachOptions)0, 2, 2);
 
-        gtk_table_attach(GTK_TABLE(form), row, 0, 1, rcnt, rcnt+1,
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-            (GtkAttachOptions)0, 2, 2);
-        rcnt++;
+        // gtk_table_attach(GTK_TABLE(form), row, 0, 1, rcnt, rcnt+1,
+        //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+        //     (GtkAttachOptions)0, 2, 2);
+        // rcnt++;
 
-        //
-        // size labels and text widgets
-        //
-        HCdesc *hcdesc = GRpkgIf()->HCof(hc->hc_fmt);
-        hc_checklims(hcdesc);
-        row = gtk_hbox_new(false, 2);
-        gtk_widget_show(row);
+        // //
+        // // size labels and text widgets
+        // //
+        // HCdesc *hcdesc = GRpkgIf()->HCof(hc->hc_fmt);
+        // hc_checklims(hcdesc);
+        // row = gtk_hbox_new(false, 2);
+        // gtk_widget_show(row);
 
-        GtkWidget *vbox = gtk_vbox_new(false, 2);
-        gtk_widget_show(vbox);
+        // GtkWidget *vbox = gtk_vbox_new(false, 2);
+        // gtk_widget_show(vbox);
 
-        button = gtk_toggle_button_new_with_label("Width");
-        gtk_widget_set_name(button, "AutoWidth");
-        gtk_widget_show(button);
-        gtk_signal_connect(GTK_OBJECT(button), "clicked",
-            GTK_SIGNAL_FUNC(hc_auto_proc), wb);
+        // button = gtk_toggle_button_new_with_label("Width");
+        // gtk_widget_set_name(button, "AutoWidth");
+        // gtk_widget_show(button);
+        // g_signal_connect(G_OBJECT(button), "clicked",
+        //     hc_auto_proc, wb);
 
-        frame = gtk_frame_new(0);
-        gtk_widget_show(frame);
-        gtk_container_add(GTK_CONTAINER(frame), button);
-        gtk_box_pack_start(GTK_BOX(vbox), frame, true, true, 0);
-        hc->hc_wlabel = button;
+        // frame = gtk_frame_new(0);
+        // gtk_widget_show(frame);
+        // gtk_container_add(GTK_CONTAINER(frame), button);
+        // gtk_box_pack_start(GTK_BOX(vbox), frame, true, true, 0);
+        // hc->hc_wlabel = button;
 
-        double amin = 1.0;
-        double amax = 10.0;
-        if (hcdesc) {
-            amin = MM(hcdesc->limits.minwidth);
-            amax = MM(hcdesc->limits.maxwidth);
-        }
-        GtkObject *adj = gtk_adjustment_new(hc->hc_wid_val, amin, amax, .1,
-            1.0, 0.0);
-        entry = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1.0, 2);
-        gtk_widget_set_name(entry, "Width");
-        gtk_widget_show(entry);
-        gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(entry), true);
-        hc->hc_wid = entry;
-        gtk_box_pack_start(GTK_BOX(vbox), entry, true, true, 0);
-        gtk_box_pack_start(GTK_BOX(row), vbox, true, true, 0);
+        // double amin = 1.0;
+        // double amax = 10.0;
+        // if (hcdesc) {
+        //     amin = MM(hcdesc->limits.minwidth);
+        //     amax = MM(hcdesc->limits.maxwidth);
+        // }
+        // GtkObject *adj = gtk_adjustment_new(hc->hc_wid_val, amin, amax, .1,
+        //     1.0, 0.0);
+        // entry = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1.0, 2);
+        // gtk_widget_set_name(entry, "Width");
+        // gtk_widget_show(entry);
+        // gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(entry), true);
+        // hc->hc_wid = entry;
+        // gtk_box_pack_start(GTK_BOX(vbox), entry, true, true, 0);
+        // gtk_box_pack_start(GTK_BOX(row), vbox, true, true, 0);
 
-        vbox = gtk_vbox_new(false, 2);
-        gtk_widget_show(vbox);
+        // vbox = gtk_vbox_new(false, 2);
+        // gtk_widget_show(vbox);
 
-        button = gtk_toggle_button_new_with_label("Height");
-        gtk_widget_set_name(button, "AutoHeight");
-        gtk_widget_show(button);
-        gtk_signal_connect(GTK_OBJECT(button), "clicked",
-            GTK_SIGNAL_FUNC(hc_auto_proc), wb);
+        // button = gtk_toggle_button_new_with_label("Height");
+        // gtk_widget_set_name(button, "AutoHeight");
+        // gtk_widget_show(button);
+        // g_signal_connect(G_OBJECT(button), "clicked",
+        //     hc_auto_proc, wb);
 
-        frame = gtk_frame_new(0);
-        gtk_widget_show(frame);
-        gtk_container_add(GTK_CONTAINER(frame), button);
-        gtk_box_pack_start(GTK_BOX(vbox), frame, true, true, 0);
-        hc->hc_hlabel = button;
+        // frame = gtk_frame_new(0);
+        // gtk_widget_show(frame);
+        // gtk_container_add(GTK_CONTAINER(frame), button);
+        // gtk_box_pack_start(GTK_BOX(vbox), frame, true, true, 0);
+        // hc->hc_hlabel = button;
 
-        if (hcdesc) {
-            amin = MM(hcdesc->limits.minheight);
-            amax = MM(hcdesc->limits.maxheight);
-        }
-        adj = gtk_adjustment_new(hc->hc_hei_val, amin, amax, .1, 1.0, 0.0);
-        entry = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1.0, 2);
-        gtk_widget_set_name(entry, "Height");
-        gtk_widget_show(entry);
-        gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(entry), true);
-        hc->hc_hei = entry;
-        gtk_box_pack_start(GTK_BOX(vbox), entry, true, true, 0);
-        gtk_box_pack_start(GTK_BOX(row), vbox, true, true, 0);
+        // if (hcdesc) {
+        //     amin = MM(hcdesc->limits.minheight);
+        //     amax = MM(hcdesc->limits.maxheight);
+        // }
+        // adj = gtk_adjustment_new(hc->hc_hei_val, amin, amax, .1, 1.0, 0.0);
+        // entry = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1.0, 2);
+        // gtk_widget_set_name(entry, "Height");
+        // gtk_widget_show(entry);
+        // gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(entry), true);
+        // hc->hc_hei = entry;
+        // gtk_box_pack_start(GTK_BOX(vbox), entry, true, true, 0);
+        // gtk_box_pack_start(GTK_BOX(row), vbox, true, true, 0);
 
-        vbox = gtk_vbox_new(false, 2);
-        gtk_widget_show(vbox);
+        // vbox = gtk_vbox_new(false, 2);
+        // gtk_widget_show(vbox);
 
-        label = gtk_label_new("Left");
-        gtk_widget_show(label);
-        gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
-        gtk_misc_set_padding(GTK_MISC(label), 2, 2);
-        frame = gtk_frame_new(0);
-        gtk_widget_show(frame);
-        gtk_container_add(GTK_CONTAINER(frame), label);
-        gtk_box_pack_start(GTK_BOX(vbox), frame, true, true, 0);
-        hc->hc_xlabel = label;
+        // label = gtk_label_new("Left");
+        // gtk_widget_show(label);
+        // gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
+        // gtk_misc_set_padding(GTK_MISC(label), 2, 2);
+        // frame = gtk_frame_new(0);
+        // gtk_widget_show(frame);
+        // gtk_container_add(GTK_CONTAINER(frame), label);
+        // gtk_box_pack_start(GTK_BOX(vbox), frame, true, true, 0);
+        // hc->hc_xlabel = label;
 
-        amax = 1.0;
-        if (hcdesc) {
-            amin = MM(hcdesc->limits.minxoff);
-            amax = MM(hcdesc->limits.maxxoff);
-        }
-        adj = gtk_adjustment_new(hc->hc_lft_val, amin, amax, .1, 1.0, 0.0);
-        entry = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1.0, 2);
-        gtk_widget_set_name(entry, "Left");
-        gtk_widget_show(entry);
-        gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(entry), true);
-        hc->hc_left = entry;
-        gtk_box_pack_start(GTK_BOX(vbox), entry, true, true, 0);
-        gtk_box_pack_start(GTK_BOX(row), vbox, true, true, 0);
+        // amax = 1.0;
+        // if (hcdesc) {
+        //     amin = MM(hcdesc->limits.minxoff);
+        //     amax = MM(hcdesc->limits.maxxoff);
+        // }
+        // adj = gtk_adjustment_new(hc->hc_lft_val, amin, amax, .1, 1.0, 0.0);
+        // entry = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1.0, 2);
+        // gtk_widget_set_name(entry, "Left");
+        // gtk_widget_show(entry);
+        // gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(entry), true);
+        // hc->hc_left = entry;
+        // gtk_box_pack_start(GTK_BOX(vbox), entry, true, true, 0);
+        // gtk_box_pack_start(GTK_BOX(row), vbox, true, true, 0);
 
-        vbox = gtk_vbox_new(false, 2);
-        gtk_widget_show(vbox);
+        // vbox = gtk_vbox_new(false, 2);
+        // gtk_widget_show(vbox);
 
-        label = gtk_label_new(
-            (GRpkgIf()->HCof(hc->hc_fmt)->limits.flags & HCtopMargin) ?
-                "Top" : "Bottom");
-        gtk_widget_show(label);
-        gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
-        gtk_misc_set_padding(GTK_MISC(label), 2, 2);
-        frame = gtk_frame_new(0);
-        gtk_widget_show(frame);
-        gtk_container_add(GTK_CONTAINER(frame), label);
-        gtk_box_pack_start(GTK_BOX(vbox), frame, true, true, 0);
-        hc->hc_ylabel = label;
+        // label = gtk_label_new(
+        //     (GRpkgIf()->HCof(hc->hc_fmt)->limits.flags & HCtopMargin) ?
+        //         "Top" : "Bottom");
+        // gtk_widget_show(label);
+        // gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
+        // gtk_misc_set_padding(GTK_MISC(label), 2, 2);
+        // frame = gtk_frame_new(0);
+        // gtk_widget_show(frame);
+        // gtk_container_add(GTK_CONTAINER(frame), label);
+        // gtk_box_pack_start(GTK_BOX(vbox), frame, true, true, 0);
+        // hc->hc_ylabel = label;
 
-        if (hcdesc) {
-            amin = MM(hcdesc->limits.minyoff);
-            amax = MM(hcdesc->limits.maxyoff);
-        }
-        adj = gtk_adjustment_new(hc->hc_top_val, amin, amax, .1, 1.0, 0.0);
-        entry = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1.0, 2);
-        gtk_widget_set_name(entry, "TopBot");
-        gtk_widget_show(entry);
-        gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(entry), true);
-        hc->hc_top = entry;
+        // if (hcdesc) {
+        //     amin = MM(hcdesc->limits.minyoff);
+        //     amax = MM(hcdesc->limits.maxyoff);
+        // }
+        // adj = gtk_adjustment_new(hc->hc_top_val, amin, amax, .1, 1.0, 0.0);
+        // entry = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1.0, 2);
+        // gtk_widget_set_name(entry, "TopBot");
+        // gtk_widget_show(entry);
+        // gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(entry), true);
+        // hc->hc_top = entry;
 
-        gtk_box_pack_start(GTK_BOX(vbox), entry, true, true, 0);
-        gtk_box_pack_start(GTK_BOX(row), vbox, true, true, 0);
+        // gtk_box_pack_start(GTK_BOX(vbox), entry, true, true, 0);
+        // gtk_box_pack_start(GTK_BOX(row), vbox, true, true, 0);
 
-        gtk_table_attach(GTK_TABLE(form), row, 0, 1, rcnt, rcnt+1,
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-            (GtkAttachOptions)0, 2, 2);
-        rcnt++;
+        // gtk_table_attach(GTK_TABLE(form), row, 0, 1, rcnt, rcnt+1,
+        //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+        //     (GtkAttachOptions)0, 2, 2);
+        // rcnt++;
 
-        //
-        // paper size option menu and metric button
-        //
-        row = gtk_hbox_new(false, 2);
-        gtk_widget_show(row);
+        // //
+        // // paper size option menu and metric button
+        // //
+        // row = gtk_hbox_new(false, 2);
+        // gtk_widget_show(row);
 
-        entry = gtk_option_menu_new();
-        gtk_widget_set_name(entry, "PageSize");
-        gtk_widget_show(entry);
-        menu = gtk_menu_new();
-        gtk_widget_set_name(menu, "PageSize");
-        int i = 0;
-        for (sMedia *m = pagesizes; m->name; m++, i++) {
-            mi = gtk_menu_item_new_with_label(m->name);
-            gtk_widget_set_name(mi, m->name);
-            gtk_widget_show(mi);
-            gtk_menu_append(GTK_MENU(menu), mi);
-            gtk_object_set_user_data(GTK_OBJECT(mi), (void*)(long)i);
-            gtk_signal_connect(GTK_OBJECT(mi), "activate",
-                GTK_SIGNAL_FUNC(hc_pagesize_proc), wb);
-        }
-        gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
-        gtk_option_menu_set_history(GTK_OPTION_MENU(entry), 0);
-        gtk_box_pack_start(GTK_BOX(row), entry, true, true, 0);
-        hc->hc_pgsmenu = entry;
+        // entry = gtk_combo_box_text_new();
+        // gtk_widget_set_name(entry, "PageSize");
+        // gtk_widget_show(entry);
+        // menu = gtk_menu_new();
+        // gtk_widget_set_name(menu, "PageSize");
+        // int i = 0;
+        // for (sMedia *m = pagesizes; m->name; m++, i++) {
+        //     mi = gtk_menu_item_new_with_label(m->name);
+        //     gtk_widget_set_name(mi, m->name);
+        //     gtk_widget_show(mi);
+        //     gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        //     gtk_object_set_user_data(G_OBJECT(mi), (void*)(long)i);
+        //     g_signal_connect(G_OBJECT(mi), "activate",
+        //         hc_pagesize_proc, wb);
+        // }
+        // // gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
+        // // gtk_option_menu_set_history(GTK_OPTION_MENU(entry), 0);
+        // gtk_box_pack_start(GTK_BOX(row), entry, true, true, 0);
+        // hc->hc_pgsmenu = entry;
 
-        button = gtk_check_button_new_with_label("Metric (mm)");
-        gtk_widget_set_name(button, "Metric");
-        gtk_widget_show(button);
-        gtk_signal_connect(GTK_OBJECT(button), "clicked",
-            GTK_SIGNAL_FUNC(hc_metric_proc), wb);
-        gtk_box_pack_end(GTK_BOX(row), button, false, false, 0);
-        hc->hc_metbtn = button;
+        // button = gtk_check_button_new_with_label("Metric (mm)");
+        // gtk_widget_set_name(button, "Metric");
+        // gtk_widget_show(button);
+        // g_signal_connect(G_OBJECT(button), "clicked",
+        //     hc_metric_proc, wb);
+        // gtk_box_pack_end(GTK_BOX(row), button, false, false, 0);
+        // hc->hc_metbtn = button;
 
-        gtk_table_attach(GTK_TABLE(form), row, 0, 1, rcnt, rcnt+1,
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-            (GtkAttachOptions)0, 2, 2);
-        rcnt++;
+        // gtk_table_attach(GTK_TABLE(form), row, 0, 1, rcnt, rcnt+1,
+        //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+        //     (GtkAttachOptions)0, 2, 2);
+        // rcnt++;
 
-        row = gtk_hbox_new(false, 2);
-        gtk_widget_show(row);
-        if (cb && cb->hcframe) {
-            button = gtk_toggle_button_new_with_label("Frame");
-            gtk_widget_set_name(button, "Frame");
-            gtk_widget_show(button);
-            gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
-            gtk_signal_connect(GTK_OBJECT(button), "clicked",
-                GTK_SIGNAL_FUNC(hc_frame_proc), wb);
-        }
+        // row = gtk_hbox_new(false, 2);
+        // gtk_widget_show(row);
+        // if (cb && cb->hcframe) {
+        //     button = gtk_toggle_button_new_with_label("Frame");
+        //     gtk_widget_set_name(button, "Frame");
+        //     gtk_widget_show(button);
+        //     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
+        //     g_signal_connect(G_OBJECT(button), "clicked",
+        //         hc_frame_proc, wb);
+        // }
 
-        label = gtk_label_new("Line Width (points)");
-        gtk_widget_show(label);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-        gtk_misc_set_padding(GTK_MISC(label), 2, 2);
-        gtk_box_pack_start(GTK_BOX(row), label, true, true, 0);
-        hc->hc_linwlab = label;
+        // label = gtk_label_new("Line Width (points)");
+        // gtk_widget_show(label);
+        // gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+        // gtk_misc_set_padding(GTK_MISC(label), 2, 2);
+        // gtk_box_pack_start(GTK_BOX(row), label, true, true, 0);
+        // hc->hc_linwlab = label;
 
-        adj = gtk_adjustment_new(0.0l, 0.0, 10.0, .1, 1.0, 0.0);
-        entry = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1.0, 2);
-        gtk_widget_set_name(entry, "linewidth");
-        gtk_widget_show(entry);
-        gtk_widget_set_usize(entry, 90, -1);
-        gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(entry), true);
-        gtk_box_pack_start(GTK_BOX(row), entry, false, false, 0);
-        hc->hc_linwent = entry;
+        // adj = gtk_adjustment_new(0.0l, 0.0, 10.0, .1, 1.0, 0.0);
+        // entry = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1.0, 2);
+        // gtk_widget_set_name(entry, "linewidth");
+        // gtk_widget_show(entry);
+        // gtk_widget_set_size_request(entry, 90, -1);
+        // gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(entry), true);
+        // gtk_box_pack_start(GTK_BOX(row), entry, false, false, 0);
+        // hc->hc_linwent = entry;
 
-        if (hcdesc && hcdesc->line_width) {
-            gtk_widget_show(label);
-            gtk_widget_show(entry);
-        }
-        else {
-            gtk_widget_hide(label);
-            gtk_widget_hide(entry);
-        }
+        // if (hcdesc && hcdesc->line_width) {
+        //     gtk_widget_show(label);
+        //     gtk_widget_show(entry);
+        // }
+        // else {
+        //     gtk_widget_hide(label);
+        //     gtk_widget_hide(entry);
+        // }
 
-        gtk_table_attach(GTK_TABLE(form), row, 0, 1, rcnt, rcnt+1,
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-            (GtkAttachOptions)0, 2, 2);
+        // gtk_table_attach(GTK_TABLE(form), row, 0, 1, rcnt, rcnt+1,
+        //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+        //     (GtkAttachOptions)0, 2, 2);
         rcnt++;
     }
 
@@ -1167,15 +1168,15 @@ GTKprintPopup::hc_hcpopup(GRobject caller, gtk_bag *wb, HCcb *cb,
     button = gtk_button_new_with_label("Print");
     gtk_widget_set_name(button, "Print");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(hc_go_proc), wb);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     hc_go_proc, wb);
     gtk_box_pack_start(GTK_BOX(row5), button, true, true, 0);
 
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(hc_cancel_proc), wb);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     hc_cancel_proc, wb);
     gtk_box_pack_start(GTK_BOX(row5), button, true, true, 0);
 
     gtk_table_attach(GTK_TABLE(form), row5, 0, 1, rcnt, rcnt+1,
@@ -1231,15 +1232,15 @@ GTKprintPopup::hc_hcpopup(GRobject caller, gtk_bag *wb, HCcb *cb,
     GtkWidget *menu = gtk_menu_new();
     gtk_widget_set_name(menu, "printers");
     gtk_widget_show(menu);
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(hc->hc_prntmenu), menu);
+    // gtk_option_menu_set_menu(GTK_OPTION_MENU(hc->hc_prntmenu), menu);
     if (!hc->hc_numprinters) {
         GtkWidget *mi =
             gtk_menu_item_new_with_label(no_printer_msg);
         gtk_widget_set_name(mi, no_printer_msg);
         gtk_widget_show(mi);
-        gtk_menu_append(GTK_MENU(menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(hc_formenu_proc), wb);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(hc_formenu_proc), wb);
     }
     else {
         for (int i = 0; i < hc->hc_numprinters; i++) {
@@ -1247,9 +1248,9 @@ GTKprintPopup::hc_hcpopup(GRobject caller, gtk_bag *wb, HCcb *cb,
                 gtk_menu_item_new_with_label(hc->hc_printers[i]);
             gtk_widget_set_name(mi, hc->hc_printers[i]);
             gtk_widget_show(mi);
-            gtk_menu_append(GTK_MENU(menu), mi);
-            gtk_signal_connect(GTK_OBJECT(mi), "activate",
-                GTK_SIGNAL_FUNC(hc_formenu_proc), wb);
+            gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+            g_signal_connect(G_OBJECT(mi), "activate",
+                G_CALLBACK(hc_formenu_proc), wb);
         }
     }
     hc_set_printer(wb);
@@ -1298,7 +1299,7 @@ GTKprintPopup::hc_set_printer(gtk_bag *wb)
     if (!hc->hc_printers) {
         curprinter = 0;
         if (hc->hc_prntmenu)
-            gtk_option_menu_set_history(GTK_OPTION_MENU(hc->hc_prntmenu), 0);
+            // gtk_option_menu_set_history(GTK_OPTION_MENU(hc->hc_prntmenu), 0);
         return;
     }
     if (curprinter < 0)
@@ -1307,7 +1308,7 @@ GTKprintPopup::hc_set_printer(gtk_bag *wb)
         curprinter = 0;
 
     if (hc->hc_prntmenu)
-        gtk_option_menu_set_history(GTK_OPTION_MENU(hc->hc_prntmenu),
+        // gtk_option_menu_set_history(GTK_OPTION_MENU(hc->hc_prntmenu),
             curprinter);
     char *name = hc->hc_printers[curprinter];
 
@@ -1398,8 +1399,8 @@ GTKprintPopup::hc_set_format(gtk_bag *wb, int index, bool set_menu)
     if (!oldhcdesc || !newhcdesc)
         return;
 
-    if (set_menu)
-        gtk_option_menu_set_history(GTK_OPTION_MENU(hc->hc_fmtmenu), index);
+    // if (set_menu)
+    //     // gtk_option_menu_set_history(GTK_OPTION_MENU(hc->hc_fmtmenu), index);
 
     // Set the current defaults to the current values.
     if (oldhcdesc->defaults.command)
@@ -1418,28 +1419,28 @@ GTKprintPopup::hc_set_format(gtk_bag *wb, int index, bool set_menu)
     hc->hc_orient = newhcdesc->defaults.orient;
 
     if (hc->hc_wid) {
-        double w = gtk_spin_button_get_value_as_float(
+        double w = gtk_spin_button_get_value(
             GTK_SPIN_BUTTON(hc->hc_wid));
         if (hc->hc_metric)
             w /= MMPI;
         oldhcdesc->defaults.defwidth = w;
     }
     if (hc->hc_hei) {
-        double h = gtk_spin_button_get_value_as_float(
+        double h = gtk_spin_button_get_value(
             GTK_SPIN_BUTTON(hc->hc_hei));
         if (hc->hc_metric)
             h /= MMPI;
         oldhcdesc->defaults.defheight = h;
     }
     if (hc->hc_left) {
-        double x = gtk_spin_button_get_value_as_float(
+        double x = gtk_spin_button_get_value(
             GTK_SPIN_BUTTON(hc->hc_left));
         if (hc->hc_metric)
             x /= MMPI;
         oldhcdesc->defaults.defxoff = x;
     }
     if (hc->hc_top) {
-        double y = gtk_spin_button_get_value_as_float(
+        double y = gtk_spin_button_get_value(
             GTK_SPIN_BUTTON(hc->hc_top));
         if (hc->hc_metric)
             y /= MMPI;
@@ -1519,38 +1520,38 @@ GTKprintPopup::hc_set_format(gtk_bag *wb, int index, bool set_menu)
         }
     }
 
-    if (hc->hc_resmenu) {
-        GtkWidget *menu =
-            gtk_option_menu_get_menu(GTK_OPTION_MENU(hc->hc_resmenu));
-        const char *mname = gtk_widget_get_name(menu);
-        mname = lstring::copy(mname);
-        gtk_widget_destroy(menu);
-        menu = gtk_menu_new();
-        gtk_widget_set_name(menu, mname);
-        delete [] mname;
+    // if (hc->hc_resmenu) {
+    //     GtkWidget *menu =
+    //         gtk_option_menu_get_menu(GTK_OPTION_MENU(hc->hc_resmenu));
+    //     const char *mname = gtk_widget_get_name(menu);
+    //     mname = lstring::copy(mname);
+    //     gtk_widget_destroy(menu);
+    //     menu = gtk_menu_new();
+    //     gtk_widget_set_name(menu, mname);
+    //     delete [] mname;
 
-        const char **s = newhcdesc->limits.resols;
-        if (s && *s) {
-            for (int j = 0; s[j]; j++) {
-                GtkWidget *mi = gtk_menu_item_new_with_label(s[j]);
-                gtk_widget_set_name(mi, s[j]);
-                gtk_widget_show(mi);
-                gtk_menu_append(GTK_MENU(menu), mi);
-                gtk_object_set_user_data(GTK_OBJECT(mi), (void*)(long)j);
-                gtk_signal_connect(GTK_OBJECT(mi), "activate",
-                    GTK_SIGNAL_FUNC(hc_resol_proc), wb);
-            }
-        }
-        else {
-            GtkWidget *mi = gtk_menu_item_new_with_label("fixed");
-            gtk_widget_set_name(mi, "fixed");
-            gtk_widget_show(mi);
-            gtk_menu_append(GTK_MENU(menu), mi);
-        }
-        gtk_option_menu_set_menu(GTK_OPTION_MENU(hc->hc_resmenu), menu);
-        gtk_option_menu_set_history(GTK_OPTION_MENU(hc->hc_resmenu),
-            hc->hc_resol);
-    }
+    //     const char **s = newhcdesc->limits.resols;
+    //     if (s && *s) {
+    //         for (int j = 0; s[j]; j++) {
+    //             GtkWidget *mi = gtk_menu_item_new_with_label(s[j]);
+    //             gtk_widget_set_name(mi, s[j]);
+    //             gtk_widget_show(mi);
+    //             gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    //             gtk_object_set_user_data(G_OBJECT(mi), (void*)(long)j);
+    //             g_signal_connect(G_OBJECT(mi), "activate",
+    //                 hc_resol_proc, wb);
+    //         }
+    //     }
+    //     else {
+    //         GtkWidget *mi = gtk_menu_item_new_with_label("fixed");
+    //         gtk_widget_set_name(mi, "fixed");
+    //         gtk_widget_show(mi);
+    //         gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    //     }
+    //     // gtk_option_menu_set_menu(GTK_OPTION_MENU(hc->hc_resmenu), menu);
+    //     // gtk_option_menu_set_history(GTK_OPTION_MENU(hc->hc_resmenu),
+    //         hc->hc_resol);
+    // }
     if (hc->hc_cb && hc->hc_cb->hcsetup)
         (*hc->hc_cb->hcsetup)(true, hc->hc_fmt, false, hc->hc_context);
 
@@ -1569,100 +1570,100 @@ GTKprintPopup::hc_set_format(gtk_bag *wb, int index, bool set_menu)
 void
 GTKprintPopup::hc_update_menu(GTKprintPopup *hc)
 {
-    GtkWidget *menu =
-        gtk_option_menu_get_menu(GTK_OPTION_MENU(hc->hc_fontmenu));
-    if (!menu)
-        return;
-    GList *gl = gtk_container_children(GTK_CONTAINER(menu));
-    for (GList *l = gl; l; l = l->next)
-        gtk_widget_destroy(GTK_WIDGET(l->data));
-    g_list_free(gl);
+    // GtkWidget *menu =
+    //     gtk_option_menu_get_menu(GTK_OPTION_MENU(hc->hc_fontmenu));
+    // if (!menu)
+    //     return;
+    // GList *gl = gtk_container_get_children(GTK_CONTAINER(menu));
+    // for (GList *l = gl; l; l = l->next)
+    //     gtk_widget_destroy(GTK_WIDGET(l->data));
+    // g_list_free(gl);
 
-    int i = 0, hist = -1;
-    GtkWidget *mi = gtk_menu_item_new_with_label("PostScript Times");
-    gtk_widget_set_name(mi, "PostScript Times");
-    gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_object_set_user_data(GTK_OBJECT(mi), (void*)PStimes);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(hc_menu_proc), hc);
-    if (hc->hc_textfmt == PStimes)
-        hist = i;
-    i++;
+    // int i = 0, hist = -1;
+    // GtkWidget *mi = gtk_menu_item_new_with_label("PostScript Times");
+    // gtk_widget_set_name(mi, "PostScript Times");
+    // gtk_widget_show(mi);
+    // gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    // gtk_object_set_user_data(G_OBJECT(mi), (void*)PStimes);
+    // g_signal_connect(G_OBJECT(mi), "activate",
+    //     hc_menu_proc, hc);
+    // if (hc->hc_textfmt == PStimes)
+    //     hist = i;
+    // i++;
 
-    mi = gtk_menu_item_new_with_label("PostScript Helvetica");
-    gtk_widget_set_name(mi, "PostScript Helvetica");
-    gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_object_set_user_data(GTK_OBJECT(mi), (void*)PShelv);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(hc_menu_proc), hc);
-    if (hc->hc_textfmt == PShelv)
-        hist = i;
-    i++;
+    // mi = gtk_menu_item_new_with_label("PostScript Helvetica");
+    // gtk_widget_set_name(mi, "PostScript Helvetica");
+    // gtk_widget_show(mi);
+    // gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    // gtk_object_set_user_data(G_OBJECT(mi), (void*)PShelv);
+    // g_signal_connect(G_OBJECT(mi), "activate",
+    //     hc_menu_proc, hc);
+    // if (hc->hc_textfmt == PShelv)
+    //     hist = i;
+    // i++;
 
-    mi = gtk_menu_item_new_with_label("PostScript Century");
-    gtk_widget_set_name(mi, "PostScript Century");
-    gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_object_set_user_data(GTK_OBJECT(mi), (void*)PScentury);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(hc_menu_proc), hc);
-    if (hc->hc_textfmt == PScentury)
-        hist = i;
-    i++;
+    // mi = gtk_menu_item_new_with_label("PostScript Century");
+    // gtk_widget_set_name(mi, "PostScript Century");
+    // gtk_widget_show(mi);
+    // gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    // gtk_object_set_user_data(G_OBJECT(mi), (void*)PScentury);
+    // g_signal_connect(G_OBJECT(mi), "activate",
+    //     hc_menu_proc, hc);
+    // if (hc->hc_textfmt == PScentury)
+    //     hist = i;
+    // i++;
 
-    mi = gtk_menu_item_new_with_label("PostScript Lucida");
-    gtk_widget_set_name(mi, "PostScript Lucida");
-    gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_object_set_user_data(GTK_OBJECT(mi), (void*)PSlucida);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(hc_menu_proc), hc);
-    if (hc->hc_textfmt == PSlucida)
-        hist = i;
-    i++;
+    // mi = gtk_menu_item_new_with_label("PostScript Lucida");
+    // gtk_widget_set_name(mi, "PostScript Lucida");
+    // gtk_widget_show(mi);
+    // gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    // gtk_object_set_user_data(G_OBJECT(mi), (void*)PSlucida);
+    // g_signal_connect(G_OBJECT(mi), "activate",
+    //     hc_menu_proc, hc);
+    // if (hc->hc_textfmt == PSlucida)
+    //     hist = i;
+    // i++;
 
-    mi = gtk_menu_item_new_with_label("Plain Text");
-    gtk_widget_set_name(mi, "Plain Text");
-    gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_object_set_user_data(GTK_OBJECT(mi), (void*)PlainText);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(hc_menu_proc), hc);
-    if (hc->hc_textfmt == PlainText)
-        hist = i;
-    i++;
+    // mi = gtk_menu_item_new_with_label("Plain Text");
+    // gtk_widget_set_name(mi, "Plain Text");
+    // gtk_widget_show(mi);
+    // gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    // gtk_object_set_user_data(G_OBJECT(mi), (void*)PlainText);
+    // g_signal_connect(G_OBJECT(mi), "activate",
+    //     hc_menu_proc, hc);
+    // if (hc->hc_textfmt == PlainText)
+    //     hist = i;
+    // i++;
 
-    /*
-    mi = gtk_menu_item_new_with_label("Pretty Text");
-    gtk_widget_set_name(mi, "Pretty Text");
-    gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_object_set_user_data(GTK_OBJECT(mi), (void*)PrettyText);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(hc_menu_proc), hc);
-    if (hc->hc_textfmt == PrettyText)
-        hist = i;
-    i++;
-    */
+    // /*
+    // mi = gtk_menu_item_new_with_label("Pretty Text");
+    // gtk_widget_set_name(mi, "Pretty Text");
+    // gtk_widget_show(mi);
+    // gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    // gtk_object_set_user_data(G_OBJECT(mi), (void*)PrettyText);
+    // g_signal_connect(G_OBJECT(mi), "activate",
+    //     hc_menu_proc, hc);
+    // if (hc->hc_textfmt == PrettyText)
+    //     hist = i;
+    // i++;
+    // */
 
-    mi = gtk_menu_item_new_with_label("HTML Text");
-    gtk_widget_set_name(mi, "HTML Text");
-    gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_object_set_user_data(GTK_OBJECT(mi), (void*)HtmlText);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(hc_menu_proc), hc);
-    if (hc->hc_textfmt == HtmlText)
-        hist = i;
-    i++;
+    // mi = gtk_menu_item_new_with_label("HTML Text");
+    // gtk_widget_set_name(mi, "HTML Text");
+    // gtk_widget_show(mi);
+    // gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    // gtk_object_set_user_data(G_OBJECT(mi), (void*)HtmlText);
+    // g_signal_connect(G_OBJECT(mi), "activate",
+    //     hc_menu_proc, hc);
+    // if (hc->hc_textfmt == HtmlText)
+    //     hist = i;
+    // i++;
 
-    if (hist < 0) {
-        hist = 0;
-        hc->hc_textfmt = PStimes;
-    }
-    gtk_option_menu_set_history(GTK_OPTION_MENU(hc->hc_fontmenu), hist);
+    // if (hist < 0) {
+    //     hist = 0;
+    //     hc->hc_textfmt = PStimes;
+    // }
+    // // gtk_option_menu_set_history(GTK_OPTION_MENU(hc->hc_fontmenu), hist);
 }
 
 
@@ -1672,10 +1673,10 @@ GTKprintPopup::hc_update_menu(GTKprintPopup *hc)
 void
 GTKprintPopup::hc_menu_proc(GtkWidget *caller, void *client_data)
 {
-    HCtextType indx =
-        (HCtextType)(long)gtk_object_get_user_data(GTK_OBJECT(caller));
-    GTKprintPopup *hc = (GTKprintPopup*)client_data;
-    hc->hc_textfmt = indx;
+    // HCtextType indx =
+    //     (HCtextType)(long)gtk_object_get_user_data(G_OBJECT(caller));
+    // GTKprintPopup *hc = (GTKprintPopup*)client_data;
+    // hc->hc_textfmt = indx;
 }
 
 
@@ -1687,10 +1688,10 @@ GTKprintPopup::hc_formenu_proc(GtkWidget *caller, void *client_data)
 {
     gtk_bag *wb = static_cast<gtk_bag*>(client_data);
     GTKprintPopup *hc = wb->HC();
-    if (hc) {
-        long index = (long)gtk_object_get_user_data(GTK_OBJECT(caller));
-        hc_set_format(wb, index, false);
-    }
+    // if (hc) {
+    //     long index = (long)gtk_object_get_user_data(G_OBJECT(caller));
+    //     hc_set_format(wb, index, false);
+    // }
 }
 
 
@@ -1717,26 +1718,26 @@ GTKprintPopup::hc_pagesize_proc(GtkWidget *caller, void *client_data)
         return;
     if (GTK_IS_RADIO_BUTTON(caller)) {
         // This is text-only mode, set the metric field for A4
-        if (GTK_TOGGLE_BUTTON(caller)->active)
-            hc->hc_metric = false;
-        else
-            hc->hc_metric = true;
-        return;
+        // if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(caller)))
+        //     hc->hc_metric = false;
+        // else
+        //     hc->hc_metric = true;
+        // return;
     }
-    long index = (long)gtk_object_get_user_data(GTK_OBJECT(caller));
-    double shrink = 0.375 * 72;
-    double width = pagesizes[index].width - 2*shrink;
-    double height = pagesizes[index].height - 2*shrink;
-    hc->hc_pgsindex = index;
-    if (hc->hc_metric) {
-        width *= MMPI;
-        height *= MMPI;
-        shrink *= MMPI;
-    }
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(hc->hc_wid), width/72);
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(hc->hc_hei), height/72);
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(hc->hc_left), shrink/72);
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(hc->hc_top), shrink/72);
+    // long index = (long)gtk_object_get_user_data(G_OBJECT(caller));
+    // double shrink = 0.375 * 72;
+    // double width = pagesizes[index].width - 2*shrink;
+    // double height = pagesizes[index].height - 2*shrink;
+    // hc->hc_pgsindex = index;
+    // if (hc->hc_metric) {
+    //     width *= MMPI;
+    //     height *= MMPI;
+    //     shrink *= MMPI;
+    // }
+    // gtk_spin_button_set_value(GTK_SPIN_BUTTON(hc->hc_wid), width/72);
+    // gtk_spin_button_set_value(GTK_SPIN_BUTTON(hc->hc_hei), height/72);
+    // gtk_spin_button_set_value(GTK_SPIN_BUTTON(hc->hc_left), shrink/72);
+    // gtk_spin_button_set_value(GTK_SPIN_BUTTON(hc->hc_top), shrink/72);
 }
 
 
@@ -1748,71 +1749,71 @@ GTKprintPopup::hc_metric_proc(GtkWidget *caller, void *client_data)
     if (!hc)
         return;
     bool wasmetric = hc->hc_metric;
-    hc->hc_metric = GTK_TOGGLE_BUTTON(caller)->active;
+    // hc->hc_metric = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(caller));
 
-    if (wasmetric != hc->hc_metric) {
-        double d;
+    // if (wasmetric != hc->hc_metric) {
+    //     double d;
 
-        d = gtk_spin_button_get_value_as_float(GTK_SPIN_BUTTON(hc->hc_wid));
-        GtkAdjustment *adj = GTK_SPIN_BUTTON(hc->hc_wid)->adjustment;
-        if (wasmetric) {
-            d /= MMPI;
-            adj = (GtkAdjustment*)gtk_adjustment_new(d, adj->lower/MMPI,
-                adj->upper/MMPI, .1, 1.0, 0.0);
-        }
-        else {
-            d *= MMPI;
-            adj = (GtkAdjustment*)gtk_adjustment_new(d, adj->lower*MMPI,
-                adj->upper*MMPI, .1, 1.0, 0.0);
-        }
-        gtk_spin_button_set_adjustment(GTK_SPIN_BUTTON(hc->hc_wid), adj);
-        gtk_adjustment_value_changed(adj);
+    //     d = gtk_spin_button_get_value(GTK_SPIN_BUTTON(hc->hc_wid));
+    //     GtkAdjustment *adj = GTK_SPIN_BUTTON(hc->hc_wid)->adjustment;
+    //     if (wasmetric) {
+    //         d /= MMPI;
+    //         adj = (GtkAdjustment*)gtk_adjustment_new(d, adj->lower/MMPI,
+    //             adj->upper/MMPI, .1, 1.0, 0.0);
+    //     }
+    //     else {
+    //         d *= MMPI;
+    //         adj = (GtkAdjustment*)gtk_adjustment_new(d, adj->lower*MMPI,
+    //             adj->upper*MMPI, .1, 1.0, 0.0);
+    //     }
+    //     gtk_spin_button_set_adjustment(GTK_SPIN_BUTTON(hc->hc_wid), adj);
+    //     gtk_adjustment_value_changed(adj);
 
-        d = gtk_spin_button_get_value_as_float(GTK_SPIN_BUTTON(hc->hc_hei));
-        adj = GTK_SPIN_BUTTON(hc->hc_hei)->adjustment;
-        if (wasmetric) {
-            d /= MMPI;
-            adj = (GtkAdjustment*)gtk_adjustment_new(d, adj->lower/MMPI,
-                adj->upper/MMPI, .1, 1.0, 0.0);
-        }
-        else {
-            d *= MMPI;
-            adj = (GtkAdjustment*)gtk_adjustment_new(d, adj->lower*MMPI,
-                adj->upper*MMPI, .1, 1.0, 0.0);
-        }
-        gtk_spin_button_set_adjustment(GTK_SPIN_BUTTON(hc->hc_hei), adj);
-        gtk_adjustment_value_changed(adj);
+    //     d = gtk_spin_button_get_value(GTK_SPIN_BUTTON(hc->hc_hei));
+    //     adj = GTK_SPIN_BUTTON(hc->hc_hei)->adjustment;
+    //     if (wasmetric) {
+    //         d /= MMPI;
+    //         adj = (GtkAdjustment*)gtk_adjustment_new(d, adj->lower/MMPI,
+    //             adj->upper/MMPI, .1, 1.0, 0.0);
+    //     }
+    //     else {
+    //         d *= MMPI;
+    //         adj = (GtkAdjustment*)gtk_adjustment_new(d, adj->lower*MMPI,
+    //             adj->upper*MMPI, .1, 1.0, 0.0);
+    //     }
+    //     gtk_spin_button_set_adjustment(GTK_SPIN_BUTTON(hc->hc_hei), adj);
+    //     gtk_adjustment_value_changed(adj);
 
-        d = gtk_spin_button_get_value_as_float(GTK_SPIN_BUTTON(hc->hc_left));
-        adj = GTK_SPIN_BUTTON(hc->hc_left)->adjustment;
-        if (wasmetric) {
-            d /= MMPI;
-            adj = (GtkAdjustment*)gtk_adjustment_new(d, adj->lower/MMPI,
-                adj->upper/MMPI, .1, 1.0, 0.0);
-        }
-        else {
-            d *= MMPI;
-            adj = (GtkAdjustment*)gtk_adjustment_new(d, adj->lower*MMPI,
-                adj->upper*MMPI, .1, 1.0, 0.0);
-        }
-        gtk_spin_button_set_adjustment(GTK_SPIN_BUTTON(hc->hc_left), adj);
-        gtk_adjustment_value_changed(adj);
+    //     d = gtk_spin_button_get_value(GTK_SPIN_BUTTON(hc->hc_left));
+    //     adj = GTK_SPIN_BUTTON(hc->hc_left)->adjustment;
+    //     if (wasmetric) {
+    //         d /= MMPI;
+    //         adj = (GtkAdjustment*)gtk_adjustment_new(d, adj->lower/MMPI,
+    //             adj->upper/MMPI, .1, 1.0, 0.0);
+    //     }
+    //     else {
+    //         d *= MMPI;
+    //         adj = (GtkAdjustment*)gtk_adjustment_new(d, adj->lower*MMPI,
+    //             adj->upper*MMPI, .1, 1.0, 0.0);
+    //     }
+    //     gtk_spin_button_set_adjustment(GTK_SPIN_BUTTON(hc->hc_left), adj);
+    //     gtk_adjustment_value_changed(adj);
 
-        d = gtk_spin_button_get_value_as_float(GTK_SPIN_BUTTON(hc->hc_top));
-        adj = GTK_SPIN_BUTTON(hc->hc_top)->adjustment;
-        if (wasmetric) {
-            d /= MMPI;
-            adj = (GtkAdjustment*)gtk_adjustment_new(d, adj->lower*MMPI,
-                adj->upper*MMPI, .1, 1.0, 0.0);
-        }
-        else {
-            d *= MMPI;
-            adj = (GtkAdjustment*)gtk_adjustment_new(d, adj->lower*MMPI,
-                adj->upper*MMPI, .1, 1.0, 0.0);
-        }
-        gtk_spin_button_set_adjustment(GTK_SPIN_BUTTON(hc->hc_top), adj);
-        gtk_adjustment_value_changed(adj);
-    }
+    //     d = gtk_spin_button_get_value(GTK_SPIN_BUTTON(hc->hc_top));
+    //     adj = GTK_SPIN_BUTTON(hc->hc_top)->adjustment;
+    //     if (wasmetric) {
+    //         d /= MMPI;
+    //         adj = (GtkAdjustment*)gtk_adjustment_new(d, adj->lower*MMPI,
+    //             adj->upper*MMPI, .1, 1.0, 0.0);
+    //     }
+    //     else {
+    //         d *= MMPI;
+    //         adj = (GtkAdjustment*)gtk_adjustment_new(d, adj->lower*MMPI,
+    //             adj->upper*MMPI, .1, 1.0, 0.0);
+    //     }
+    //     gtk_spin_button_set_adjustment(GTK_SPIN_BUTTON(hc->hc_top), adj);
+    //     gtk_adjustment_value_changed(adj);
+    // }
 }
 
 
@@ -1857,23 +1858,23 @@ GTKprintPopup::hc_port_proc(GtkWidget*, void *client_data)
     if (hc) {
         // The landscape button merely sets a flag passed to the driver.
         // It is up to the driver to respond appropriately.
-        bool state =gtk_option_menu_get_history(
-            GTK_OPTION_MENU(hc->hc_orientmenu));
-        if (state)
-            hc->hc_orient &= ~HClandscape;
-        else
-            hc->hc_orient |= HClandscape;
+        // bool state =gtk_option_menu_get_history(
+        //     GTK_OPTION_MENU(hc->hc_orientmenu));
+        // if (state)
+        //     hc->hc_orient &= ~HClandscape;
+        // else
+        //     hc->hc_orient |= HClandscape;
 
-        // See if we should swap the margin label.
-        HCdesc *hcdesc = GRpkgIf()->HCof(hc->hc_fmt);
-        if (hcdesc && (hcdesc->limits.flags & HClandsSwpYmarg)) {
-            char *str;
-            gtk_label_get(GTK_LABEL(hc->hc_ylabel), &str);
-            if (!strcmp(str, "Top"))
-                gtk_label_set_text(GTK_LABEL(hc->hc_ylabel), "Bottom");
-            else
-                gtk_label_set_text(GTK_LABEL(hc->hc_ylabel), "Top");
-        }
+        // // See if we should swap the margin label.
+        // HCdesc *hcdesc = GRpkgIf()->HCof(hc->hc_fmt);
+        // if (hcdesc && (hcdesc->limits.flags & HClandsSwpYmarg)) {
+        //     char *str;
+        //     gtk_label_get_text(GTK_LABEL(hc->hc_ylabel), &str);
+        //     if (!strcmp(str, "Top"))
+        //         gtk_label_set_text(GTK_LABEL(hc->hc_ylabel), "Bottom");
+        //     else
+        //         gtk_label_set_text(GTK_LABEL(hc->hc_ylabel), "Top");
+        // }
     }
 }
 
@@ -1885,12 +1886,12 @@ void
 GTKprintPopup::hc_fit_proc(GtkWidget *caller, void *client_data)
 {
     GTKprintPopup *hc = static_cast<gtk_bag*>(client_data)->HC();
-    if (hc) {
-        if (GTK_TOGGLE_BUTTON(caller)->active)
-            hc->hc_orient |= HCbest;
-        else
-            hc->hc_orient &= ~HCbest;
-    }
+    // if (hc) {
+    //     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(caller)))
+    //         hc->hc_orient |= HCbest;
+    //     else
+    //         hc->hc_orient &= ~HCbest;
+    // }
 }
 
 
@@ -1902,31 +1903,31 @@ GTKprintPopup::hc_tofile_proc(GtkWidget *caller, void *client_data)
 {
     GTKprintPopup *hc = static_cast<gtk_bag*>(client_data)->HC();
     if (hc) {
-        bool state = GTK_TOGGLE_BUTTON(caller)->active;
-        hc->hc_tofile = state;
-        const char *s = gtk_entry_get_text(GTK_ENTRY(hc->hc_cmdtxtbox));
-        if (state) {
-            gtk_label_set_text(GTK_LABEL(hc->hc_cmdlab), "File Name");
-            delete [] hc->hc_cmdtext;
-            hc->hc_cmdtext = lstring::copy(s);
-            gtk_entry_set_text(GTK_ENTRY(hc->hc_cmdtxtbox), hc->hc_tofilename);
-#ifdef WIN32
-            gtk_widget_show(hc->hc_cmdtxtbox);
-            gtk_widget_hide(hc->hc_prntmenu);
-#endif
-        }
-        else {
-#ifdef WIN32
-            gtk_label_set_text(GTK_LABEL(hc->hc_cmdlab), "Printer Name");
-            gtk_widget_hide(hc->hc_cmdtxtbox);
-            gtk_widget_show(hc->hc_prntmenu);
-#else
-            gtk_label_set_text(GTK_LABEL(hc->hc_cmdlab), "Print Command");
-            delete [] hc->hc_tofilename;
-            hc->hc_tofilename = lstring::copy(s);
-            gtk_entry_set_text(GTK_ENTRY(hc->hc_cmdtxtbox), hc->hc_cmdtext);
-#endif
-        }
+//         bool state = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(caller));
+//         hc->hc_tofile = state;
+//         const char *s = gtk_entry_get_text(GTK_ENTRY(hc->hc_cmdtxtbox));
+//         if (state) {
+//             gtk_label_set_text(GTK_LABEL(hc->hc_cmdlab), "File Name");
+//             delete [] hc->hc_cmdtext;
+//             hc->hc_cmdtext = lstring::copy(s);
+//             gtk_entry_set_text(GTK_ENTRY(hc->hc_cmdtxtbox), hc->hc_tofilename);
+// #ifdef WIN32
+//             gtk_widget_show(hc->hc_cmdtxtbox);
+//             gtk_widget_hide(hc->hc_prntmenu);
+// #endif
+//         }
+//         else {
+// #ifdef WIN32
+//             gtk_label_set_text(GTK_LABEL(hc->hc_cmdlab), "Printer Name");
+//             gtk_widget_hide(hc->hc_cmdtxtbox);
+//             gtk_widget_show(hc->hc_prntmenu);
+// #else
+//             gtk_label_set_text(GTK_LABEL(hc->hc_cmdlab), "Print Command");
+//             delete [] hc->hc_tofilename;
+//             hc->hc_tofilename = lstring::copy(s);
+//             gtk_entry_set_text(GTK_ENTRY(hc->hc_cmdtxtbox), hc->hc_cmdtext);
+// #endif
+//         }
     }
 }
 
@@ -1938,10 +1939,10 @@ void
 GTKprintPopup::hc_legend_proc(GtkWidget *caller, void *client_data)
 {
     GTKprintPopup *hc = static_cast<gtk_bag*>(client_data)->HC();
-    if (hc) {
-        bool state = GTK_TOGGLE_BUTTON(caller)->active;
-        hc->hc_legend = (state ? HClegOn : HClegOff);
-    }
+    // if (hc) {
+    //     bool state = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(caller));
+    //     hc->hc_legend = (state ? HClegOn : HClegOff);
+    // }
 }
 
 
@@ -1959,7 +1960,7 @@ GTKprintPopup::hc_auto_proc(GtkWidget *btn, void *client_data)
         return;
     if (btn == hc->hc_wlabel) {
         if (GRX->GetStatus(btn)) {
-            hcdesc->last_w = gtk_spin_button_get_value_as_float(
+            hcdesc->last_w = gtk_spin_button_get_value(
                 GTK_SPIN_BUTTON(hc->hc_wid));
             if (hc->hc_metric)
                 hcdesc->last_w /= MMPI;
@@ -1988,7 +1989,7 @@ GTKprintPopup::hc_auto_proc(GtkWidget *btn, void *client_data)
     }
     else if (btn == hc->hc_hlabel) {
         if (GRX->GetStatus(btn)) {
-            hcdesc->last_h = gtk_spin_button_get_value_as_float(
+            hcdesc->last_h = gtk_spin_button_get_value(
                 GTK_SPIN_BUTTON(hc->hc_hei));
             if (hc->hc_metric)
                 hcdesc->last_h /= MMPI;
@@ -2025,10 +2026,10 @@ GTKprintPopup::hc_key_hdlr(GtkWidget*, GdkEvent *ev, void *client_data)
 {
     gtk_bag *wb = static_cast<gtk_bag*>(client_data);
     GTKprintPopup *hc = wb->HC();
-    if (hc && ev->key.keyval == GDK_Return) {
-        hc->hc_go_proc(0, client_data);
-        return (true);
-    }
+    // if (hc && ev->key.keyval == GDK_KEY_Return) {
+    //     hc->hc_go_proc(0, client_data);
+    //     return (true);
+    // }
     return (false);
 }
 
@@ -2255,7 +2256,7 @@ GTKprintPopup::hc_do_go(gtk_bag *wb)
     double w = 0.0;
     if (!(hcdesc->limits.flags & HCdontCareWidth)) {
         if (!GRX->GetStatus(hc->hc_wlabel)) {
-            w = gtk_spin_button_get_value_as_float(
+            w = gtk_spin_button_get_value(
                 GTK_SPIN_BUTTON(hc->hc_wid));
             if (hc->hc_metric)
                 w /= MMPI;
@@ -2264,7 +2265,7 @@ GTKprintPopup::hc_do_go(gtk_bag *wb)
     double h = 0.0;
     if (!(hcdesc->limits.flags & HCdontCareHeight)) {
         if (!GRX->GetStatus(hc->hc_hlabel)) {
-            h = gtk_spin_button_get_value_as_float(
+            h = gtk_spin_button_get_value(
                 GTK_SPIN_BUTTON(hc->hc_hei));
             if (hc->hc_metric)
                 h /= MMPI;
@@ -2272,14 +2273,14 @@ GTKprintPopup::hc_do_go(gtk_bag *wb)
     }
     double x = 0.0;
     if (!(hcdesc->limits.flags & HCdontCareXoff)) {
-        x = gtk_spin_button_get_value_as_float(
+        x = gtk_spin_button_get_value(
             GTK_SPIN_BUTTON(hc->hc_left));
         if (hc->hc_metric)
             x /= MMPI;
     }
     double y = 0.0;
     if (!(hcdesc->limits.flags & HCdontCareYoff)) {
-        y = gtk_spin_button_get_value_as_float(
+        y = gtk_spin_button_get_value(
             GTK_SPIN_BUTTON(hc->hc_top));
         if (hc->hc_metric)
             y /= MMPI;
@@ -2296,7 +2297,7 @@ GTKprintPopup::hc_do_go(gtk_bag *wb)
         sscanf(hcdesc->limits.resols[hc->hc_resol], "%d", &resol);
     sprintf(buf, hcdesc->fmtstring, filename, resol, w, h, x, y);
     if (hcdesc->line_width) {
-        double d = gtk_spin_button_get_value_as_float(
+        double d = gtk_spin_button_get_value(
             GTK_SPIN_BUTTON(hc->hc_linwent));
         sprintf(buf + strlen(buf), " -p %g", d);
     }
@@ -2502,7 +2503,7 @@ GTKprintPopup::hc_proc_hdlr(int pid, int status, void*)
         if (msg) {
             msg->add_msg(buf);
             msg->set_error(err);
-            gtk_idle_add((GtkFunction)hc_msg_idle_proc, (void*)(long)pid);
+            g_idle_add(hc_msg_idle_proc, (void*)(long)pid);
         }
     }
 #else
@@ -2520,12 +2521,12 @@ void
 GTKprintPopup::hc_resol_proc(GtkWidget *caller, void *client_data)
 {
     GTKprintPopup *hc = static_cast<gtk_bag*>(client_data)->HC();
-    if (hc) {
-        long i = (long)gtk_object_get_user_data(GTK_OBJECT(caller));
-        if (i >= 0 && i < 100)
-            // sanity check
-            hc->hc_resol = i;
-    }
+    // if (hc) {
+    //     long i = (long)gtk_object_get_user_data(G_OBJECT(caller));
+    //     if (i >= 0 && i < 100)
+    //         // sanity check
+    //         hc->hc_resol = i;
+    // }
 }
 
 
@@ -2694,21 +2695,21 @@ GTKprintPopup::hc_set_sens(GTKprintPopup *hc, unsigned int word)
             gtk_widget_set_sensitive(hc->hc_metbtn, true);
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(hc->hc_metbtn),
                 hc->hc_metric);
-            gtk_option_menu_set_history(GTK_OPTION_MENU(hc->hc_pgsmenu),
-                hc->hc_pgsindex);
+            // // gtk_option_menu_set_history(GTK_OPTION_MENU(hc->hc_pgsmenu),
+            //     hc->hc_pgsindex);
         }
     }
 
     if (hc->hc_orientmenu) {
-        if (word & HCnoLandscape) {
-            gtk_option_menu_set_history(GTK_OPTION_MENU(hc->hc_orientmenu), 0);
-            gtk_widget_set_sensitive(hc->hc_orientmenu, false);
-        }
-        else {
-            gtk_widget_set_sensitive(hc->hc_orientmenu, true);
-            gtk_option_menu_set_history(GTK_OPTION_MENU(hc->hc_orientmenu),
-                (hc->hc_orient & HClandscape) != 0);
-        }
+        // if (word & HCnoLandscape) {
+        //     // gtk_option_menu_set_history(GTK_OPTION_MENU(hc->hc_orientmenu), 0);
+        //     gtk_widget_set_sensitive(hc->hc_orientmenu, false);
+        // }
+        // else {
+        //     gtk_widget_set_sensitive(hc->hc_orientmenu, true);
+        //     // gtk_option_menu_set_history(GTK_OPTION_MENU(hc->hc_orientmenu),
+        //         (hc->hc_orient & HClandscape) != 0);
+        // }
     }
 
     if (hc->hc_fitbtn) {
@@ -2809,20 +2810,20 @@ GTKprintPopup::hc_pop_message(gtk_bag *wb)
 
     GtkWidget *button = gtk_button_new_with_label("Abort");
     gtk_widget_set_name(button, "Abort");
-    gtk_object_set_data(GTK_OBJECT(button), "abort", (void*)1);
-    gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(hc_go_abort_proc), wb);
+    // g_object_set_data(G_OBJECT(button), "abort", (void*)1);
+    // gtk_widget_show(button);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     hc_go_abort_proc, wb);
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, 2, 3,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
 
     GdkRectangle rect;
     ShellGeometry(wb->HC()->hc_popup, 0, &rect);
-    gtk_widget_set_uposition(GP->popup, rect.x + rect.width, rect.y);
-    gtk_widget_show(GP->popup);
+    // gtk_widget_set_size_request(GP->popup, rect.x + rect.width, rect.y);
+    // gtk_widget_show(GP->popup);
 
-    gtk_idle_add((GtkFunction)hc_go_idle_proc, wb);
+    g_idle_add(hc_go_idle_proc, wb);
 }
 
 

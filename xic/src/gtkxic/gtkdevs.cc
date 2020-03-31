@@ -248,7 +248,7 @@ namespace {
             static void dv_cancel_proc(GtkWidget*, void*);
             static void dv_more_proc(GtkWidget*, void*);
             static void dv_switch_proc(GtkWidget*, void*);
-            static void dv_menu_proc(GtkWidget*, void*);
+            static void dv_menu_proc(GtkWidget*, gpointer*);
             static bool dv_comp_func(const char*, const char*);
 
             static int dv_redraw_idle(void*);
@@ -295,7 +295,7 @@ cSced::PopUpDevs(GRobject caller, ShowMode mode)
         }
     }
     else if (mode == MODE_OFF) {
-        if (Dv && Dv->Shell() && !Dv->Shell()->window) {
+        if (Dv && Dv->Shell() && !gtk_widget_get_window(Dv->Shell())) {
             // "delete window" received
             delete Dv;
         }
@@ -339,7 +339,7 @@ cSced::PopUpDevs(GRobject caller, ShowMode mode)
     GRX->SetPopupLocation(GRloc(LW_UL), Dv->Shell(), mainBag()->Viewport());
 
     if (Dv->Viewport())
-        Dv->SetWindow(Dv->Viewport()->window);
+        Dv->SetWindow(gtk_widget_get_window(Dv->Viewport()));
 }
 
 
@@ -374,6 +374,7 @@ sDv::sDv(GRobject caller, stringlist *wl)
     stringlist::sort(wl, dv_comp_func);
 
     wb_shell = gtk_NewPopup(mainBag(), "Device Palette", dv_cancel_proc, 0);
+    wb_window = gtk_widget_get_window(wb_shell);
     if (!wb_shell)
         return;
 
@@ -387,7 +388,7 @@ sDv::sDv(GRobject caller, stringlist *wl)
         dv_type = dvMenuPict;
         gd_viewport = gtk_drawing_area_new();
         gtk_widget_show(gd_viewport);
-        gtk_drawing_area_size(GTK_DRAWING_AREA(gd_viewport),
+        gtk_widget_set_size_request(gd_viewport,
             40, CELL_SIZE);
 
         GTKfont::setupFont(gd_viewport, FNT_SCREEN, true);
@@ -415,22 +416,22 @@ sDv::sDv(GRobject caller, stringlist *wl)
         gtk_window_set_default_size(GTK_WINDOW(wb_shell), width, -1);
 
         gtk_widget_add_events(gd_viewport, GDK_EXPOSURE_MASK);
-        gtk_signal_connect(GTK_OBJECT(gd_viewport), "expose-event",
-            GTK_SIGNAL_FUNC(dv_redraw_hdlr), 0);
+        g_signal_connect(G_OBJECT(gd_viewport), "expose-event",
+            G_CALLBACK(dv_redraw_hdlr), 0);
         gtk_widget_add_events(gd_viewport, GDK_BUTTON_PRESS_MASK);
-        gtk_signal_connect_after(GTK_OBJECT(gd_viewport), "button-press-event",
-            GTK_SIGNAL_FUNC(dv_btn_hdlr), 0);
+        g_signal_connect_after(G_OBJECT(gd_viewport), "button-press-event",
+            G_CALLBACK(dv_btn_hdlr), 0);
         gtk_widget_add_events(gd_viewport, GDK_POINTER_MOTION_MASK);
-        gtk_signal_connect(GTK_OBJECT(gd_viewport), "motion-notify-event",
-            GTK_SIGNAL_FUNC(dv_motion_hdlr), 0);
+        g_signal_connect(G_OBJECT(gd_viewport), "motion-notify-event",
+            G_CALLBACK(dv_motion_hdlr), 0);
         gtk_widget_add_events(gd_viewport, GDK_ENTER_NOTIFY_MASK);
-        gtk_signal_connect(GTK_OBJECT(gd_viewport), "enter-notify-event",
-            GTK_SIGNAL_FUNC(dv_enter_hdlr), 0);
+        g_signal_connect(G_OBJECT(gd_viewport), "enter-notify-event",
+            G_CALLBACK(dv_enter_hdlr), 0);
         gtk_widget_add_events(gd_viewport, GDK_LEAVE_NOTIFY_MASK);
-        gtk_signal_connect(GTK_OBJECT(gd_viewport), "leave-notify-event",
-            GTK_SIGNAL_FUNC(dv_leave_hdlr), 0);
-        gtk_signal_connect(GTK_OBJECT(gd_viewport), "style-set",
-            GTK_SIGNAL_FUNC(dv_font_change_hdlr), 0);
+        g_signal_connect(G_OBJECT(gd_viewport), "leave-notify-event",
+            G_CALLBACK(dv_leave_hdlr), 0);
+        g_signal_connect(G_OBJECT(gd_viewport), "style-set",
+            G_CALLBACK(dv_font_change_hdlr), 0);
 
         gtk_table_attach(GTK_TABLE(form), gd_viewport, 0, 1, 0, 1,
             (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -443,15 +444,15 @@ sDv::sDv(GRobject caller, stringlist *wl)
         gtk_widget_set_name(button, "More");
         dv_morebtn = button;
         // don't show unless needed
-        gtk_signal_connect(GTK_OBJECT(button), "clicked",
-            GTK_SIGNAL_FUNC(dv_more_proc), 0);
+        g_signal_connect(G_OBJECT(button), "clicked",
+            G_CALLBACK(dv_more_proc), 0);
         gtk_box_pack_start(GTK_BOX(vbox), button, true, true, 0);
 
         button = new_pixmap_button(dd_xpm, 0, false);
         gtk_widget_set_name(button, "Drop");
         gtk_widget_show(button);
-        gtk_signal_connect(GTK_OBJECT(button), "clicked",
-            GTK_SIGNAL_FUNC(dv_switch_proc), 0);
+        g_signal_connect(G_OBJECT(button), "clicked",
+            G_CALLBACK(dv_switch_proc), 0);
         gtk_box_pack_start(GTK_BOX(vbox), button, true, true, 0);
 
         gtk_table_attach(GTK_TABLE(form), vbox, 1, 2, 0, 1,
@@ -502,7 +503,7 @@ sDv::sDv(GRobject caller, stringlist *wl)
                 GtkWidget *head = gtk_menu_item_new_with_label(bf);
                 gtk_widget_set_name(head, bf);
                 gtk_widget_show(head);
-                gtk_menu_bar_append(GTK_MENU_BAR(menubar), head);
+                gtk_menu_shell_append(GTK_MENU_SHELL(menubar), head);
 
                 menu = gtk_menu_new();
                 gtk_menu_item_set_submenu(GTK_MENU_ITEM(head), menu);
@@ -510,11 +511,11 @@ sDv::sDv(GRobject caller, stringlist *wl)
             GtkWidget *ent = gtk_menu_item_new_with_label(ww->string);
             gtk_widget_set_name(ent, ww->string);
             gtk_widget_show(ent);
-            gtk_signal_connect(GTK_OBJECT(ent), "activate",
-                GTK_SIGNAL_FUNC(dv_menu_proc), 0);
-            gtk_object_set_user_data(GTK_OBJECT(ent), ww->string);
+            g_signal_connect(G_OBJECT(ent), "activate",
+                G_CALLBACK(dv_menu_proc), 0);
+            g_object_set_data (G_OBJECT(ent), (const gchar*)c, ww->string);
             ww->string = 0;
-            gtk_menu_append(GTK_MENU(menu), ent);
+            gtk_menu_shell_append(GTK_MENU_SHELL(menu), ent);
             lastc = c;
         }
         stringlist::destroy(wl);
@@ -522,8 +523,8 @@ sDv::sDv(GRobject caller, stringlist *wl)
         GtkWidget *button = new_pixmap_button(pict_xpm, 0, false);
         gtk_widget_set_name(button, "Style");
         gtk_widget_show(button);
-        gtk_signal_connect(GTK_OBJECT(button), "clicked",
-            GTK_SIGNAL_FUNC(dv_switch_proc), 0);
+        g_signal_connect(G_OBJECT(button), "clicked",
+            G_CALLBACK(dv_switch_proc), 0);
         gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
         gtk_table_attach(GTK_TABLE(form), frame, 0, 1, 0, 1,
@@ -542,28 +543,28 @@ sDv::sDv(GRobject caller, stringlist *wl)
         GtkWidget *head = gtk_menu_item_new_with_label("Devices");
         gtk_widget_set_name(head, "Devices");
         gtk_widget_show(head);
-        gtk_menu_bar_append(GTK_MENU_BAR(menubar), head);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menubar), head);
         GtkWidget *menu_d = gtk_menu_new();
         gtk_menu_item_set_submenu(GTK_MENU_ITEM(head), menu_d);
 
         head = gtk_menu_item_new_with_label("Sources");
         gtk_widget_set_name(head, "Sources");
         gtk_widget_show(head);
-        gtk_menu_bar_append(GTK_MENU_BAR(menubar), head);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menubar), head);
         GtkWidget *menu_s = gtk_menu_new();
         gtk_menu_item_set_submenu(GTK_MENU_ITEM(head), menu_s);
 
         head = gtk_menu_item_new_with_label("Macros");
         gtk_widget_set_name(head, "Macros");
         gtk_widget_show(head);
-        gtk_menu_bar_append(GTK_MENU_BAR(menubar), head);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menubar), head);
         GtkWidget *menu_m = gtk_menu_new();
         gtk_menu_item_set_submenu(GTK_MENU_ITEM(head), menu_m);
 
         head = gtk_menu_item_new_with_label("Terminals");
         gtk_widget_set_name(head, "Terminals");
         gtk_widget_show(head);
-        gtk_menu_bar_append(GTK_MENU_BAR(menubar), head);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menubar), head);
         GtkWidget *menu_t = gtk_menu_new();
         gtk_menu_item_set_submenu(GTK_MENU_ITEM(head), menu_t);
 
@@ -623,10 +624,10 @@ sDv::sDv(GRobject caller, stringlist *wl)
                 GtkWidget *ent = gtk_menu_item_new_with_label(ww->string);
                 gtk_widget_set_name(ent, ww->string);
                 gtk_widget_show(ent);
-                gtk_signal_connect(GTK_OBJECT(ent), "activate",
-                    GTK_SIGNAL_FUNC(dv_menu_proc), 0);
-                gtk_object_set_user_data(GTK_OBJECT(ent), ww->string);
-                gtk_menu_append(GTK_MENU(menu), ent);
+                g_signal_connect(G_OBJECT(ent), "activate",
+                    G_CALLBACK(dv_menu_proc), 0);
+                g_object_set_data (G_OBJECT(ent), (const gchar*)"activate", ww->string);
+                gtk_menu_shell_append(GTK_MENU_SHELL(menu), ent);
                 ww->string = 0;
             }
         }
@@ -635,8 +636,8 @@ sDv::sDv(GRobject caller, stringlist *wl)
         GtkWidget *button = new_pixmap_button(dda_xpm, 0, false);
         gtk_widget_set_name(button, "Style");
         gtk_widget_show(button);
-        gtk_signal_connect(GTK_OBJECT(button), "clicked",
-            GTK_SIGNAL_FUNC(dv_switch_proc), 0);
+        g_signal_connect(G_OBJECT(button), "clicked",
+            G_CALLBACK(dv_switch_proc), 0);
         gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
         gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 0, 1,
@@ -654,8 +655,8 @@ sDv::~sDv()
         GRX->SetStatus(dv_caller, false);
     delete [] dv_entries;
     if (wb_shell)
-        gtk_signal_disconnect_by_func(GTK_OBJECT(wb_shell),
-            GTK_SIGNAL_FUNC(dv_cancel_proc), wb_shell);
+        g_signal_handlers_disconnect_by_func(G_OBJECT(wb_shell),
+            (gpointer)dv_cancel_proc, wb_shell);
 }
 
 
@@ -668,17 +669,17 @@ sDv::activate(bool active)
     if (active) {
         if (!dv_active) {
             int x, y;
-            gdk_window_get_root_origin(mainBag()->Shell()->window, &x, &y);
-            gtk_widget_set_uposition(wb_shell, dv_px + x, dv_py + y);
+            gdk_window_get_root_origin(gtk_widget_get_window(mainBag()->Shell()), &x, &y);
+            gtk_widget_set_size_request(wb_shell, dv_px + x, dv_py + y);
             gtk_widget_show(wb_shell);
             dv_active = true;
         }
     }
     else {
         if (dv_active) {
-            gdk_window_get_root_origin(wb_shell->window, &dv_px, &dv_py);
+            gdk_window_get_root_origin(gtk_widget_get_window(wb_shell), &dv_px, &dv_py);
             int x, y;
-            gdk_window_get_root_origin(mainBag()->Shell()->window, &x, &y);
+            gdk_window_get_root_origin(gtk_widget_get_window(mainBag()->Shell()), &x, &y);
             dv_px -= x;
             dv_py -= y;
             gtk_widget_hide(wb_shell);
@@ -736,8 +737,7 @@ sDv::init_sizes()
     if (!mainBag())
         return (0);
 
-    int width;
-    gdk_window_get_size(mainBag()->Viewport()->window, &width, 0);
+    int width = gdk_window_get_width(gtk_widget_get_window(mainBag()->Viewport()));
     left += 40 + SPA;  // Button width is approx 40.
     if (left < width)
         width = left;
@@ -754,102 +754,110 @@ void
 sDv::render_cell(int which, bool selected)
 {
     SetColor(selected ? dv_selec : dv_backg);
-    gdk_draw_rectangle(gd_window, GC(), true,
-        dv_entries[which].x - dv_leftofst, SPA, dv_entries[which].width,
-        CELL_SIZE - 2*SPA);
-    CDcbin cbin;
-    if (OIfailed(CD()->OpenExisting(dv_entries[which].name, &cbin)))
-        return;
-    CDs *sdesc = cbin.elec();
-    if (!sdesc)
-        return;
-    CDs *syr = sdesc->symbolicRep(0);
-    if (syr)
-        sdesc = syr;
-    sdesc->computeBB();
-    BBox BB = *sdesc->BB();
-    int x = (BB.left + BB.right)/2;
-    int y = (BB.bottom + BB.top)/2;
 
-    int vp_height = CELL_SIZE - 2*SPA;
-    int vp_width = dv_entries[which].width - 2;
+    // cairo_region_t * cairo_region = cairo_region_create();
+    // GdkDrawingContext * drawing_context;
+    // drawing_context = gdk_window_begin_draw_frame (gd_window, cairo_region);
+    // cairo_t * cr = gdk_drawing_context_get_cairo_context (drawing_context);
 
-    WindowDesc wd;
-    wd.Attrib()->set_display_labels(Electrical, SLupright);
-    wd.SetWbag(DSP()->MainWdesc()->Wbag());
-    wd.SetWdraw(this);
+    // cairo_rectangle(cr,
+    //     dv_entries[which].x - dv_leftofst, SPA, dv_entries[which].width,
+    //     CELL_SIZE - 2*SPA);
+    // CDcbin cbin;
+    // if (OIfailed(CD()->OpenExisting(dv_entries[which].name, &cbin)))
+    //     return;
+    // CDs *sdesc = cbin.elec();
+    // if (!sdesc)
+    //     return;
+    // CDs *syr = sdesc->symbolicRep(0);
+    // if (syr)
+    //     sdesc = syr;
+    // sdesc->computeBB();
+    // BBox BB = *sdesc->BB();
+    // int x = (BB.left + BB.right)/2;
+    // int y = (BB.bottom + BB.top)/2;
 
-    wd.SetRatio(((double)vp_height)/DEVSIZE);
-    int height = (int)(vp_height/wd.Ratio());
-    wd.Window()->top = y + height/2;
-    wd.Window()->bottom = y - height/2;
-    // Shift a little for text placement compensation.
-    wd.Window()->left = BB.left - (int)(SPA/wd.Ratio());
-    wd.Window()->right = BB.right - (int)(SPA/wd.Ratio());
+    // int vp_height = CELL_SIZE - 2*SPA;
+    // int vp_width = dv_entries[which].width - 2;
 
-    wd.InitViewport(vp_width, vp_height);
-    *wd.ClipRect() = wd.Viewport();
+    // WindowDesc wd;
+    // wd.Attrib()->set_display_labels(Electrical, SLupright);
+    // wd.SetWbag(DSP()->MainWdesc()->Wbag());
+    // wd.SetWdraw(this);
 
-    GdkPixmap *pm = gdk_pixmap_new(gd_window,  vp_width, vp_height,
-        GRX->Visual()->depth);
-    // swap in the pixmap
-    GRobject window_bak = gd_window;
-    gd_window = pm;
+    // wd.SetRatio(((double)vp_height)/DEVSIZE);
+    // int height = (int)(vp_height/wd.Ratio());
+    // wd.Window()->top = y + height/2;
+    // wd.Window()->bottom = y - height/2;
+    // // Shift a little for text placement compensation.
+    // wd.Window()->left = BB.left - (int)(SPA/wd.Ratio());
+    // wd.Window()->right = BB.right - (int)(SPA/wd.Ratio());
 
-    SetColor(selected ? dv_selec : dv_backg);
-    SetFillpattern(0);
-    Box(0, 0, vp_width - 1, vp_height - 1);
+    // wd.InitViewport(vp_width, vp_height);
+    // *wd.ClipRect() = wd.Viewport();
 
-    DSP()->TPush();
-    SetColor(dv_foreg);
-    CDl *ld;
-    CDlgen lgen(DSP()->CurMode());
-    while ((ld = lgen.next()) != 0) {
-        if (ld->isInvisible() || ld->isNoInstView())
-            continue;
-        CDg gdesc;
-        gdesc.init_gen(sdesc, ld);
-        CDo *pointer;
-        while ((pointer = gdesc.next()) != 0) {
-            if (pointer->type() == CDBOX)
-                wd.ShowBox(&pointer->oBB(), ld->getAttrFlags(),
-                    dsp_prm(ld)->fill());
-            else if (pointer->type() == CDPOLYGON) {
-                const Poly po(((const CDpo*)pointer)->po_poly());
-                wd.ShowPolygon(&po, ld->getAttrFlags(), dsp_prm(ld)->fill(),
-                    &pointer->oBB());
-            }
-            else if (pointer->type() == CDWIRE) {
-                const Wire w(((const CDw*)pointer)->w_wire());
-                wd.ShowWire(&w, 0, 0);
-            }
-            else if (pointer->type() == CDLABEL) {
-                const Label la(((const CDla*)pointer)->la_label());
-                wd.ShowLabel(&la);
-            }
-        }
-    }
-    int fwid, fhei;
-    TextExtent(dv_entries[which].name, &fwid, &fhei);
-    x = 0;
-    y = vp_height - fhei;
-    SetColor(selected ? dv_selec : dv_backg);
-    BBox tBB(x, y+fhei, x+fwid, y);
-    Box(tBB.left, tBB.bottom, tBB.right,
-        tBB.bottom - (abs(tBB.height())*8)/10);
-    SetColor(dv_hlite);
-    Text(dv_entries[which].name, tBB.left, tBB.bottom, 0,
-        tBB.width(), abs(tBB.height()));
-    DSP()->TPop();
+    // cairo_surface_t *pm = cairo_image_surface_create(gd_window,  vp_width, vp_height);
+    // // swap in the pixmap
+    // GRobject window_bak = gd_window;
+    // gd_window = pm;
 
-    int xoff = dv_entries[which].x - dv_leftofst - 2;
-    int yoff = SPA;
+    // SetColor(selected ? dv_selec : dv_backg);
+    // SetFillpattern(0);
+    // Box(0, 0, vp_width - 1, vp_height - 1);
 
-    gdk_window_copy_area((GdkWindow*)window_bak, GC(),
-        xoff, yoff, (GdkWindow*)gd_window, 0, 0, vp_width, vp_height);
+    // DSP()->TPush();
+    // SetColor(dv_foreg);
+    // CDl *ld;
+    // CDlgen lgen(DSP()->CurMode());
+    // while ((ld = lgen.next()) != 0) {
+    //     if (ld->isInvisible() || ld->isNoInstView())
+    //         continue;
+    //     CDg gdesc;
+    //     gdesc.init_gen(sdesc, ld);
+    //     CDo *pointer;
+    //     while ((pointer = gdesc.next()) != 0) {
+    //         if (pointer->type() == CDBOX)
+    //             wd.ShowBox(&pointer->oBB(), ld->getAttrFlags(),
+    //                 dsp_prm(ld)->fill());
+    //         else if (pointer->type() == CDPOLYGON) {
+    //             const Poly po(((const CDpo*)pointer)->po_poly());
+    //             wd.ShowPolygon(&po, ld->getAttrFlags(), dsp_prm(ld)->fill(),
+    //                 &pointer->oBB());
+    //         }
+    //         else if (pointer->type() == CDWIRE) {
+    //             const Wire w(((const CDw*)pointer)->w_wire());
+    //             wd.ShowWire(&w, 0, 0);
+    //         }
+    //         else if (pointer->type() == CDLABEL) {
+    //             const Label la(((const CDla*)pointer)->la_label());
+    //             wd.ShowLabel(&la);
+    //         }
+    //     }
+    // }
+    // int fwid, fhei;
+    // TextExtent(dv_entries[which].name, &fwid, &fhei);
+    // x = 0;
+    // y = vp_height - fhei;
+    // SetColor(selected ? dv_selec : dv_backg);
+    // BBox tBB(x, y+fhei, x+fwid, y);
+    // Box(tBB.left, tBB.bottom, tBB.right,
+    //     tBB.bottom - (abs(tBB.height())*8)/10);
+    // SetColor(dv_hlite);
+    // Text(dv_entries[which].name, tBB.left, tBB.bottom, 0,
+    //     tBB.width(), abs(tBB.height()));
+    // DSP()->TPop();
 
-    gd_window = (GdkWindow*)window_bak;
-    gdk_pixmap_unref(pm);
+    // int xoff = dv_entries[which].x - dv_leftofst - 2;
+    // int yoff = SPA;
+
+    // gdk_window_copy_area((GdkWindow*)window_bak, GC(),
+    //     xoff, yoff, (GdkWindow*)gd_window, 0, 0, vp_width, vp_height);
+
+    // gdk_window_end_draw_frame(window, drawing_context);
+    // cairo_region_destroy(cairo_region);
+
+    // gd_window = (GdkWindow*)window_bak;
+    // g_object_unref(pm);
 }
 
 
@@ -901,12 +909,12 @@ sDv::show_selected(int which)
     xp.assign(0, dv_entries[which].x - SPA/2 - dv_leftofst, SPA/2 + h);
     xp.assign(1, xp.at(0).x, xp.at(0).y - h);
     xp.assign(2, xp.at(1).x + w, xp.at(1).y);
-    SetColor(gd_viewport->style->light[gd_viewport->state].pixel);
+    // SetColor(gd_viewport->style->light[gd_viewport->state].pixel);
     PolyLine(&xp, 3);
     xp.assign(0, dv_entries[which].x - SPA/2 - dv_leftofst, SPA/2 + h);
     xp.assign(1, xp.at(0).x + w, xp.at(0).y);
     xp.assign(2, xp.at(1).x, xp.at(1).y - h);
-    SetColor(gd_viewport->style->dark[gd_viewport->state].pixel);
+    // SetColor(gd_viewport->style->dark[gd_viewport->state].pixel);
     PolyLine(&xp, 3);
 }
 
@@ -928,12 +936,12 @@ sDv::show_unselected(int which)
     xp.assign(0, dv_entries[which].x - SPA/2 - dv_leftofst, SPA/2 + h);
     xp.assign(1, xp.at(0).x, xp.at(0).y - h);
     xp.assign(2, xp.at(1).x + w, xp.at(1).y);
-    SetColor(gd_viewport->style->dark[gd_viewport->state].pixel);
+    // SetColor(gd_viewport->style->dark[gd_viewport->state].pixel);
     PolyLine(&xp, 3);
     xp.assign(0, dv_entries[which].x - SPA/2 - dv_leftofst, SPA/2 + h);
     xp.assign(1, xp.at(0).x + w, xp.at(0).y);
     xp.assign(2, xp.at(1).x, xp.at(1).y - h);
-    SetColor(gd_viewport->style->light[gd_viewport->state].pixel);
+    // SetColor(gd_viewport->style->light[gd_viewport->state].pixel);
     PolyLine(&xp, 3);
 }
 
@@ -982,9 +990,9 @@ sDv::dv_switch_proc(GtkWidget*, void*)
 // Menu handler (MenuCateg and MenuAlpha only).
 //
 void
-sDv::dv_menu_proc(GtkWidget *caller, void*)
+sDv::dv_menu_proc(GtkWidget *caller, gpointer *user_data)
 {
-    char *string = (char*)gtk_object_get_user_data(GTK_OBJECT(caller));
+    char *string = (char*)g_object_get_data(G_OBJECT(caller), (const gchar*)user_data);
     if (XM()->IsDoingHelp()) {
         char tbuf[128];
         sprintf(tbuf, "dev:%s", string);
@@ -1032,29 +1040,28 @@ sDv::dv_comp_func(const char *p, const char *q)
 int
 sDv::dv_redraw_idle(void*)
 {
-    Dv->dv_leftofst = Dv->dv_entries[Dv->dv_leftindx].x - SPA;
-    int width;
-    gdk_window_get_size(Dv->gd_viewport->window, &width, 0);
-    int i;
-    for (i = Dv->dv_leftindx; i < Dv->dv_numdevs; i++) {
-        if (Dv->dv_entries[i].x - Dv->dv_leftofst +
-                Dv->dv_entries[i].width + SPA > width)
-            break;
-    }
-    if (i == Dv->dv_numdevs && Dv->dv_leftindx == 0) {
-        if (GTK_WIDGET_VISIBLE(Dv->dv_morebtn))
-            gtk_widget_hide(Dv->dv_morebtn);
-    }
-    else {
-        if (!GTK_WIDGET_VISIBLE(Dv->dv_morebtn))
-            gtk_widget_show(Dv->dv_morebtn);
-    }
-    Dv->dv_rightindx = i;
+    // Dv->dv_leftofst = Dv->dv_entries[Dv->dv_leftindx].x - SPA;
+    // int width = gdk_window_get_width(Dv->gtk_widget_get_window(gd_viewport));
+    // int i;
+    // for (i = Dv->dv_leftindx; i < Dv->dv_numdevs; i++) {
+    //     if (Dv->dv_entries[i].x - Dv->dv_leftofst +
+    //             Dv->dv_entries[i].width + SPA > width)
+    //         break;
+    // }
+    // if (i == Dv->dv_numdevs && Dv->dv_leftindx == 0) {
+    //     if (GTK_WIDGET_VISIBLE(Dv->dv_morebtn))
+    //         gtk_widget_hide(Dv->dv_morebtn);
+    // }
+    // else {
+    //     if (!GTK_WIDGET_VISIBLE(Dv->dv_morebtn))
+    //         gtk_widget_show(Dv->dv_morebtn);
+    // }
+    // Dv->dv_rightindx = i;
 
-    for (i = Dv->dv_leftindx; i < Dv->dv_rightindx; i++) {
-        Dv->render_cell(i, i == Dv->dv_pressed);
-        Dv->show_unselected(i);
-    }
+    // for (i = Dv->dv_leftindx; i < Dv->dv_rightindx; i++) {
+    //     Dv->render_cell(i, i == Dv->dv_pressed);
+    //     Dv->show_unselected(i);
+    // }
     return (false);
 }
 

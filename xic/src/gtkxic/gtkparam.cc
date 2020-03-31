@@ -84,7 +84,7 @@ void
 cMain::ShowParameters(const char*)
 {
     if (!id)
-        id = gtk_idle_add(print_idle, 0);
+        id = g_idle_add(print_idle, 0);
 }
 
 
@@ -112,24 +112,24 @@ cParam::cParam()
         GDK_BUTTON_PRESS_MASK |
         GDK_BUTTON_RELEASE_MASK |
         GDK_POINTER_MOTION_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "button-press-event",
-        GTK_SIGNAL_FUNC(readout_btn_hdlr), 0);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "button-release-event",
-        GTK_SIGNAL_FUNC(readout_btn_hdlr), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "button-press-event",
+        G_CALLBACK(readout_btn_hdlr), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "button-release-event",
+        G_CALLBACK(readout_btn_hdlr), 0);
     gtk_widget_add_events(gd_viewport, GDK_EXPOSURE_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "expose-event",
-        GTK_SIGNAL_FUNC(readout_redraw), 0);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "style-set",
-        GTK_SIGNAL_FUNC(readout_font_change), 0);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "motion-notify-event",
-        GTK_SIGNAL_FUNC(readout_motion_hdlr), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "expose-event",
+        G_CALLBACK(readout_redraw), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "style-set",
+        G_CALLBACK(readout_font_change), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "motion-notify-event",
+        G_CALLBACK(readout_motion_hdlr), 0);
     gtk_selection_add_targets(gd_viewport, GDK_SELECTION_PRIMARY, targets,
         n_targets);
 #ifndef WIN32
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "selection-clear-event",
-        GTK_SIGNAL_FUNC(readout_selection_clear), 0);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "selection-get",
-        GTK_SIGNAL_FUNC(readout_selection_get), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "selection-clear-event",
+        G_CALLBACK(readout_selection_clear), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "selection-get",
+        G_CALLBACK(readout_selection_get), 0);
 #endif
 
     GTKfont::setupFont(gd_viewport, FNT_SCREEN, true);
@@ -137,7 +137,7 @@ cParam::cParam()
     // Set size
     int wid = 600;
     int hei = GTKfont::stringHeight(gd_viewport, 0) + 2;
-    gtk_drawing_area_size(GTK_DRAWING_AREA(gd_viewport), wid, hei);
+    gtk_widget_set_size_request(gd_viewport, wid, hei);
 }
 
 
@@ -145,7 +145,7 @@ void
 cParam::print()
 {
     if (!gd_window)
-        gd_window = gd_viewport->window;
+        gd_window = gtk_widget_get_window(gd_viewport);
     unsigned long c1 = DSP()->Color(PromptTextColor);
     unsigned long c2 = DSP()->Color(PromptEditTextColor);
     int fwid, fhei;
@@ -269,24 +269,25 @@ cParam::print()
 void
 cParam::display(int start, int end)
 {
-    gd_window = gd_viewport->window;
+    gd_window = gtk_widget_get_window(gd_viewport);
     if (!gd_window)
         return;
 
     int winw, winh;
-    gdk_window_get_size(gd_window, &winw, &winh);
+    winw = gdk_window_get_width(gd_window);
+    winh = gdk_window_get_height(gd_window);
     if (winw != p_width || winh != p_height) {
         if (p_pm)
-            gdk_pixmap_unref(p_pm);
-        p_pm = gdk_pixmap_new(gd_window, winw, winh, GRX->Visual()->depth);
-        p_width = winw;
-        p_height = winh;
-        start = 0;
-        end = 256;
+            g_object_unref(p_pm);
+    //     p_pm = gdk_pixmap_new(gd_window, winw, winh, GRX->Visual()->depth);
+    //     p_width = winw;
+    //     p_height = winh;
+    //     start = 0;
+    //     end = 256;
     }
-    p_win_bak = gd_window;
-    gd_window = p_pm;
-    gd_viewport->window = gd_window;
+    // p_win_bak = gd_window;
+    // gd_window = p_pm;
+    // gtk_widget_get_window(gd_viewport) = gd_window;
 
     if (start == 0 && end == 256) {
         SetWindowBackground(DSP()->Color(PromptBackgroundColor));
@@ -296,11 +297,11 @@ cParam::display(int start, int end)
 
     p_text.display(this, start, end);
 
-    gdk_window_copy_area(p_win_bak, CpyGC(), 0, 0, gd_window,
-        0, 0, p_width, p_height);
-    gd_window = p_win_bak;
-    p_win_bak = 0;
-    gd_viewport->window = gd_window;
+    // gdk_window_copy_area(p_win_bak, CpyGC(), 0, 0, gd_window,
+    //     0, 0, p_width, p_height);
+    // gd_window = p_win_bak;
+    // p_win_bak = 0;
+    // gtk_widget_get_window(gd_viewport) = gd_window;
 }
 
 
@@ -487,17 +488,17 @@ cParam::readout_redraw(GtkWidget*, GdkEvent *event, void*)
     if (!Param())
         return (false);
     GdkEventExpose *pev = (GdkEventExpose*)event;
-    if (Param() && GDK_IS_DRAWABLE(Param()->gd_window)) {
-        GdkRectangle *rects;
-        int nrects;
-        gdk_region_get_rectangles(pev->region, &rects, &nrects);
-        for (int i = 0; i < nrects; i++) {
-            gdk_window_copy_area(Param()->gd_window, Param()->CpyGC(),
-                rects[i].x, rects[i].y, Param()->p_pm,
-                rects[i].x, rects[i].y, rects[i].width, rects[i].height);
-        }
-        g_free(rects);
-    }
+    // if (Param() && GDK_IS_DRAWABLE(Param()->gd_window)) {
+    //     GdkRectangle *rects;
+    //     int nrects;
+    //     gdk_region_get_rectangles(pev->region, &rects, &nrects);
+    //     for (int i = 0; i < nrects; i++) {
+    //         gdk_window_copy_area(Param()->gd_window, Param()->CpyGC(),
+    //             rects[i].x, rects[i].y, Param()->p_pm,
+    //             rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+    //     }
+    //     g_free(rects);
+    // }
 
     return (true);
 }
@@ -509,15 +510,15 @@ cParam::readout_redraw(GtkWidget*, GdkEvent *event, void*)
 void
 cParam::readout_font_change(GtkWidget*, void*, void*)
 {
-    if (Param() && GDK_IS_DRAWABLE(Param()->gd_window)) {
-        int fw, fh;
-        Param()->TextExtent(0, &fw, &fh);
-        int winw, winh;
-        gdk_window_get_size(Param()->gd_window, &winw, &winh);
-        gtk_drawing_area_size(GTK_DRAWING_AREA(Param()->gd_viewport), -1,
-            fh + 2);
-        Param()->print();
-    }
+    // if (Param() && GDK_IS_DRAWABLE(Param()->gd_window)) {
+    //     int fw, fh;
+    //     Param()->TextExtent(0, &fw, &fh);
+    //     int winw, winh;
+    //     gdk_window_get_size(Param()->gd_window, &winw, &winh);
+    //     gtk_widget_set_size_request(Param()->gd_viewport, -1,
+    //         fh + 2);
+    //     Param()->print();
+    // }
 }
 
 
@@ -537,7 +538,7 @@ void
 cParam::readout_selection_get(GtkWidget*, GtkSelectionData *selection_data,
     guint, guint, void*)
 {
-    if (selection_data->selection != GDK_SELECTION_PRIMARY)
+    if (gtk_selection_data_get_selection(selection_data) != GDK_SELECTION_PRIMARY)
         return;
     if (!Param())
         return;

@@ -135,7 +135,7 @@ namespace {
             GtkWidget *lp_tline;            // Tline menu entry
             GtkWidget *lp_antenna;          // Antenna menu entry
             GtkWidget *lp_nddt;             // NoDrcDataType menu entry
-            GtkItemFactory *lp_item_factory;
+            GtkUIManager *lp_item_factory;
 
             CDl *lp_ldesc;                  // current layer
             int lp_line_selected;           // number of line selected or -1
@@ -191,7 +191,7 @@ cMain::PopUpLayerParamEditor(GRobject caller, ShowMode mode, const char *msg,
 #define IFINIT(i, a, b, c, d, e) { \
     menu_items[i].path = (char*)a; \
     menu_items[i].accelerator = (char*)b; \
-    menu_items[i].callback = (GtkItemFactoryCallback)c; \
+    // menu_items[i].callback = (GtkUIManagerCallback)c; \
     menu_items[i].callback_action = d; \
     menu_items[i].item_type = (char*)e; \
     i++; }
@@ -242,247 +242,247 @@ sLpe::sLpe(GRobject c, const char *msg, const char *string)
     //
     // menu bar
     //
-    GtkItemFactoryEntry menu_items[50];
-    int nitems = 0;
+    // GtkUIManagerEntry menu_items[50];
+    // int nitems = 0;
 
-    IFINIT(nitems, "/_Edit", 0, 0, 0, "<Branch>");
-    IFINIT(nitems, "/Edit/_Edit", "<control>E", lp_edit_proc, 0, 0);
-    IFINIT(nitems, "/Edit/_Delete", "<control>D", lp_delete_proc, 0, 0);
-    IFINIT(nitems, "/Edit/_Undo", "<control>U", lp_undo_proc, 0, 0);
-    IFINIT(nitems, "/Edit/sep1", 0, 0, 0, "<Separator>");
-    IFINIT(nitems, "/Edit/_Quit", "<control>Q", lp_cancel_proc, 0, 0);
+    // IFINIT(nitems, "/_Edit", 0, 0, 0, "<Branch>");
+    // IFINIT(nitems, "/Edit/_Edit", "<control>E", lp_edit_proc, 0, 0);
+    // IFINIT(nitems, "/Edit/_Delete", "<control>D", lp_delete_proc, 0, 0);
+    // IFINIT(nitems, "/Edit/_Undo", "<control>U", lp_undo_proc, 0, 0);
+    // IFINIT(nitems, "/Edit/sep1", 0, 0, 0, "<Separator>");
+    // IFINIT(nitems, "/Edit/_Quit", "<control>Q", lp_cancel_proc, 0, 0);
 
-    IFINIT(nitems, "/Layer _Keywords", 0, 0, 0, "<Branch>");
+    // IFINIT(nitems, "/Layer _Keywords", 0, 0, 0, "<Branch>");
 
-    IFINIT(nitems, "/Layer Keywords/LppName", 0, lp_kw_proc,
-        lpLppName, 0);
-    IFINIT(nitems, "/Layer Keywords/Description", 0, lp_kw_proc,
-        lpDescription, 0);
-    IFINIT(nitems, "/Layer Keywords/NoSelect", 0, lp_kw_proc,
-        lpNoSelect, 0);
-    IFINIT(nitems, "/Layer Keywords/NoMerge", 0, lp_kw_proc,
-        lpNoMerge, 0);
-    IFINIT(nitems, "/Layer Keywords/WireActive", 0, lp_kw_proc,
-        lpWireActive, 0);
-    IFINIT(nitems, "/Layer Keywords/Symbolic", 0, lp_kw_proc,
-        lpSymbolic, 0);
+    // IFINIT(nitems, "/Layer Keywords/LppName", 0, lp_kw_proc,
+    //     lpLppName, 0);
+    // IFINIT(nitems, "/Layer Keywords/Description", 0, lp_kw_proc,
+    //     lpDescription, 0);
+    // IFINIT(nitems, "/Layer Keywords/NoSelect", 0, lp_kw_proc,
+    //     lpNoSelect, 0);
+    // IFINIT(nitems, "/Layer Keywords/NoMerge", 0, lp_kw_proc,
+    //     lpNoMerge, 0);
+    // IFINIT(nitems, "/Layer Keywords/WireActive", 0, lp_kw_proc,
+    //     lpWireActive, 0);
+    // IFINIT(nitems, "/Layer Keywords/Symbolic", 0, lp_kw_proc,
+    //     lpSymbolic, 0);
 
-    // The Invalid keyword is not really supported.  At best
-    // it can be provided in the tech file only.
+    // // The Invalid keyword is not really supported.  At best
+    // // it can be provided in the tech file only.
 
-    IFINIT(nitems, "/Layer Keywords/Invisible", 0, lp_kw_proc,
-        lpInvisible, 0);
-    IFINIT(nitems, "/Layer Keywords/NoInstView", 0, lp_kw_proc,
-        lpNoInstView, 0);
-    IFINIT(nitems, "/Layer Keywords/WireWidth", 0, lp_kw_proc,
-        lpWireWidth, 0);
-    IFINIT(nitems, "/Layer Keywords/CrossThick", 0, lp_kw_proc,
-        lpCrossThick, 0);
+    // IFINIT(nitems, "/Layer Keywords/Invisible", 0, lp_kw_proc,
+    //     lpInvisible, 0);
+    // IFINIT(nitems, "/Layer Keywords/NoInstView", 0, lp_kw_proc,
+    //     lpNoInstView, 0);
+    // IFINIT(nitems, "/Layer Keywords/WireWidth", 0, lp_kw_proc,
+    //     lpWireWidth, 0);
+    // IFINIT(nitems, "/Layer Keywords/CrossThick", 0, lp_kw_proc,
+    //     lpCrossThick, 0);
 
-    IFINIT(nitems, "/Extract _Keywords", 0, 0, 0, "<Branch>");
+    // IFINIT(nitems, "/Extract _Keywords", 0, 0, 0, "<Branch>");
 
-    IFINIT(nitems, "/Extract Keywords/Conductor", 0, lp_kw_proc,
-        exConductor, 0);
-    IFINIT(nitems, "/Extract Keywords/Routing", 0, lp_kw_proc,
-        exRouting, 0);
-    IFINIT(nitems, "/Extract Keywords/GroundPlane", 0, lp_kw_proc,
-        exGroundPlane, 0);
-    IFINIT(nitems, "/Extract Keywords/GroundPlaneClear", 0, lp_kw_proc,
-        exGroundPlaneClear, 0);
-    IFINIT(nitems, "/Extract Keywords/Contact", 0, lp_kw_proc,
-        exContact, 0);
-    IFINIT(nitems, "/Extract Keywords/Via", 0, lp_kw_proc,
-        exVia, 0);
-    IFINIT(nitems, "/Extract Keywords/Dielectric", 0, lp_kw_proc,
-        exDielectric, 0);
-    IFINIT(nitems, "/Extract Keywords/DarkField", 0, lp_kw_proc,
-        exDarkField, 0);
+    // IFINIT(nitems, "/Extract Keywords/Conductor", 0, lp_kw_proc,
+    //     exConductor, 0);
+    // IFINIT(nitems, "/Extract Keywords/Routing", 0, lp_kw_proc,
+    //     exRouting, 0);
+    // IFINIT(nitems, "/Extract Keywords/GroundPlane", 0, lp_kw_proc,
+    //     exGroundPlane, 0);
+    // IFINIT(nitems, "/Extract Keywords/GroundPlaneClear", 0, lp_kw_proc,
+    //     exGroundPlaneClear, 0);
+    // IFINIT(nitems, "/Extract Keywords/Contact", 0, lp_kw_proc,
+    //     exContact, 0);
+    // IFINIT(nitems, "/Extract Keywords/Via", 0, lp_kw_proc,
+    //     exVia, 0);
+    // IFINIT(nitems, "/Extract Keywords/Dielectric", 0, lp_kw_proc,
+    //     exDielectric, 0);
+    // IFINIT(nitems, "/Extract Keywords/DarkField", 0, lp_kw_proc,
+    //     exDarkField, 0);
 
-    IFINIT(nitems, "/Physical _Keywords", 0, 0, 0, "<Branch>");
+    // IFINIT(nitems, "/Physical _Keywords", 0, 0, 0, "<Branch>");
 
-    IFINIT(nitems, "/Physical Keywords/Planarize", 0, lp_kw_proc,
-        phPlanarize, 0);
-    IFINIT(nitems, "/Physical Keywords/Thickness", 0, lp_kw_proc,
-        phThickness, 0);
-    IFINIT(nitems, "/Physical Keywords/Rho", 0, lp_kw_proc,
-        phRho, 0);
-    IFINIT(nitems, "/Physical Keywords/Sigma", 0, lp_kw_proc,
-        phSigma, 0);
-    IFINIT(nitems, "/Physical Keywords/Rsh", 0, lp_kw_proc,
-        phRsh, 0);
-    IFINIT(nitems, "/Physical Keywords/EpsRel", 0, lp_kw_proc,
-        phEpsRel, 0);
-    IFINIT(nitems, "/Physical Keywords/Capacitance", 0, lp_kw_proc,
-        phCapacitance, 0);
-    IFINIT(nitems, "/Physical Keywords/Lambda", 0, lp_kw_proc,
-        phLambda, 0);
-    IFINIT(nitems, "/Physical Keywords/Tline", 0, lp_kw_proc,
-        phTline, 0);
-    IFINIT(nitems, "/Physical Keywords/Antenna", 0, lp_kw_proc,
-        phAntenna, 0);
+    // IFINIT(nitems, "/Physical Keywords/Planarize", 0, lp_kw_proc,
+    //     phPlanarize, 0);
+    // IFINIT(nitems, "/Physical Keywords/Thickness", 0, lp_kw_proc,
+    //     phThickness, 0);
+    // IFINIT(nitems, "/Physical Keywords/Rho", 0, lp_kw_proc,
+    //     phRho, 0);
+    // IFINIT(nitems, "/Physical Keywords/Sigma", 0, lp_kw_proc,
+    //     phSigma, 0);
+    // IFINIT(nitems, "/Physical Keywords/Rsh", 0, lp_kw_proc,
+    //     phRsh, 0);
+    // IFINIT(nitems, "/Physical Keywords/EpsRel", 0, lp_kw_proc,
+    //     phEpsRel, 0);
+    // IFINIT(nitems, "/Physical Keywords/Capacitance", 0, lp_kw_proc,
+    //     phCapacitance, 0);
+    // IFINIT(nitems, "/Physical Keywords/Lambda", 0, lp_kw_proc,
+    //     phLambda, 0);
+    // IFINIT(nitems, "/Physical Keywords/Tline", 0, lp_kw_proc,
+    //     phTline, 0);
+    // IFINIT(nitems, "/Physical Keywords/Antenna", 0, lp_kw_proc,
+    //     phAntenna, 0);
 
-    IFINIT(nitems, "/Convert _Keywords", 0, 0, 0, "<Branch>");
+    // IFINIT(nitems, "/Convert _Keywords", 0, 0, 0, "<Branch>");
 
-    IFINIT(nitems, "/Convert Keywords/StreamIn", 0, lp_kw_proc,
-        cvStreamIn, 0);
-    IFINIT(nitems, "/Convert Keywords/StreamOut", 0, lp_kw_proc,
-        cvStreamOut, 0);
-    IFINIT(nitems, "/Convert Keywords/NoDrcDataType", 0, lp_kw_proc,
-        cvNoDrcDataType, 0);
+    // IFINIT(nitems, "/Convert Keywords/StreamIn", 0, lp_kw_proc,
+    //     cvStreamIn, 0);
+    // IFINIT(nitems, "/Convert Keywords/StreamOut", 0, lp_kw_proc,
+    //     cvStreamOut, 0);
+    // IFINIT(nitems, "/Convert Keywords/NoDrcDataType", 0, lp_kw_proc,
+    //     cvNoDrcDataType, 0);
 
 
-    IFINIT(nitems, "/Global _Attributes", 0, 0, 0, "<Branch>");
-    IFINIT(nitems, "/Global Attributes/BoxLineStyle", 0, lp_attr_proc,
-        lpBoxLineStyle, 0);
-    IFINIT(nitems, "/Global Attributes/LayerReorderMode", 0, lp_attr_proc,
-        lpLayerReorderMode, 0);
-    IFINIT(nitems, "/Global Attributes/NoPlanarize", 0, lp_attr_proc,
-        lpNoPlanarize, 0);
-    IFINIT(nitems, "/Global Attributes/AntennaTotal", 0, lp_attr_proc,
-        lpAntennaTotal, 0);
-    IFINIT(nitems, "/Global Attributes/SubstrateEps", 0, lp_attr_proc,
-        lpSubstrateEps, 0);
-    IFINIT(nitems, "/Global Attributes/SubstrateThickness", 0, lp_attr_proc,
-        lpSubstrateThickness, 0);
+    // IFINIT(nitems, "/Global _Attributes", 0, 0, 0, "<Branch>");
+    // IFINIT(nitems, "/Global Attributes/BoxLineStyle", 0, lp_attr_proc,
+    //     lpBoxLineStyle, 0);
+    // IFINIT(nitems, "/Global Attributes/LayerReorderMode", 0, lp_attr_proc,
+    //     lpLayerReorderMode, 0);
+    // IFINIT(nitems, "/Global Attributes/NoPlanarize", 0, lp_attr_proc,
+    //     lpNoPlanarize, 0);
+    // IFINIT(nitems, "/Global Attributes/AntennaTotal", 0, lp_attr_proc,
+    //     lpAntennaTotal, 0);
+    // IFINIT(nitems, "/Global Attributes/SubstrateEps", 0, lp_attr_proc,
+    //     lpSubstrateEps, 0);
+    // IFINIT(nitems, "/Global Attributes/SubstrateThickness", 0, lp_attr_proc,
+    //     lpSubstrateThickness, 0);
 
-    IFINIT(nitems, "/_Help", 0, 0, 0, "<LastBranch>");
-    IFINIT(nitems, "/Help/_Help", "<control>H", lp_help_proc, 0, 0);
+    // IFINIT(nitems, "/_Help", 0, 0, 0, "<LastBranch>");
+    // IFINIT(nitems, "/Help/_Help", "<control>H", lp_help_proc, 0, 0);
 
-    GtkAccelGroup *accel_group = gtk_accel_group_new();
-    lp_item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<lp>",
-        accel_group);
-    GtkItemFactory *ifc = lp_item_factory;
-    for (int i = 0; i < nitems; i++)
-        gtk_item_factory_create_item(ifc, menu_items + i, 0, 2);
-    gtk_window_add_accel_group(GTK_WINDOW(lp_popup), accel_group);
+    // GtkAccelGroup *accel_group = gtk_accel_group_new();
+    // lp_item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<lp>",
+    //     accel_group);
+    // GtkUIManager *ifc = lp_item_factory;
+    // for (int i = 0; i < nitems; i++)
+    //     gtk_item_factory_create_item(ifc, menu_items + i, 0, 2);
+    // gtk_window_add_accel_group(GTK_WINDOW(lp_popup), accel_group);
 
-    GtkWidget *menubar = gtk_item_factory_get_widget(ifc, "<lp>");
-    gtk_widget_show(menubar);
+    // GtkWidget *menubar = gtk_item_factory_get_widget(ifc, "<lp>");
+    // gtk_widget_show(menubar);
 
-    lp_lyr_menu = gtk_item_factory_get_item(ifc, "/Layer Keywords");
-    gtk_widget_set_name(lp_lyr_menu, "/Layer Keywords");
-    lp_ext_menu = gtk_item_factory_get_item(ifc, "/Extract Keywords");
-    gtk_widget_set_name(lp_ext_menu, "/Extract Keywords");
-    lp_phy_menu = gtk_item_factory_get_item(ifc, "/Physical Keywords");
-    gtk_widget_set_name(lp_phy_menu, "/Physical Keywords");
-    lp_cvt_menu = gtk_item_factory_get_item(ifc, "/Convert Keywords");
-    gtk_widget_set_name(lp_cvt_menu, "/Convert Keywords");
+    // lp_lyr_menu = gtk_item_factory_get_item(ifc, "/Layer Keywords");
+    // gtk_widget_set_name(lp_lyr_menu, "/Layer Keywords");
+    // lp_ext_menu = gtk_item_factory_get_item(ifc, "/Extract Keywords");
+    // gtk_widget_set_name(lp_ext_menu, "/Extract Keywords");
+    // lp_phy_menu = gtk_item_factory_get_item(ifc, "/Physical Keywords");
+    // gtk_widget_set_name(lp_phy_menu, "/Physical Keywords");
+    // lp_cvt_menu = gtk_item_factory_get_item(ifc, "/Convert Keywords");
+    // gtk_widget_set_name(lp_cvt_menu, "/Convert Keywords");
 
-    gtk_widget_hide(lp_ext_menu);
-    gtk_widget_hide(lp_phy_menu);
-    gtk_widget_hide(lp_cvt_menu);
+    // gtk_widget_hide(lp_ext_menu);
+    // gtk_widget_hide(lp_phy_menu);
+    // gtk_widget_hide(lp_cvt_menu);
 
-    lp_edit = gtk_item_factory_get_widget(ifc, "/Edit/Edit");
-    lp_del = gtk_item_factory_get_widget(ifc, "/Edit/Delete");
-    lp_undo = gtk_item_factory_get_widget(ifc, "/Edit/Undo");
+    // lp_edit = gtk_item_factory_get_widget(ifc, "/Edit/Edit");
+    // lp_del = gtk_item_factory_get_widget(ifc, "/Edit/Delete");
+    // lp_undo = gtk_item_factory_get_widget(ifc, "/Edit/Undo");
 
-    lp_ivis = gtk_item_factory_get_widget(ifc, "/Layer Keywords/Invisible");
-    lp_nmrg = gtk_item_factory_get_widget(ifc, "/Layer Keywords/NoMerge");
-    lp_xthk = gtk_item_factory_get_widget(ifc, "/Layer Keywords/CrossThick");
-    lp_wira = gtk_item_factory_get_widget(ifc, "/Layer Keywords/WireActive");
-    lp_noiv = gtk_item_factory_get_widget(ifc, "/Layer Keywords/NoInstView");
+    // lp_ivis = gtk_item_factory_get_widget(ifc, "/Layer Keywords/Invisible");
+    // lp_nmrg = gtk_item_factory_get_widget(ifc, "/Layer Keywords/NoMerge");
+    // lp_xthk = gtk_item_factory_get_widget(ifc, "/Layer Keywords/CrossThick");
+    // lp_wira = gtk_item_factory_get_widget(ifc, "/Layer Keywords/WireActive");
+    // lp_noiv = gtk_item_factory_get_widget(ifc, "/Layer Keywords/NoInstView");
 
-    lp_darkfield = gtk_item_factory_get_widget(ifc,
-        "/Extract Keywords/DarkField");
+    // lp_darkfield = gtk_item_factory_get_widget(ifc,
+    //     "/Extract Keywords/DarkField");
 
-    lp_rho = gtk_item_factory_get_widget(ifc, "/Physical Keywords/Rho");
-    lp_sigma = gtk_item_factory_get_widget(ifc, "/Physical Keywords/Sigma");
-    lp_rsh = gtk_item_factory_get_widget(ifc, "/Physical Keywords/Rsh");
-    lp_epsrel = gtk_item_factory_get_widget(ifc, "/Physical Keywords/EpsRel");
-    lp_cap = gtk_item_factory_get_widget(ifc, "/Physical Keywords/Capacitance");
-    lp_lambda = gtk_item_factory_get_widget(ifc, "/Physical Keywords/Lambda");
-    lp_tline = gtk_item_factory_get_widget(ifc, "/Physical Keywords/Tline");
-    lp_antenna = gtk_item_factory_get_widget(ifc, "/Physical Keywords/Antenna");
+    // lp_rho = gtk_item_factory_get_widget(ifc, "/Physical Keywords/Rho");
+    // lp_sigma = gtk_item_factory_get_widget(ifc, "/Physical Keywords/Sigma");
+    // lp_rsh = gtk_item_factory_get_widget(ifc, "/Physical Keywords/Rsh");
+    // lp_epsrel = gtk_item_factory_get_widget(ifc, "/Physical Keywords/EpsRel");
+    // lp_cap = gtk_item_factory_get_widget(ifc, "/Physical Keywords/Capacitance");
+    // lp_lambda = gtk_item_factory_get_widget(ifc, "/Physical Keywords/Lambda");
+    // lp_tline = gtk_item_factory_get_widget(ifc, "/Physical Keywords/Tline");
+    // lp_antenna = gtk_item_factory_get_widget(ifc, "/Physical Keywords/Antenna");
 
-    lp_nddt = gtk_item_factory_get_widget(ifc,
-        "/Convert Keywords/NoDrcDataType");
+    // lp_nddt = gtk_item_factory_get_widget(ifc,
+    //     "/Convert Keywords/NoDrcDataType");
 
-    GtkWidget *widget = gtk_item_factory_get_item(ifc, "/Edit");
-    if (widget)
-        gtk_widget_set_name(widget, "Edit");
-    widget = gtk_item_factory_get_item(ifc, "/Help");
-    if (widget)
-        gtk_widget_set_name(widget, "Help");
+    // GtkWidget *widget = gtk_item_factory_get_item(ifc, "/Edit");
+    // if (widget)
+    //     gtk_widget_set_name(widget, "Edit");
+    // widget = gtk_item_factory_get_item(ifc, "/Help");
+    // if (widget)
+    //     gtk_widget_set_name(widget, "Help");
 
-    int rowcnt = 0;
-    gtk_table_attach(GTK_TABLE(form), menubar, 0, 1, rowcnt, rowcnt + 1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
-    rowcnt++;
+    // int rowcnt = 0;
+    // gtk_table_attach(GTK_TABLE(form), menubar, 0, 1, rowcnt, rowcnt + 1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
+    // rowcnt++;
 
-    GtkWidget *nbook = gtk_notebook_new();
-    gtk_widget_show(nbook);
-    gtk_signal_connect(GTK_OBJECT(nbook), "switch-page",
-        GTK_SIGNAL_FUNC(lp_page_change_proc), 0);
+    // GtkWidget *nbook = gtk_notebook_new();
+    // gtk_widget_show(nbook);
+    // g_signal_connect(G_OBJECT(nbook), "switch-page",
+    //     G_CALLBACK(lp_page_change_proc), 0);
 
-    gtk_table_attach(GTK_TABLE(form), nbook, 0, 1, rowcnt, rowcnt+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
-    rowcnt++;
+    // gtk_table_attach(GTK_TABLE(form), nbook, 0, 1, rowcnt, rowcnt+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
+    // rowcnt++;
 
-    GtkWidget *label = gtk_label_new("Layer");
-    gtk_widget_show(label);
-    GtkWidget *label1 = gtk_label_new("Edit basic parameters for layer");
-    gtk_widget_show(label1);
-    gtk_notebook_append_page(GTK_NOTEBOOK(nbook), label1, label);
+    // GtkWidget *label = gtk_label_new("Layer");
+    // gtk_widget_show(label);
+    // GtkWidget *label1 = gtk_label_new("Edit basic parameters for layer");
+    // gtk_widget_show(label1);
+    // gtk_notebook_append_page(GTK_NOTEBOOK(nbook), label1, label);
 
-    label = gtk_label_new("Extract");
-    gtk_widget_show(label);
-    label1 = gtk_label_new("Edit extraction parameters for layer");
-    gtk_widget_show(label1);
-    gtk_notebook_append_page(GTK_NOTEBOOK(nbook), label1, label);
+    // label = gtk_label_new("Extract");
+    // gtk_widget_show(label);
+    // label1 = gtk_label_new("Edit extraction parameters for layer");
+    // gtk_widget_show(label1);
+    // gtk_notebook_append_page(GTK_NOTEBOOK(nbook), label1, label);
 
-    label = gtk_label_new("Physical");
-    gtk_widget_show(label);
-    label1 = gtk_label_new("Edit physical attributes of layer");
-    gtk_widget_show(label1);
-    gtk_notebook_append_page(GTK_NOTEBOOK(nbook), label1, label);
+    // label = gtk_label_new("Physical");
+    // gtk_widget_show(label);
+    // label1 = gtk_label_new("Edit physical attributes of layer");
+    // gtk_widget_show(label1);
+    // gtk_notebook_append_page(GTK_NOTEBOOK(nbook), label1, label);
 
-    label = gtk_label_new("Convert");
-    gtk_widget_show(label);
-    label1 = gtk_label_new("Edit conversion parameters of layer");
-    gtk_widget_show(label1);
-    gtk_notebook_append_page(GTK_NOTEBOOK(nbook), label1, label);
+    // label = gtk_label_new("Convert");
+    // gtk_widget_show(label);
+    // label1 = gtk_label_new("Edit conversion parameters of layer");
+    // gtk_widget_show(label1);
+    // gtk_notebook_append_page(GTK_NOTEBOOK(nbook), label1, label);
 
-    GtkWidget *contr;
-    text_scrollable_new(&contr, &lp_text, FNT_FIXED);
+    // GtkWidget *contr;
+    // text_scrollable_new(&contr, &lp_text, FNT_FIXED);
 
-    gtk_widget_add_events(lp_text, GDK_BUTTON_PRESS_MASK);
-    gtk_signal_connect(GTK_OBJECT(lp_text), "button-press-event",
-        GTK_SIGNAL_FUNC(lp_text_btn_hdlr), 0);
-    gtk_signal_connect_after(GTK_OBJECT(lp_text), "realize",
-        GTK_SIGNAL_FUNC(text_realize_proc), 0);
+    // gtk_widget_add_events(lp_text, GDK_BUTTON_PRESS_MASK);
+    // g_signal_connect(G_OBJECT(lp_text), "button-press-event",
+    //     G_CALLBACK(lp_text_btn_hdlr), 0);
+    // g_signal_connect_after(G_OBJECT(lp_text), "realize",
+    //     G_CALLBACK(text_realize_proc), 0);
 
-    GtkTextBuffer *textbuf =
-        gtk_text_view_get_buffer(GTK_TEXT_VIEW(lp_text));
-    const char *bclr = GRpkgIf()->GetAttrColor(GRattrColorLocSel);
-    gtk_text_buffer_create_tag(textbuf, "primary", "background", bclr, NULL);
+    // GtkTextBuffer *textbuf =
+    //     gtk_text_view_get_buffer(GTK_TEXT_VIEW(lp_text));
+    // const char *bclr = GRpkgIf()->GetAttrColor(GRattrColorLocSel);
+    // gtk_text_buffer_create_tag(textbuf, "primary", "background", bclr, NULL);
 
-    gtk_widget_set_usize(lp_text, DEF_WIDTH, DEF_HEIGHT);
+    // gtk_widget_set_size_request(lp_text, DEF_WIDTH, DEF_HEIGHT);
 
-    // The font change pop-up uses this to redraw the widget
-    gtk_object_set_data(GTK_OBJECT(lp_text), "font_changed",
-        (void*)lp_font_changed);
+    // // The font change pop-up uses this to redraw the widget
+    // g_object_set_data(G_OBJECT(lp_text), "font_changed",
+    //     (void*)lp_font_changed);
 
-    gtk_table_attach(GTK_TABLE(form), contr, 0, 1, rowcnt, rowcnt + 1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 2, 2);
-    rowcnt++;
+    // gtk_table_attach(GTK_TABLE(form), contr, 0, 1, rowcnt, rowcnt + 1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 2, 2);
+    // rowcnt++;
 
-    lp_label = gtk_label_new("");
-    gtk_widget_show(lp_label);
-    GtkWidget *frame = gtk_frame_new(0);
-    gtk_widget_show(frame);
-    gtk_container_add(GTK_CONTAINER(frame), lp_label);
+    // lp_label = gtk_label_new("");
+    // gtk_widget_show(lp_label);
+    // GtkWidget *frame = gtk_frame_new(0);
+    // gtk_widget_show(frame);
+    // gtk_container_add(GTK_CONTAINER(frame), lp_label);
 
-    gtk_table_attach(GTK_TABLE(form), frame, 0, 1, rowcnt, rowcnt + 1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
-    rowcnt++;
+    // gtk_table_attach(GTK_TABLE(form), frame, 0, 1, rowcnt, rowcnt + 1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
+    // rowcnt++;
 
-    if (lp_undo)
-        gtk_widget_set_sensitive(lp_undo, false);
-    update(msg, string);
+    // if (lp_undo)
+    //     gtk_widget_set_sensitive(lp_undo, false);
+    // update(msg, string);
 }
 
 

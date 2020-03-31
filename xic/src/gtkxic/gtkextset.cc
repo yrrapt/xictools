@@ -144,7 +144,7 @@ namespace {
             GtkWidget *es_p4_apmrg;
             GtkWidget *es_p4_apfix;
 
-            GtkItemFactory *es_item_factory;
+            GtkUIManager *es_item_factory;
             int es_gpmhst;
             sDevDesc *es_devdesc;
 
@@ -276,8 +276,8 @@ sEs::sEs(GRobject c)
     GtkWidget *button = gtk_button_new_with_label("Help");
     gtk_widget_set_name(button, "Help");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_box_pack_end(GTK_BOX(row), button, false, false, 0);
     gtk_table_attach(GTK_TABLE(form), row, 0, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -305,24 +305,24 @@ sEs::sEs(GRobject c)
     button = gtk_button_new_with_label("Clear Extraction");
     gtk_widget_set_name(button, "ClearEx");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_box_pack_start(GTK_BOX(row), button, false, false, 0);
     es_clrex = button;
 
     button = gtk_button_new_with_label("Do Extraction");
     gtk_widget_set_name(button, "DoEx");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_box_pack_start(GTK_BOX(row), button, false, false, 0);
     es_doex = button;
 
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_cancel_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_cancel_proc), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
 
     gtk_table_attach(GTK_TABLE(form), row, 0, 2, rowcnt, rowcnt+1,
@@ -381,8 +381,8 @@ sEs::views_and_ops_page()
     gtk_widget_set_name(button, "ExtView");
     gtk_widget_show(button);
     es_p1_extview = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(tform), button, 0, 2, 0, 1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)(0), 2, 2);
@@ -391,8 +391,8 @@ sEs::views_and_ops_page()
     gtk_widget_set_name(button, "Groups");
     gtk_widget_show(button);
     es_p1_groups = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(tform), button, 2, 3, 0, 1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)(0), 2, 2);
@@ -401,8 +401,8 @@ sEs::views_and_ops_page()
     gtk_widget_set_name(button, "Nodes");
     gtk_widget_show(button);
     es_p1_nodes = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(tform), button, 3, 4, 0, 1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)(0), 2, 2);
@@ -411,8 +411,8 @@ sEs::views_and_ops_page()
     gtk_widget_set_name(button, "Terms");
     gtk_widget_show(button);
     es_p1_terms = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(tform), button, 0, 1, 1, 2,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)(0), 2, 2);
@@ -421,8 +421,8 @@ sEs::views_and_ops_page()
     gtk_widget_set_name(button, "CTOnly");
     gtk_widget_show(button);
     es_p1_cterms = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(tform), button, 2, 4, 1, 2,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)(0), 2, 2);
@@ -449,22 +449,22 @@ sEs::views_and_ops_page()
     button = gtk_button_new_with_label("Reset Terms");
     gtk_widget_set_name(button, "ResetTerms");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
 
     button = gtk_button_new_with_label("Reset Subckts");
     gtk_widget_set_name(button, "ResetSubs");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
 
     button = gtk_check_button_new_with_label("Recursive");
     gtk_widget_set_name(button, "Recurse");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
     es_p1_recurs = button;
 
@@ -476,8 +476,8 @@ sEs::views_and_ops_page()
     gtk_widget_set_name(button, "EditTerms");
     gtk_widget_show(button);
     es_p1_tedit = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(tform), button, 0, 1, 1, 2,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)(0), 2, 2);
@@ -486,8 +486,8 @@ sEs::views_and_ops_page()
     gtk_widget_set_name(button, "FindTerm");
     gtk_widget_show(button);
     es_p1_tfind = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(tform), button, 1, 2, 1, 2,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)(0), 2, 2);
@@ -519,22 +519,22 @@ sEs::views_and_ops_page()
     button = gtk_button_new_with_label("Groups/Nodes");
     gtk_widget_set_name(button, "GrpNodSel");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
 
     button = gtk_button_new_with_label("Devices");
     gtk_widget_set_name(button, "DevsSel");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
 
     button = gtk_button_new_with_label("Subckts");
     gtk_widget_set_name(button, "SubcSel");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
 
     gtk_table_attach(GTK_TABLE(form), row, 0, 2, rowcnt, rowcnt+1,
@@ -575,8 +575,8 @@ sEs::net_and_cell_page()
     GtkWidget *button = gtk_toggle_button_new_with_label("Apply");
     gtk_widget_set_name(button, "NlpSet");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_box_pack_start(GTK_BOX(row), button, false, false, 0);
     es_p2_nlprpset = button;
 
@@ -597,8 +597,8 @@ sEs::net_and_cell_page()
     button = gtk_toggle_button_new_with_label("Apply");
     gtk_widget_set_name(button, "NllSet");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_box_pack_start(GTK_BOX(row), button, false, false, 0);
     es_p2_nllset = button;
 
@@ -615,8 +615,8 @@ sEs::net_and_cell_page()
         "Ignore net name labels");
     gtk_widget_set_name(button, "IgnName");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -627,8 +627,8 @@ sEs::net_and_cell_page()
         "Find old-style net (term name) labels");
     gtk_widget_set_name(button, "OldName");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -639,8 +639,8 @@ sEs::net_and_cell_page()
         "Update net name labels after association");
     gtk_widget_set_name(button, "UpdName");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -651,8 +651,8 @@ sEs::net_and_cell_page()
         "Merge groups with matching net names");
     gtk_widget_set_name(button, "Merge");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -686,8 +686,8 @@ sEs::net_and_cell_page()
     button = gtk_check_button_new_with_label("Assume convex vias");
     gtk_widget_set_name(button, "ViaCvx");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(vform), button, 0, 1, vcnt, vcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -704,8 +704,8 @@ sEs::net_and_cell_page()
 
     GtkWidget *vsb = sb_vdepth.init(EXT_DEF_VIA_SEARCH_DEPTH, 0,
         CDMAXCALLDEPTH, 0);
-    sb_vdepth.connect_changed(GTK_SIGNAL_FUNC(es_val_changed), 0, "ViaDepth");
-    gtk_widget_set_usize(vsb, 80, -1);
+    // (es_val_changed, 0, "ViaDepth");
+    gtk_widget_set_size_request(vsb, 80, -1);
     gtk_box_pack_end(GTK_BOX(row), vsb, false, false, 0);
 
     gtk_table_attach(GTK_TABLE(vform), row, 1, 2, vcnt, vcnt+1,
@@ -717,8 +717,8 @@ sEs::net_and_cell_page()
         "Check for via connections between subcells");
     gtk_widget_set_name(button, "ViaSubs");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(vform), button, 0, 2, vcnt, vcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -745,8 +745,8 @@ sEs::net_and_cell_page()
         "Assume clear-field ground plane is global");
     gtk_widget_set_name(button, "GPGlob");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(tform), button, 0, 2, tcnt, tcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -757,15 +757,15 @@ sEs::net_and_cell_page()
         "Invert dark-field ground plane for multi-nets");
     gtk_widget_set_name(button, "GPMulti");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(tform), button, 0, 2, tcnt, tcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
     tcnt++;
     es_p2_gpmulti = button;
 
-    es_p2_gpmthd = gtk_option_menu_new();
+    es_p2_gpmthd = gtk_combo_box_text_new();
     gtk_widget_set_name(es_p2_gpmthd, "GPMthd");
     gtk_widget_show(es_p2_gpmthd);
     GtkWidget *menu = gtk_menu_new();
@@ -775,22 +775,22 @@ sEs::net_and_cell_page()
         "Invert in each cell, clip out subcells");
     gtk_widget_set_name(mi, "0");
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(es_gpinv_proc), 0);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(es_gpinv_proc), 0);
     mi = gtk_menu_item_new_with_label("Invert flat in top-level cell");
     gtk_widget_set_name(mi, "1");
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(es_gpinv_proc), 0);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(es_gpinv_proc), 0);
     mi = gtk_menu_item_new_with_label("Invert flat in all cells");
     gtk_widget_set_name(mi, "2");
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(es_gpinv_proc), 0);
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(es_p2_gpmthd), menu);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(es_gpinv_proc), 0);
+    // gtk_option_menu_set_menu(GTK_OPTION_MENU(es_p2_gpmthd), menu);
     gtk_table_attach(GTK_TABLE(tform), es_p2_gpmthd, 0, 2, tcnt, tcnt+1,
         (GtkAttachOptions)0,
         (GtkAttachOptions)0, 2, 2);
@@ -805,7 +805,7 @@ sEs::net_and_cell_page()
 #define IFINIT(i, a, b, c, d, e) { \
     menu_items[i].path = (char*)a; \
     menu_items[i].accelerator = (char*)b; \
-    menu_items[i].callback = (GtkItemFactoryCallback)c; \
+    menu_items[i].callback = (GtkUIManagerCallback)c; \
     menu_items[i].callback_action = d; \
     menu_items[i].item_type = (char*)e; \
     i++; }
@@ -822,244 +822,244 @@ sEs::devs_page()
     //
     // Menu bar.
     //
-    GtkItemFactoryEntry menu_items[50];
-    int nitems = 0;
+    // GtkUIManagerEntry menu_items[50];
+    // int nitems = 0;
 
-    IFINIT(nitems, "/_Device Block", 0, 0, 0, "<Branch>");
-    IFINIT(nitems, "/Device Block/New", 0, es_dev_menu_proc,
-        0, 0);
-    IFINIT(nitems, "/Device Block/Delete", 0, es_dev_menu_proc,
-        1, "<CheckItem>");
-    IFINIT(nitems, "/Device Block/Undelete", 0, es_dev_menu_proc,
-        2, 0);
-    IFINIT(nitems, "/Device Block/sep1", 0, 0, 0, "<Separator>");
-    GtkAccelGroup *accel_group = gtk_accel_group_new();
-    es_item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<extrc>",
-        accel_group);
-    for (int i = 0; i < nitems; i++)
-        gtk_item_factory_create_item(es_item_factory, menu_items + i, 0, 2);
-    gtk_window_add_accel_group(GTK_WINDOW(es_popup), accel_group);
+    // IFINIT(nitems, "/_Device Block", 0, 0, 0, "<Branch>");
+    // IFINIT(nitems, "/Device Block/New", 0, es_dev_menu_proc,
+    //     0, 0);
+    // IFINIT(nitems, "/Device Block/Delete", 0, es_dev_menu_proc,
+    //     1, "<CheckItem>");
+    // IFINIT(nitems, "/Device Block/Undelete", 0, es_dev_menu_proc,
+    //     2, 0);
+    // IFINIT(nitems, "/Device Block/sep1", 0, 0, 0, "<Separator>");
+    // GtkAccelGroup *accel_group = gtk_accel_group_new();
+    // es_item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<extrc>",
+    //     accel_group);
+    // for (int i = 0; i < nitems; i++)
+    //     gtk_item_factory_create_item(es_item_factory, menu_items + i, 0, 2);
+    // gtk_window_add_accel_group(GTK_WINDOW(es_popup), accel_group);
 
-    GtkWidget *menubar = gtk_item_factory_get_widget(es_item_factory,
-        "<extrc>");
-    gtk_widget_show(menubar);
+    // GtkWidget *menubar = gtk_item_factory_get_widget(es_item_factory,
+    //     "<extrc>");
+    // gtk_widget_show(menubar);
 
-    es_p2_menu = gtk_item_factory_get_item(es_item_factory, "/Device Block");
-    if (es_p2_menu)
-        es_p2_menu = GTK_MENU_ITEM(es_p2_menu)->submenu;
-    if (es_p2_menu) {
-        stringlist *dnames = EX()->listDevices();
-        for (stringlist *sl = dnames; sl; sl = sl->next) {
-            const char *t = sl->string;
-            char *nm = lstring::gettok(&t);
-            char *pf = lstring::gettok(&t);
-            sDevDesc *d = EX()->findDevice(nm, pf);
-            delete [] nm;
-            delete [] pf;
+    // es_p2_menu = gtk_item_factory_get_item(es_item_factory, "/Device Block");
+    // if (es_p2_menu)
+    //     es_p2_menu = GTK_MENU_ITEM(es_p2_menu)->submenu;
+    // if (es_p2_menu) {
+    //     stringlist *dnames = EX()->listDevices();
+    //     for (stringlist *sl = dnames; sl; sl = sl->next) {
+    //         const char *t = sl->string;
+    //         char *nm = lstring::gettok(&t);
+    //         char *pf = lstring::gettok(&t);
+    //         sDevDesc *d = EX()->findDevice(nm, pf);
+    //         delete [] nm;
+    //         delete [] pf;
 
-            if (d) {
-                GtkWidget *mi = gtk_menu_item_new_with_label(sl->string);
-                gtk_widget_show(mi);
-                gtk_signal_connect(GTK_OBJECT(mi), "activate",
-                    GTK_SIGNAL_FUNC(es_dev_menu_proc), d);
-                gtk_menu_append(GTK_MENU(es_p2_menu), mi);
-            }
-        }
-        stringlist::destroy(dnames);
-    }
+    //         if (d) {
+    //             GtkWidget *mi = gtk_menu_item_new_with_label(sl->string);
+    //             gtk_widget_show(mi);
+    //             g_signal_connect(G_OBJECT(mi), "activate",
+    //                 G_CALLBACK(es_dev_menu_proc), d);
+    //             gtk_menu_shell_append(GTK_MENU_SHELL(es_p2_menu), mi);
+    //         }
+    //     }
+    //     stringlist::destroy(dnames);
+    // }
 
-    es_p2_delblk =
-        gtk_item_factory_get_widget(es_item_factory, "/Device Block/Delete");
-    es_p2_undblk =
-        gtk_item_factory_get_widget(es_item_factory, "/Device Block/Undelete");
-    gtk_widget_set_sensitive(es_p2_undblk, false);
+    // es_p2_delblk =
+    //     gtk_item_factory_get_widget(es_item_factory, "/Device Block/Delete");
+    // es_p2_undblk =
+    //     gtk_item_factory_get_widget(es_item_factory, "/Device Block/Undelete");
+    // gtk_widget_set_sensitive(es_p2_undblk, false);
 
-    gtk_table_attach(GTK_TABLE(form), menubar, 0, 2, rowcnt, rowcnt+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
-    rowcnt++;
+    // gtk_table_attach(GTK_TABLE(form), menubar, 0, 2, rowcnt, rowcnt+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
+    // rowcnt++;
 
-    //
-    // Check boxes.
-    //
-    GtkWidget *button = gtk_check_button_new_with_label(
-        "Don't merge series devices");
-    gtk_widget_set_name(button, "NoSeries");
-    gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
-    gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
-    rowcnt++;
-    es_p3_noseries = button;
+    // //
+    // // Check boxes.
+    // //
+    // GtkWidget *button = gtk_check_button_new_with_label(
+    //     "Don't merge series devices");
+    // gtk_widget_set_name(button, "NoSeries");
+    // gtk_widget_show(button);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     G_CALLBACK(es_action), 0);
+    // gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
+    // rowcnt++;
+    // es_p3_noseries = button;
 
-    button = gtk_check_button_new_with_label("Don't merge parallel devices");
-    gtk_widget_set_name(button, "NoPara");
-    gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
-    gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
-    rowcnt++;
-    es_p3_nopara = button;
+    // button = gtk_check_button_new_with_label("Don't merge parallel devices");
+    // gtk_widget_set_name(button, "NoPara");
+    // gtk_widget_show(button);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     G_CALLBACK(es_action), 0);
+    // gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
+    // rowcnt++;
+    // es_p3_nopara = button;
 
-    button = gtk_check_button_new_with_label(
-        "Include devices with terminals shorted");
-    gtk_widget_set_name(button, "KeepShrt");
-    gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
-    gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
-    rowcnt++;
-    es_p3_keepshrt = button;
+    // button = gtk_check_button_new_with_label(
+    //     "Include devices with terminals shorted");
+    // gtk_widget_set_name(button, "KeepShrt");
+    // gtk_widget_show(button);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     G_CALLBACK(es_action), 0);
+    // gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
+    // rowcnt++;
+    // es_p3_keepshrt = button;
 
-    button = gtk_check_button_new_with_label(
-        "Don't merge devices with terminals shorted");
-    gtk_widget_set_name(button, "NoMrgShrt");
-    gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
-    gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
-    rowcnt++;
-    es_p3_nomrgshrt = button;
+    // button = gtk_check_button_new_with_label(
+    //     "Don't merge devices with terminals shorted");
+    // gtk_widget_set_name(button, "NoMrgShrt");
+    // gtk_widget_show(button);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     G_CALLBACK(es_action), 0);
+    // gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
+    // rowcnt++;
+    // es_p3_nomrgshrt = button;
 
-    button = gtk_check_button_new_with_label(
-        "Skip device parameter measurement");
-    gtk_widget_set_name(button, "NoMeas");
-    gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
-    gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
-    rowcnt++;
-    es_p3_nomeas = button;
+    // button = gtk_check_button_new_with_label(
+    //     "Skip device parameter measurement");
+    // gtk_widget_set_name(button, "NoMeas");
+    // gtk_widget_show(button);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     G_CALLBACK(es_action), 0);
+    // gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
+    // rowcnt++;
+    // es_p3_nomeas = button;
 
-    button = gtk_check_button_new_with_label(
-        "Use measurement results cache property");
-    gtk_widget_set_name(button, "UseCache");
-    gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
-    gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
-    rowcnt++;
-    es_p3_usecache = button;
+    // button = gtk_check_button_new_with_label(
+    //     "Use measurement results cache property");
+    // gtk_widget_set_name(button, "UseCache");
+    // gtk_widget_show(button);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     G_CALLBACK(es_action), 0);
+    // gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
+    // rowcnt++;
+    // es_p3_usecache = button;
 
-    button = gtk_check_button_new_with_label(
-        "Don't read measurement results from property");
-    gtk_widget_set_name(button, "NoRdCache");
-    gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
-    gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
-    rowcnt++;
-    es_p3_nordcache = button;
+    // button = gtk_check_button_new_with_label(
+    //     "Don't read measurement results from property");
+    // gtk_widget_set_name(button, "NoRdCache");
+    // gtk_widget_show(button);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     G_CALLBACK(es_action), 0);
+    // gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
+    // rowcnt++;
+    // es_p3_nordcache = button;
 
-    GtkWidget *sep = gtk_hseparator_new();
-    gtk_widget_show(sep);
-    gtk_table_attach(GTK_TABLE(form), sep, 0, 2, rowcnt, rowcnt+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
-    rowcnt++;
+    // GtkWidget *sep = gtk_hseparator_new();
+    // gtk_widget_show(sep);
+    // gtk_table_attach(GTK_TABLE(form), sep, 0, 2, rowcnt, rowcnt+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
+    // rowcnt++;
 
-    //
-    // RL solver group.
-    //
-    GtkWidget *frame = gtk_frame_new("Resistor/Inductor Extraction");
-    gtk_widget_show(frame);
-    gtk_table_attach(GTK_TABLE(form), frame, 0, 2, rowcnt, rowcnt+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL), 2, 2);
-    rowcnt++;
-    int rlcnt = 0;
+    // //
+    // // RL solver group.
+    // //
+    // GtkWidget *frame = gtk_frame_new("Resistor/Inductor Extraction");
+    // gtk_widget_show(frame);
+    // gtk_table_attach(GTK_TABLE(form), frame, 0, 2, rowcnt, rowcnt+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL), 2, 2);
+    // rowcnt++;
+    // int rlcnt = 0;
 
-    GtkWidget *rlform = gtk_table_new(2, 1, false);
-    gtk_widget_show(rlform);
-    gtk_container_set_border_width(GTK_CONTAINER(rlform), 2);
-    gtk_container_add(GTK_CONTAINER(frame), rlform);
+    // GtkWidget *rlform = gtk_table_new(2, 1, false);
+    // gtk_widget_show(rlform);
+    // gtk_container_set_border_width(GTK_CONTAINER(rlform), 2);
+    // gtk_container_add(GTK_CONTAINER(frame), rlform);
 
-    GtkWidget *row = gtk_hbox_new(false, 2);
-    gtk_widget_show(row);
+    // GtkWidget *row = gtk_hbox_new(false, 2);
+    // gtk_widget_show(row);
 
-    button = gtk_check_button_new_with_label("Set/use fixed grid size");
-    gtk_widget_set_name(button, "DeltaSet");
-    gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
-    gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
-    es_p3_deltaset = button;
+    // button = gtk_check_button_new_with_label("Set/use fixed grid size");
+    // gtk_widget_set_name(button, "DeltaSet");
+    // gtk_widget_show(button);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     G_CALLBACK(es_action), 0);
+    // gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
+    // es_p3_deltaset = button;
 
-    int ndgt = CD()->numDigits();
-    GtkWidget *sb = sb_delta.init(0.01, 0.01, 1000.0, ndgt);
-    sb_delta.connect_changed(GTK_SIGNAL_FUNC(es_val_changed), 0, "Delta");
-    gtk_widget_set_usize(sb, 80, -1);
-    gtk_box_pack_end(GTK_BOX(row), sb, false, false, 0);
+    // int ndgt = CD()->numDigits();
+    // GtkWidget *sb = sb_delta.init(0.01, 0.01, 1000.0, ndgt);
+    // // (es_val_changed, 0, "Delta");
+    // gtk_widget_set_size_request(sb, 80, -1);
+    // gtk_box_pack_end(GTK_BOX(row), sb, false, false, 0);
 
-    gtk_table_attach(GTK_TABLE(rlform), row, 0, 2, rlcnt, rlcnt+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
-    rlcnt++;
+    // gtk_table_attach(GTK_TABLE(rlform), row, 0, 2, rlcnt, rlcnt+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
+    // rlcnt++;
 
-    button = gtk_check_button_new_with_label("Try to tile");
-    gtk_widget_set_name(button, "TryTile");
-    gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
-    gtk_table_attach(GTK_TABLE(rlform), button, 0, 1, rlcnt, rlcnt+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
-    es_p3_trytile = button;
+    // button = gtk_check_button_new_with_label("Try to tile");
+    // gtk_widget_set_name(button, "TryTile");
+    // gtk_widget_show(button);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     G_CALLBACK(es_action), 0);
+    // gtk_table_attach(GTK_TABLE(rlform), button, 0, 1, rlcnt, rlcnt+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
+    // es_p3_trytile = button;
 
-    row = gtk_hbox_new(false, 2);
-    gtk_widget_show(row);
+    // row = gtk_hbox_new(false, 2);
+    // gtk_widget_show(row);
 
-    GtkWidget *label = gtk_label_new("Maximum tile count per device");
-    gtk_widget_show(label);
-    gtk_misc_set_padding(GTK_MISC(label), 2, 2);
-    gtk_box_pack_start(GTK_BOX(row), label, true, true, 0);
-    es_p3_lmax = label;
+    // GtkWidget *label = gtk_label_new("Maximum tile count per device");
+    // gtk_widget_show(label);
+    // gtk_misc_set_padding(GTK_MISC(label), 2, 2);
+    // gtk_box_pack_start(GTK_BOX(row), label, true, true, 0);
+    // es_p3_lmax = label;
 
-    sb = sb_maxpts.init(1000.0, 1000.0, 100000.0, 0);
-    sb_maxpts.connect_changed(GTK_SIGNAL_FUNC(es_val_changed), 0, "MaxPts");
-    gtk_widget_set_usize(sb, 80, -1);
-    gtk_box_pack_end(GTK_BOX(row), sb, false, false, 0);
+    // sb = sb_maxpts.init(1000.0, 1000.0, 100000.0, 0);
+    // // (es_val_changed, 0, "MaxPts");
+    // gtk_widget_set_size_request(sb, 80, -1);
+    // gtk_box_pack_end(GTK_BOX(row), sb, false, false, 0);
 
-    gtk_table_attach(GTK_TABLE(rlform), row, 1, 2, rlcnt, rlcnt+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
-    rlcnt++;
+    // gtk_table_attach(GTK_TABLE(rlform), row, 1, 2, rlcnt, rlcnt+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
+    // rlcnt++;
 
-    row = gtk_hbox_new(false, 2);
-    gtk_widget_show(row);
+    // row = gtk_hbox_new(false, 2);
+    // gtk_widget_show(row);
 
-    label = gtk_label_new("Set fixed per-device grid cell count");
-    gtk_widget_show(label);
-    gtk_misc_set_padding(GTK_MISC(label), 2, 2);
-    gtk_box_pack_start(GTK_BOX(row), label, true, true, 0);
-    es_p3_lgrid = label;
+    // label = gtk_label_new("Set fixed per-device grid cell count");
+    // gtk_widget_show(label);
+    // gtk_misc_set_padding(GTK_MISC(label), 2, 2);
+    // gtk_box_pack_start(GTK_BOX(row), label, true, true, 0);
+    // es_p3_lgrid = label;
 
-    sb = sb_gridpts.init(10.0, 10.0, 100000.0, 0);
-    sb_gridpts.connect_changed(GTK_SIGNAL_FUNC(es_val_changed), 0, "GridPts");
-    gtk_widget_set_usize(sb, 80, -1);
-    gtk_box_pack_end(GTK_BOX(row), sb, false, false, 0);
+    // sb = sb_gridpts.init(10.0, 10.0, 100000.0, 0);
+    // // (es_val_changed, 0, "GridPts");
+    // gtk_widget_set_size_request(sb, 80, -1);
+    // gtk_box_pack_end(GTK_BOX(row), sb, false, false, 0);
 
-    gtk_table_attach(GTK_TABLE(rlform), row, 0, 2, rlcnt, rlcnt+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
+    // gtk_table_attach(GTK_TABLE(rlform), row, 0, 2, rlcnt, rlcnt+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
 
-    GtkWidget *tab_label = gtk_label_new("Device\nConfig");
-    gtk_widget_show(tab_label);
-    gtk_notebook_append_page(GTK_NOTEBOOK(es_notebook), form, tab_label);
+    // GtkWidget *tab_label = gtk_label_new("Device\nConfig");
+    // gtk_widget_show(tab_label);
+    // gtk_notebook_append_page(GTK_NOTEBOOK(es_notebook), form, tab_label);
 }
 
 
@@ -1084,8 +1084,8 @@ sEs::misc_page()
     GtkWidget *button = gtk_toggle_button_new_with_label("Apply");
     gtk_widget_set_name(button, "UseKeys");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_box_pack_start(GTK_BOX(row), button, false, false, 0);
     es_p4_flkeyset = button;
 
@@ -1102,8 +1102,8 @@ sEs::misc_page()
         "Extract opaque cells, ignore OPAQUE flag");
     gtk_widget_set_name(button, "Opaque");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -1114,8 +1114,8 @@ sEs::misc_page()
         "Be very verbose on prompt line during extraction.");
     gtk_widget_set_name(button, "Verbose");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -1131,8 +1131,8 @@ sEs::misc_page()
     button = gtk_toggle_button_new_with_label("Apply");
     gtk_widget_set_name(button, "GlbSet");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_box_pack_start(GTK_BOX(row), button, false, false, 0);
     es_p4_glbexset = button;
 
@@ -1165,8 +1165,8 @@ sEs::misc_page()
         "Don't run symmetry trials in association");
     gtk_widget_set_name(button, "NoPerm");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(aform), button, 0, 2, arowcnt, arowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -1177,8 +1177,8 @@ sEs::misc_page()
         "Logically merge physical contacts for split net handling");
     gtk_widget_set_name(button, "MergePC");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(aform), button, 0, 2, arowcnt, arowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -1189,8 +1189,8 @@ sEs::misc_page()
         "Apply post-association permutation fix");
     gtk_widget_set_name(button, "PrmFix");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(es_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(es_action), 0);
     gtk_table_attach(GTK_TABLE(aform), button, 0, 2, arowcnt, arowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -1206,8 +1206,8 @@ sEs::misc_page()
     gtk_box_pack_start(GTK_BOX(row), label, true, true, 0);
 
     GtkWidget *sb = sb_loop.init(EXT_DEF_LVS_LOOP_MAX, 0.0, 1000000.0, 0);
-    sb_loop.connect_changed(GTK_SIGNAL_FUNC(es_val_changed), 0, "Loop");
-    gtk_widget_set_usize(sb, 80, -1);
+    // (es_val_changed, 0, "Loop");
+    gtk_widget_set_size_request(sb, 80, -1);
     gtk_box_pack_end(GTK_BOX(row), sb, false, false, 0);
 
     gtk_table_attach(GTK_TABLE(aform), row, 1, 2, arowcnt, arowcnt+1,
@@ -1224,8 +1224,8 @@ sEs::misc_page()
     gtk_box_pack_start(GTK_BOX(row), label, true, true, 0);
 
     sb = sb_iters.init(EXT_DEF_LVS_ITER_MAX, 10.0, 1000000.0, 0);
-    sb_iters.connect_changed(GTK_SIGNAL_FUNC(es_val_changed), 0, "Iters");
-    gtk_widget_set_usize(sb, 80, -1);
+    // (es_val_changed, 0, "Iters");
+    gtk_widget_set_size_request(sb, 80, -1);
     gtk_box_pack_end(GTK_BOX(row), sb, false, false, 0);
 
     gtk_table_attach(GTK_TABLE(aform), row, 1, 2, arowcnt, arowcnt+1,
@@ -1306,8 +1306,8 @@ sEs::update()
         CDvdb()->getVariable(VA_GroundPlaneMulti) != 0);
 
     if (es_gpmhst != (int)Tech()->GroundPlaneMode())
-        gtk_option_menu_set_history(GTK_OPTION_MENU(es_p2_gpmthd),
-            Tech()->GroundPlaneMode());
+        // gtk_option_menu_set_history(GTK_OPTION_MENU(es_p2_gpmthd),
+        //    Tech()->GroundPlaneMode());
 
     // page 3
     GRX->SetStatus(es_p3_noseries,
@@ -1899,7 +1899,7 @@ sEs::es_gpinv_proc(GtkWidget *caller, void*)
 void
 sEs::dev_menu_upd()
 {
-    GList *gl = gtk_container_children(GTK_CONTAINER(es_p2_menu));
+    GList *gl = gtk_container_get_children(GTK_CONTAINER(es_p2_menu));
     int cnt = 0;
     for (GList *l = gl; l; l = l->next, cnt++) {
         if (cnt > 3)  // ** skip first four entries **
@@ -1919,9 +1919,9 @@ sEs::dev_menu_upd()
         if (d) {
             GtkWidget *mi = gtk_menu_item_new_with_label(sl->string);
             gtk_widget_show(mi);
-            gtk_signal_connect(GTK_OBJECT(mi), "activate",
-                GTK_SIGNAL_FUNC(es_dev_menu_proc), d);
-            gtk_menu_append(GTK_MENU(es_p2_menu), mi);
+            g_signal_connect(G_OBJECT(mi), "activate",
+                G_CALLBACK(es_dev_menu_proc), d);
+            gtk_menu_shell_append(GTK_MENU_SHELL(es_p2_menu), mi);
         }
     }
     stringlist::destroy(dnames);

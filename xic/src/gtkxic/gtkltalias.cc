@@ -76,7 +76,7 @@ namespace {
             GRaffirmPopup *la_affirm;
             GRledPopup *la_line_edit;
             GtkWidget *la_list;
-            GtkItemFactory *la_factory;
+            GtkUIManager *la_factory;
             GRobject la_calling_btn;
             int la_row;
             bool la_show_dec;
@@ -130,7 +130,7 @@ cMain::PopUpLayerAliases(GRobject caller, ShowMode mode)
 #define IFINIT(i, a, b, c, d, e) { \
     menu_items[i].path = (char*)a; \
     menu_items[i].accelerator = (char*)b; \
-    menu_items[i].callback = (GtkItemFactoryCallback)c; \
+    menu_items[i].callback = (GtkUIManagerCallback)c; \
     menu_items[i].callback_action = d; \
     menu_items[i].item_type = (char*)e; \
     i++; }
@@ -148,128 +148,129 @@ sLA::sLA(GRobject c)
     la_no_select = false;
 
     wb_shell = gtk_NewPopup(0, "Layer Aliases", la_cancel_proc, 0);
+    wb_window = gtk_widget_get_window(wb_shell);
     if (!wb_shell)
         return;
     GtkWidget *form = gtk_table_new(1, 1, false);
     gtk_widget_show(form);
     gtk_container_add(GTK_CONTAINER(wb_shell), form);
 
-    GtkItemFactoryEntry menu_items[20];
-    int nitems = 0;
+    // GtkUIManagerEntry menu_items[20];
+    // int nitems = 0;
 
-    IFINIT(nitems, "/_File", 0, 0, 0, "<Branch>")
-    IFINIT(nitems, "/File/_Open", "<control>O", la_action_proc,
-        OpenCode, 0);
-    IFINIT(nitems, "/File/_Save", "<control>S", la_action_proc,
-        SaveCode, 0);
-    IFINIT(nitems, "/File/sep1", 0, 0, 0, "<Separator>");
-    IFINIT(nitems, "/File/_Quit", "<control>Q", la_action_proc,
-        CancelCode, 0);
+    // IFINIT(nitems, "/_File", 0, 0, 0, "<Branch>")
+    // IFINIT(nitems, "/File/_Open", "<control>O", la_action_proc,
+    //     OpenCode, 0);
+    // IFINIT(nitems, "/File/_Save", "<control>S", la_action_proc,
+    //     SaveCode, 0);
+    // IFINIT(nitems, "/File/sep1", 0, 0, 0, "<Separator>");
+    // IFINIT(nitems, "/File/_Quit", "<control>Q", la_action_proc,
+    //     CancelCode, 0);
 
-    IFINIT(nitems, "/_Edit", 0, 0, 0, "<Branch>")
-    IFINIT(nitems, "/Edit/_New", "<control>N", la_action_proc,
-        NewCode, 0);
-    IFINIT(nitems, "/Edit/_Delete", "<control>D", la_action_proc,
-        DeleteCode, 0);
-    IFINIT(nitems, "/Edit/_Edit", "<control>E", la_action_proc,
-        EditCode, 0);
-    IFINIT(nitems, "/Edit/Decimal _Form", "<control>F", la_action_proc,
-        DecCode, "<CheckItem>");
+    // IFINIT(nitems, "/_Edit", 0, 0, 0, "<Branch>")
+    // IFINIT(nitems, "/Edit/_New", "<control>N", la_action_proc,
+    //     NewCode, 0);
+    // IFINIT(nitems, "/Edit/_Delete", "<control>D", la_action_proc,
+    //     DeleteCode, 0);
+    // IFINIT(nitems, "/Edit/_Edit", "<control>E", la_action_proc,
+    //     EditCode, 0);
+    // IFINIT(nitems, "/Edit/Decimal _Form", "<control>F", la_action_proc,
+    //     DecCode, "<CheckItem>");
 
-    IFINIT(nitems, "/_Help", 0, 0, 0, "<LastBranch>");
-    IFINIT(nitems, "/Help/_Help", "<control>H", la_action_proc,
-        HelpCode, 0);
+    // IFINIT(nitems, "/_Help", 0, 0, 0, "<LastBranch>");
+    // IFINIT(nitems, "/Help/_Help", "<control>H", la_action_proc,
+    //     HelpCode, 0);
 
-    GtkAccelGroup *accel_group = gtk_accel_group_new();
-    la_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<aliases>",
-        accel_group);
-    for (int i = 0; i < nitems; i++)
-        gtk_item_factory_create_item(la_factory, menu_items + i, 0, 2);
-    gtk_window_add_accel_group(GTK_WINDOW(wb_shell), accel_group);
+    // GtkAccelGroup *accel_group = gtk_accel_group_new();
+    // la_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<aliases>",
+    //     accel_group);
+    // for (int i = 0; i < nitems; i++)
+    //     gtk_item_factory_create_item(la_factory, menu_items + i, 0, 2);
+    // gtk_window_add_accel_group(GTK_WINDOW(wb_shell), accel_group);
 
-    GtkWidget *menubar = gtk_item_factory_get_widget(la_factory, "<aliases>");
-    gtk_widget_show(menubar);
+    // GtkWidget *menubar = gtk_item_factory_get_widget(la_factory, "<aliases>");
+    // gtk_widget_show(menubar);
 
-    // name the menubar objects
-    GtkWidget *widget = gtk_item_factory_get_item(la_factory, "/File");
-    if (widget)
-        gtk_widget_set_name(widget, "File");
-    widget = gtk_item_factory_get_item(la_factory, "/Edit");
-    if (widget)
-        gtk_widget_set_name(widget, "Edit");
-    widget = gtk_item_factory_get_item(la_factory, "/Help");
-    if (widget)
-        gtk_widget_set_name(widget, "Help");
+    // // name the menubar objects
+    // GtkWidget *widget = gtk_item_factory_get_item(la_factory, "/File");
+    // if (widget)
+    //     gtk_widget_set_name(widget, "File");
+    // widget = gtk_item_factory_get_item(la_factory, "/Edit");
+    // if (widget)
+    //     gtk_widget_set_name(widget, "Edit");
+    // widget = gtk_item_factory_get_item(la_factory, "/Help");
+    // if (widget)
+    //     gtk_widget_set_name(widget, "Help");
 
-    widget = gtk_item_factory_get_item(la_factory, "/Edit/Delete");
-    if (widget)
-        gtk_widget_set_sensitive(widget, false);
-    widget = gtk_item_factory_get_item(la_factory, "/Edit/Edit");
-    if (widget)
-        gtk_widget_set_sensitive(widget, false);
+    // widget = gtk_item_factory_get_item(la_factory, "/Edit/Delete");
+    // if (widget)
+    //     gtk_widget_set_sensitive(widget, false);
+    // widget = gtk_item_factory_get_item(la_factory, "/Edit/Edit");
+    // if (widget)
+    //     gtk_widget_set_sensitive(widget, false);
 
-    gtk_table_attach(GTK_TABLE(form), menubar, 0, 1, 0, 1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
+    // gtk_table_attach(GTK_TABLE(form), menubar, 0, 1, 0, 1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
 
-    GtkWidget *swin = gtk_scrolled_window_new(0, 0);
-    gtk_widget_show(swin);
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swin),
-        GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-    gtk_container_set_border_width(GTK_CONTAINER(swin), 2);
+    // GtkWidget *swin = gtk_scrolled_window_new(0, 0);
+    // gtk_widget_show(swin);
+    // gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swin),
+    //     GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+    // gtk_container_set_border_width(GTK_CONTAINER(swin), 2);
 
-    const char *title[2];
-    title[0] = "Layer Name";
-    title[1] = "Alias";
-    GtkListStore *store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
-    la_list = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
-    gtk_widget_show(la_list);
-    gtk_tree_view_set_enable_search(GTK_TREE_VIEW(la_list), false);
-    GtkCellRenderer *rnd = gtk_cell_renderer_text_new();
-    GtkTreeViewColumn *tvcol = gtk_tree_view_column_new_with_attributes(
-        title[0], rnd, "text", 0, NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(la_list), tvcol);
-    tvcol = gtk_tree_view_column_new_with_attributes(
-        title[1], rnd, "text", 1, NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(la_list), tvcol);
+    // const char *title[2];
+    // title[0] = "Layer Name";
+    // title[1] = "Alias";
+    // GtkListStore *store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
+    // la_list = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+    // gtk_widget_show(la_list);
+    // gtk_tree_view_set_enable_search(GTK_TREE_VIEW(la_list), false);
+    // GtkCellRenderer *rnd = gtk_cell_renderer_text_new();
+    // GtkTreeViewColumn *tvcol = gtk_tree_view_column_new_with_attributes(
+    //     title[0], rnd, "text", 0, NULL);
+    // gtk_tree_view_append_column(GTK_TREE_VIEW(la_list), tvcol);
+    // tvcol = gtk_tree_view_column_new_with_attributes(
+    //     title[1], rnd, "text", 1, NULL);
+    // gtk_tree_view_append_column(GTK_TREE_VIEW(la_list), tvcol);
 
-    GtkTreeSelection *sel =
-        gtk_tree_view_get_selection(GTK_TREE_VIEW(la_list));
-    gtk_tree_selection_set_select_function(sel, la_select_proc, 0, 0);
-    // TreeView bug hack, see note with handlers.   
-    gtk_signal_connect(GTK_OBJECT(la_list), "focus",
-        GTK_SIGNAL_FUNC(la_focus_proc), this);
+    // GtkTreeSelection *sel =
+    //     gtk_tree_view_get_selection(GTK_TREE_VIEW(la_list));
+    // gtk_tree_selection_set_select_function(sel, la_select_proc, 0, 0);
+    // // TreeView bug hack, see note with handlers.   
+    // g_signal_connect(G_OBJECT(la_list), "focus",
+    //     G_CALLBACK(la_focus_proc), this);
 
-    gtk_container_add(GTK_CONTAINER(swin), la_list);
+    // gtk_container_add(GTK_CONTAINER(swin), la_list);
 
-    // Set up font and tracking.
-    GTKfont::setupFont(la_list, FNT_PROP, true);
+    // // Set up font and tracking.
+    // GTKfont::setupFont(la_list, FNT_PROP, true);
 
-    gtk_table_attach(GTK_TABLE(form), swin, 0, 1, 1, 2,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 2, 2);
+    // gtk_table_attach(GTK_TABLE(form), swin, 0, 1, 1, 2,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 2, 2);
 
-    GtkWidget *sep = gtk_hseparator_new();
-    gtk_widget_show(sep);
-    gtk_table_attach(GTK_TABLE(form), sep, 0, 1, 2, 3,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
+    // GtkWidget *sep = gtk_hseparator_new();
+    // gtk_widget_show(sep);
+    // gtk_table_attach(GTK_TABLE(form), sep, 0, 1, 2, 3,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
 
-    GtkWidget *button = gtk_button_new_with_label("Dismiss");
-    gtk_widget_set_name(button, "Dismiss");
-    gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(la_cancel_proc), 0);
+    // GtkWidget *button = gtk_button_new_with_label("Dismiss");
+    // gtk_widget_set_name(button, "Dismiss");
+    // gtk_widget_show(button);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     G_CALLBACK(la_cancel_proc), 0);
 
-    gtk_table_attach(GTK_TABLE(form), button, 0, 1, 3, 4,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
-    gtk_window_set_focus(GTK_WINDOW(wb_shell), button);
+    // gtk_table_attach(GTK_TABLE(form), button, 0, 1, 3, 4,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
+    // gtk_window_set_focus(GTK_WINDOW(wb_shell), button);
 
-    // Constrain overall widget width so title text isn't truncated.
-    gtk_widget_set_usize(wb_shell, 220, 200);
+    // // Constrain overall widget width so title text isn't truncated.
+    // gtk_widget_set_size_request(wb_shell, 220, 200);
 
-    update();
+    // update();
 }
 
 
@@ -434,7 +435,8 @@ void
 sLA::la_action_proc(GtkWidget *caller, void*, unsigned code)
 {
     int w, h;
-    gdk_window_get_size(LA->wb_shell->window, &w, &h);
+    w = gdk_window_get_width(gtk_widget_get_window(LA->wb_shell));
+    h = gdk_window_get_height(gtk_widget_get_window(LA->wb_shell));
     GRloc loc(LW_XYR, w + 4, 0);
     if (code == CancelCode)
         XM()->PopUpLayerAliases(0, MODE_OFF);
@@ -518,29 +520,29 @@ sLA::la_select_proc(GtkTreeSelection*, GtkTreeModel*, GtkTreePath *path,
     int issel, void*)
 {
     if (LA) {
-        if (issel) {
-            LA->la_row = -1;
-            GtkWidget *widget =
-                gtk_item_factory_get_item(LA->la_factory, "/Edit/Delete");
-            if (widget)
-                gtk_widget_set_sensitive(widget, false);
-            widget = gtk_item_factory_get_item(LA->la_factory, "/Edit/Edit");
-            if (widget)
-                gtk_widget_set_sensitive(widget, false);
-            return (true);
-        }
-        if (LA->la_no_select)
-            return (false);
-        int *indices = gtk_tree_path_get_indices(path);
-        if (indices)
-            LA->la_row = *indices;
-        GtkWidget *widget =
-            gtk_item_factory_get_item(LA->la_factory, "/Edit/Delete");
-        if (widget)
-            gtk_widget_set_sensitive(widget, true);
-        widget = gtk_item_factory_get_item(LA->la_factory, "/Edit/Edit");
-        if (widget)
-            gtk_widget_set_sensitive(widget, true);
+        // if (issel) {
+        //     LA->la_row = -1;
+        //     GtkWidget *widget =
+        //         gtk_item_factory_get_item(LA->la_factory, "/Edit/Delete");
+        //     if (widget)
+        //         gtk_widget_set_sensitive(widget, false);
+        //     widget = gtk_item_factory_get_item(LA->la_factory, "/Edit/Edit");
+        //     if (widget)
+        //         gtk_widget_set_sensitive(widget, false);
+        //     return (true);
+        // }
+        // if (LA->la_no_select)
+        //     return (false);
+        // int *indices = gtk_tree_path_get_indices(path);
+        // if (indices)
+        //     LA->la_row = *indices;
+        // GtkWidget *widget =
+        //     gtk_item_factory_get_item(LA->la_factory, "/Edit/Delete");
+        // if (widget)
+        //     gtk_widget_set_sensitive(widget, true);
+        // widget = gtk_item_factory_get_item(LA->la_factory, "/Edit/Edit");
+        // if (widget)
+        //     gtk_widget_set_sensitive(widget, true);
     }
     return (true);
 }

@@ -248,17 +248,17 @@ sFsBmap::~sFsBmap()
 void
 sFsBmap::enable(GTKfilePopup *fs, int id)
 {
-    if (!GTK_BIN(fs->fs_up_btn)->child) {
+    if (!gtk_bin_get_child(GTK_BIN(fs->fs_up_btn))) {
         gtk_container_add(GTK_CONTAINER(fs->fs_up_btn), up);
         gtk_widget_show(up);
     }
-    if (!GTK_BIN(fs->fs_go_btn)->child) {
+    if (!gtk_bin_get_child(GTK_BIN(fs->fs_go_btn))) {
         gtk_container_add(GTK_CONTAINER(fs->fs_go_btn), go);
         gtk_widget_show(go);
     }
     if (id == 0) {
         if (fs->fs_up_btn && up_state != PIXBactive) {
-            GtkImage *im = GTK_IMAGE(GTK_BIN(fs->fs_up_btn)->child);
+            GtkImage *im = GTK_IMAGE(gtk_bin_get_child(GTK_BIN(fs->fs_up_btn)));
             gtk_image_set_from_pixbuf(im, up_pb);
             gtk_widget_set_sensitive(fs->fs_up_btn, true);
             up_state = PIXBactive;
@@ -266,7 +266,7 @@ sFsBmap::enable(GTKfilePopup *fs, int id)
     }
     else {
         if (fs->fs_go_btn && !no_disable_go && go_state != PIXBactive) {
-            GtkImage *im = GTK_IMAGE(GTK_BIN(fs->fs_go_btn)->child);
+            GtkImage *im = GTK_IMAGE(gtk_bin_get_child(GTK_BIN(fs->fs_go_btn)));
             gtk_image_set_from_pixbuf(im, go_pb);
             gtk_widget_set_sensitive(fs->fs_go_btn, true);
             go_state = PIXBactive;
@@ -280,17 +280,17 @@ sFsBmap::enable(GTKfilePopup *fs, int id)
 void
 sFsBmap::disable(GTKfilePopup *fs, int id)
 {
-    if (!GTK_BIN(fs->fs_up_btn)->child) {
+    if (!gtk_bin_get_child(GTK_BIN(fs->fs_up_btn))) {
         gtk_container_add(GTK_CONTAINER(fs->fs_up_btn), up);
         gtk_widget_show(up);
     }
-    if (!GTK_BIN(fs->fs_go_btn)->child) {
+    if (!gtk_bin_get_child(GTK_BIN(fs->fs_go_btn))) {
         gtk_container_add(GTK_CONTAINER(fs->fs_go_btn), go);
         gtk_widget_show(go);
     }
     if (id == 0) {
         if (fs->fs_up_btn && up_state != PIXBgray) {
-            GtkImage *im = GTK_IMAGE(GTK_BIN(fs->fs_up_btn)->child);
+            GtkImage *im = GTK_IMAGE(gtk_bin_get_child(GTK_BIN(fs->fs_up_btn)));
             gtk_image_set_from_pixbuf(im, up_gray_pb);
             gtk_widget_set_sensitive(fs->fs_up_btn, false);
             up_state = PIXBgray;
@@ -298,7 +298,7 @@ sFsBmap::disable(GTKfilePopup *fs, int id)
     }
     else {
         if (fs->fs_go_btn && !no_disable_go && go_state != PIXBgray) {
-            GtkImage *im = GTK_IMAGE(GTK_BIN(fs->fs_go_btn)->child);
+            GtkImage *im = GTK_IMAGE(gtk_bin_get_child(GTK_BIN(fs->fs_go_btn)));
             gtk_image_set_from_pixbuf(im, go_gray_pb);
             gtk_widget_set_sensitive(fs->fs_go_btn, false);
             go_state = PIXBgray;
@@ -499,7 +499,7 @@ GTKfilePopup::any_selection()
 #define IFINIT(i, a, b, c, d, e) { \
     menu_items[i].path = (char*)a; \
     menu_items[i].accelerator = (char*)b; \
-    menu_items[i].callback = (GtkItemFactoryCallback)c; \
+    menu_items[i].callback = (GtkUIManagerCallback)c; \
     menu_items[i].callback_action = d; \
     menu_items[i].item_type = (char*)e; \
     i++; }
@@ -550,460 +550,461 @@ GTKfilePopup::GTKfilePopup(gtk_bag *owner, FsMode mode, void *arg,
     fs_dragging = false;
     fs_mtime_sort = false;
 
-    if (owner)
-        owner->MonitorAdd(this);
-    FSmonitor.add(this);
+//     if (owner)
+//         owner->MonitorAdd(this);
+//     FSmonitor.add(this);
 
-    // initialize editable filter lines
-    if (!fs_filter_options[2])
-        fs_filter_options[2] = lstring::copy("user1:");
-    if (!fs_filter_options[3])
-        fs_filter_options[3] = lstring::copy("user2:");
-    if (!fs_filter_options[4])
-        fs_filter_options[4] = lstring::copy("user3:");
-    if (!fs_filter_options[5])
-        fs_filter_options[5] = lstring::copy("user4:");
+//     // initialize editable filter lines
+//     if (!fs_filter_options[2])
+//         fs_filter_options[2] = lstring::copy("user1:");
+//     if (!fs_filter_options[3])
+//         fs_filter_options[3] = lstring::copy("user2:");
+//     if (!fs_filter_options[4])
+//         fs_filter_options[4] = lstring::copy("user3:");
+//     if (!fs_filter_options[5])
+//         fs_filter_options[5] = lstring::copy("user4:");
 
-    bool nofiles = false;
-    if (fs_type == fsSEL) {
-        fs_rootdir = lstring::copy(root_or_fname);
-        if (!fs_rootdir)
-            fs_rootdir = lstring::copy(fs_cwd_bak);
-        if (!fs_rootdir)
-            fs_rootdir = lstring::copy(cur_root());
-        wb_shell = gtk_NewPopup(owner, "File Selection", fs_quit_proc, this);
-    }
-    else if (fs_type == fsDOWNLOAD) {
-        if (!root_or_fname)
-            root_or_fname = "unnamed";
-        // root_or_fname assumed pathless
-        fs_curfile = lstring::copy(root_or_fname);
-        fs_rootdir = lstring::copy(fs_cwd_bak);
-        if (!fs_rootdir)
-            fs_rootdir = lstring::copy(cur_root());
-        wb_shell = gtk_NewPopup(owner, "Target Selection", fs_quit_proc, this);
-        nofiles = true;
-        gtk_widget_set_usize(wb_shell, 400, 200);
-    }
-    else if (fs_type == fsSAVE || fs_type == fsOPEN) {
-        // root_or_fname should be tilde and dot expanded
-        char *fn;
-        if (root_or_fname && *root_or_fname) {
-            if (!lstring::is_rooted(root_or_fname)) {
-                const char *cwd = fs_cwd_bak;
-                if (!cwd)
-                    cwd = "";
-                fn = new char[strlen(cwd) + strlen(root_or_fname) + 2];
-                sprintf(fn, "%s/%s", cwd, root_or_fname);
-            }
-            else
-                fn = lstring::copy(root_or_fname);
-            char *s = lstring::strip_path(fn);
-            if (s) {
-                *s = 0;
-                if (s-1 > fn)
-                    *(s-1) = 0;
-            }
-        }
-        else {
-            fn = lstring::copy(fs_cwd_bak);
-            if (!fn)
-                fn = lstring::copy(cur_root());
-        }
-        fs_rootdir = fn;
-        if (fs_type == fsSAVE) {
-            wb_shell = gtk_NewPopup(owner, "Path Selection", fs_quit_proc,
-                this);
-            gtk_widget_set_usize(wb_shell, 250, 200);
-            nofiles = true;
-        }
-        else
-            wb_shell = gtk_NewPopup(owner, "File Selection", fs_quit_proc,
-                this);
-    }
+//     bool nofiles = false;
+//     if (fs_type == fsSEL) {
+//         fs_rootdir = lstring::copy(root_or_fname);
+//         if (!fs_rootdir)
+//             fs_rootdir = lstring::copy(fs_cwd_bak);
+//         if (!fs_rootdir)
+//             fs_rootdir = lstring::copy(cur_root());
+//         wb_shell = gtk_NewPopup(owner, "File Selection", fs_quit_proc, this);
+//     }
+//     else if (fs_type == fsDOWNLOAD) {
+//         if (!root_or_fname)
+//             root_or_fname = "unnamed";
+//         // root_or_fname assumed pathless
+//         fs_curfile = lstring::copy(root_or_fname);
+//         fs_rootdir = lstring::copy(fs_cwd_bak);
+//         if (!fs_rootdir)
+//             fs_rootdir = lstring::copy(cur_root());
+//         wb_shell = gtk_NewPopup(owner, "Target Selection", fs_quit_proc, this);
+//         nofiles = true;
+//         gtk_widget_set_size_request(wb_shell, 400, 200);
+//     }
+//     else if (fs_type == fsSAVE || fs_type == fsOPEN) {
+//         // root_or_fname should be tilde and dot expanded
+//         char *fn;
+//         if (root_or_fname && *root_or_fname) {
+//             if (!lstring::is_rooted(root_or_fname)) {
+//                 const char *cwd = fs_cwd_bak;
+//                 if (!cwd)
+//                     cwd = "";
+//                 fn = new char[strlen(cwd) + strlen(root_or_fname) + 2];
+//                 sprintf(fn, "%s/%s", cwd, root_or_fname);
+//             }
+//             else
+//                 fn = lstring::copy(root_or_fname);
+//             char *s = lstring::strip_path(fn);
+//             if (s) {
+//                 *s = 0;
+//                 if (s-1 > fn)
+//                     *(s-1) = 0;
+//             }
+//         }
+//         else {
+//             fn = lstring::copy(fs_cwd_bak);
+//             if (!fn)
+//                 fn = lstring::copy(cur_root());
+//         }
+//         fs_rootdir = fn;
+//         if (fs_type == fsSAVE) {
+//             wb_shell = gtk_NewPopup(owner, "Path Selection", fs_quit_proc,
+//                 this);
+//             gtk_widget_set_size_request(wb_shell, 250, 200);
+//             nofiles = true;
+//         }
+//         else
+//             wb_shell = gtk_NewPopup(owner, "File Selection", fs_quit_proc,
+//                 this);
+//     }
+//     wb_window = gtk_widget_get_window(wb_shell);
 
-    // Revert focus to application window when file selector pops up.
-    gtk_signal_connect(GTK_OBJECT(wb_shell), "focus-in-event",
-        (GtkSignalFunc)fs_focus_hdlr, 0);
+//     // Revert focus to application window when file selector pops up.
+//     // TODO g_signal_connect(G_OBJECT(wb_shell), "focus-in-event",
+//     //     G_CALLBACK(fs_focus_hdlr), 0);
 
-    GtkWidget *form = gtk_table_new(1, 1, false);
-    gtk_widget_show(form);
-    gtk_container_add(GTK_CONTAINER(wb_shell), form);
+//     // TODO GtkWidget *form = gtk_table_new(1, 1, false);
+//     // gtk_widget_show(form);
+//     // gtk_container_add(GTK_CONTAINER(wb_shell), form);
 
-    //
-    // buttons
-    //
-    GtkWidget *hbox = gtk_hbox_new(false, 2);
-    gtk_widget_show(hbox);
-    fs_up_btn = gtk_button_new();
-    gtk_widget_set_name(fs_up_btn, "Up");
-    gtk_widget_show(fs_up_btn);
-    gtk_signal_connect(GTK_OBJECT(fs_up_btn), "clicked",
-        GTK_SIGNAL_FUNC(fs_up_btn_proc), this);
-    gtk_box_pack_start(GTK_BOX(hbox), fs_up_btn, false, false, 0);
+//     //
+//     // buttons
+//     //
+//     GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
+//     gtk_widget_show(hbox);
+//     fs_up_btn = gtk_button_new();
+//     gtk_widget_set_name(fs_up_btn, "Up");
+//     gtk_widget_show(fs_up_btn);
+//     // TODO g_signal_connect(G_OBJECT(fs_up_btn), "clicked",
+//     //     fs_up_btn_proc, this);
+//     gtk_box_pack_start(GTK_BOX(hbox), fs_up_btn, false, false, 0);
 
-    fs_go_btn = gtk_button_new();
-    if (fs_type == fsDOWNLOAD)
-        gtk_widget_set_name(fs_go_btn, "Download");
-    else
-        gtk_widget_set_name(fs_go_btn, "Go");
-    gtk_widget_show(fs_go_btn);
-    gtk_signal_connect(GTK_OBJECT(fs_go_btn), "clicked",
-        GTK_SIGNAL_FUNC(fs_open_proc), this);
-    gtk_box_pack_start(GTK_BOX(hbox), fs_go_btn, false, false, 0);
+//     fs_go_btn = gtk_button_new();
+//     if (fs_type == fsDOWNLOAD)
+//         gtk_widget_set_name(fs_go_btn, "Download");
+//     else
+//         gtk_widget_set_name(fs_go_btn, "Go");
+//     gtk_widget_show(fs_go_btn);
+//     // TODO g_signal_connect(G_OBJECT(fs_go_btn), "clicked",
+//     //     fs_open_proc, this);
+//     gtk_box_pack_start(GTK_BOX(hbox), fs_go_btn, false, false, 0);
 
-    if (fs_type == fsDOWNLOAD) {
-        fs_entry = gtk_entry_new();
-        gtk_widget_show(fs_entry);
-        gtk_entry_set_text(GTK_ENTRY(fs_entry), root_or_fname);
-        gtk_box_pack_start(GTK_BOX(hbox), fs_entry, true, true, 0);
-    }
+//     if (fs_type == fsDOWNLOAD) {
+//         fs_entry = gtk_entry_new();
+//         gtk_widget_show(fs_entry);
+//         gtk_entry_set_text(GTK_ENTRY(fs_entry), root_or_fname);
+//         gtk_box_pack_start(GTK_BOX(hbox), fs_entry, true, true, 0);
+//     }
 
-    //
-    // menu bar
-    //
-    if (fs_type == fsSEL || fs_type == fsSAVE || fs_type == fsOPEN) {
-        GtkItemFactoryEntry menu_items[50];
-        int nitems = 0;
+//     //
+//     // menu bar
+//     //
+//     if (fs_type == fsSEL || fs_type == fsSAVE || fs_type == fsOPEN) {
+//         // TODO GtkUIManagerEntry menu_items[50];
+//         // int nitems = 0;
 
-        IFINIT(nitems, "/_File", 0, 0, 0, "<Branch>");
-        if (fs_type == fsSEL)
-            IFINIT(nitems, "/File/_Open", "<control>O", fs_menu_proc, fsOpen,
-                0);
-        IFINIT(nitems, "/File/_New Folder", "<control>F", fs_menu_proc, fsNew,
-            0);
-        IFINIT(nitems, "/File/_Delete", "<control>D", fs_menu_proc, fsDelete,
-            0);
-        IFINIT(nitems, "/File/_Rename", "<control>R", fs_menu_proc, fsRename,
-            0);
-        IFINIT(nitems, "/File/N_ew Root", "<control>E", fs_menu_proc, fsRoot,
-            0);
-        IFINIT(nitems, "/File/N_ew CWD", "<control>C", fs_menu_proc, fsCwd, 0);
-        IFINIT(nitems, "/File/sep1", 0, 0, 0, "<Separator>");
-        IFINIT(nitems, "/File/_Quit", "<control>Q", fs_quit_proc, 0, 0);
-        IFINIT(nitems, "/_Up", 0, 0, 0, "<Branch>");
-        if (!nofiles) {
-            IFINIT(nitems, "/_Listing", 0, 0, 0, "<Branch>");
-            IFINIT(nitems, "/Listing/_Show Filter", "<control>S", fs_menu_proc,
-                fsFilt, "<CheckItem>");
-            IFINIT(nitems, "/Listing/_Relist", "<control>L", fs_menu_proc,
-                fsRelist, 0);
-            IFINIT(nitems, "/Listing/_List by Date", "<control>T",
-                fs_menu_proc, fsMtime, "<CheckItem>");
-            IFINIT(nitems, "/Listing/Show La_bel", "<control>B", fs_menu_proc,
-                fsLabel, "<CheckItem>");
-        }
-        IFINIT(nitems, "/_Help", 0, 0, 0, "<LastBranch>");
-        IFINIT(nitems, "/Help/_Help", "<control>H", fs_menu_proc, fsHelp, 0);
+//         // IFINIT(nitems, "/_File", 0, 0, 0, "<Branch>");
+//         // if (fs_type == fsSEL)
+//         //     IFINIT(nitems, "/File/_Open", "<control>O", fs_menu_proc, fsOpen,
+//         //         0);
+//         // IFINIT(nitems, "/File/_New Folder", "<control>F", fs_menu_proc, fsNew,
+//         //     0);
+//         // IFINIT(nitems, "/File/_Delete", "<control>D", fs_menu_proc, fsDelete,
+//         //     0);
+//         // IFINIT(nitems, "/File/_Rename", "<control>R", fs_menu_proc, fsRename,
+//         //     0);
+//         // IFINIT(nitems, "/File/N_ew Root", "<control>E", fs_menu_proc, fsRoot,
+//         //     0);
+//         // IFINIT(nitems, "/File/N_ew CWD", "<control>C", fs_menu_proc, fsCwd, 0);
+//         // IFINIT(nitems, "/File/sep1", 0, 0, 0, "<Separator>");
+//         // IFINIT(nitems, "/File/_Quit", "<control>Q", fs_quit_proc, 0, 0);
+//         // IFINIT(nitems, "/_Up", 0, 0, 0, "<Branch>");
+//         // if (!nofiles) {
+//         //     IFINIT(nitems, "/_Listing", 0, 0, 0, "<Branch>");
+//         //     IFINIT(nitems, "/Listing/_Show Filter", "<control>S", fs_menu_proc,
+//         //         fsFilt, "<CheckItem>");
+//         //     IFINIT(nitems, "/Listing/_Relist", "<control>L", fs_menu_proc,
+//         //         fsRelist, 0);
+//         //     IFINIT(nitems, "/Listing/_List by Date", "<control>T",
+//         //         fs_menu_proc, fsMtime, "<CheckItem>");
+//         //     IFINIT(nitems, "/Listing/Show La_bel", "<control>B", fs_menu_proc,
+//         //         fsLabel, "<CheckItem>");
+//         // }
+//         // IFINIT(nitems, "/_Help", 0, 0, 0, "<LastBranch>");
+//         // IFINIT(nitems, "/Help/_Help", "<control>H", fs_menu_proc, fsHelp, 0);
 
-        GtkAccelGroup *accel_group = gtk_accel_group_new();
-        fs_item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR,
-            "<files>", accel_group);
-        for (int i = 0; i < nitems; i++) {
-            gtk_item_factory_create_item(fs_item_factory, menu_items + i,
-                this, 2);
-        }
-        gtk_window_add_accel_group(GTK_WINDOW(wb_shell), accel_group);
+//         // GtkAccelGroup *accel_group = gtk_accel_group_new();
+//         // fs_item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR,
+//         //     "<files>", accel_group);
+//         // for (int i = 0; i < nitems; i++) {
+//         //     gtk_item_factory_create_item(fs_item_factory, menu_items + i,
+//         //         this, 2);
+//         // }
+//         // gtk_window_add_accel_group(GTK_WINDOW(wb_shell), accel_group);
 
-        fs_anc_btn = gtk_item_factory_get_item(fs_item_factory, "/Up");
-        if (fs_type == fsSEL)
-            fs_open_btn = gtk_item_factory_get_widget(fs_item_factory,
-                "/File/Open");
-        fs_new_btn = gtk_item_factory_get_widget(fs_item_factory,
-            "/File/New Folder");
-        fs_delete_btn = gtk_item_factory_get_widget(fs_item_factory,
-            "/File/Delete");
-        fs_rename_btn = gtk_item_factory_get_widget(fs_item_factory,
-            "/File/Rename");
+//         // fs_anc_btn = gtk_item_factory_get_item(fs_item_factory, "/Up");
+//         // if (fs_type == fsSEL)
+//         //     fs_open_btn = gtk_item_factory_get_widget(fs_item_factory,
+//         //         "/File/Open");
+//         // fs_new_btn = gtk_item_factory_get_widget(fs_item_factory,
+//         //     "/File/New Folder");
+//         // fs_delete_btn = gtk_item_factory_get_widget(fs_item_factory,
+//         //     "/File/Delete");
+//         // fs_rename_btn = gtk_item_factory_get_widget(fs_item_factory,
+//         //     "/File/Rename");
 
-        GtkWidget *menubar = gtk_item_factory_get_widget(fs_item_factory,
-            "<files>");
-        gtk_widget_show(menubar);
-        gtk_box_pack_start(GTK_BOX(hbox), menubar, true, true, 0);
+//         // GtkWidget *menubar = gtk_item_factory_get_widget(fs_item_factory,
+//         //     "<files>");
+//         // gtk_widget_show(menubar);
+//         // gtk_box_pack_start(GTK_BOX(hbox), menubar, true, true, 0);
 
-        if (!nofiles) {
-            // Initialize Show Label button.
-            GtkWidget *btn = gtk_item_factory_get_widget(fs_item_factory,
-                "/Listing/Show Label");
-            if (btn) {
-                if (fs_type == fsSEL)
-                    GRX->SetStatus(btn, fs_sel_show_label);
-                else if (fs_type == fsOPEN)
-                    GRX->SetStatus(btn, fs_open_show_label);
-            }
-        }
-    }
+//         if (!nofiles) {
+//             // Initialize Show Label button.
+//             // TODO GtkWidget *btn = gtk_item_factory_get_widget(fs_item_factory,
+//             //     "/Listing/Show Label");
+//             // if (btn) {
+//             //     if (fs_type == fsSEL)
+//             //         GRX->SetStatus(btn, fs_sel_show_label);
+//             //     else if (fs_type == fsOPEN)
+//             //         GRX->SetStatus(btn, fs_open_show_label);
+//             // }
+//         }
+//     }
 
-    int rowcnt = 0;
-    gtk_table_attach(GTK_TABLE(form), hbox, 0, nofiles ? 1 : 2,
-        rowcnt, rowcnt+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)(0), 2, 2);
-    rowcnt++;
+//     int rowcnt = 0;
+//     // TODO gtk_table_attach(GTK_TABLE(form), hbox, 0, nofiles ? 1 : 2,
+//     //     rowcnt, rowcnt+1,
+//     //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+//     //     (GtkAttachOptions)(0), 2, 2);
+//     rowcnt++;
 
-    //
-    // directory tree
-    //
-    GtkWidget *swin = gtk_scrolled_window_new(0, 0);
-    gtk_widget_show(swin);
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swin),
-        GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-    gtk_container_set_border_width(GTK_CONTAINER(swin), 2);
+//     //
+//     // directory tree
+//     //
+//     GtkWidget *swin = gtk_scrolled_window_new(0, 0);
+//     gtk_widget_show(swin);
+//     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swin),
+//         GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+//     gtk_container_set_border_width(GTK_CONTAINER(swin), 2);
 
-#ifdef NO_ICONS
-#define COL_TEXT 0
-#define COL_MT   1
-#define COL_BG   2
-    GtkTreeStore *store = gtk_tree_store_new(3, G_TYPE_STRING, G_TYPE_ULONG,
-        G_TYPE_STRING);
-#else
-#define COL_PBUF 0
-#define COL_TEXT 1
-#define COL_MT   2
-#define COL_BG   3
-    GtkTreeStore *store = gtk_tree_store_new(4, GDK_TYPE_PIXBUF,
-        G_TYPE_STRING, G_TYPE_ULONG, G_TYPE_STRING);
-#endif
-    fs_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
-    gtk_widget_show(fs_tree);
-    // Important, we don't want to take key events.
-    gtk_tree_view_set_enable_search(GTK_TREE_VIEW(fs_tree), false);
+// #ifdef NO_ICONS
+// #define COL_TEXT 0
+// #define COL_MT   1
+// #define COL_BG   2
+//     GtkTreeStore *store = gtk_tree_store_new(3, G_TYPE_STRING, G_TYPE_ULONG,
+//         G_TYPE_STRING);
+// #else
+// #define COL_PBUF 0
+// #define COL_TEXT 1
+// #define COL_MT   2
+// #define COL_BG   3
+//     GtkTreeStore *store = gtk_tree_store_new(4, GDK_TYPE_PIXBUF,
+//         G_TYPE_STRING, G_TYPE_ULONG, G_TYPE_STRING);
+// #endif
+//     fs_tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+//     gtk_widget_show(fs_tree);
+//     // Important, we don't want to take key events.
+//     gtk_tree_view_set_enable_search(GTK_TREE_VIEW(fs_tree), false);
 
-#ifdef NO_ICONS
-    GtkCellRenderer *rnd = gtk_cell_renderer_text_new();
-    GtkTreeViewColumn *tvcol = gtk_tree_view_column_new_with_attributes(0, rnd,
-        "text", COL_TEXT, "background", COL_BG, NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(fs_tree), tvcol);
-#else
-    GtkCellRenderer *rnd = gtk_cell_renderer_pixbuf_new();
-    GtkTreeViewColumn *tvcol = gtk_tree_view_column_new_with_attributes(0, rnd,
-        "pixbuf", COL_PBUF, NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(fs_tree), tvcol);
-    rnd = gtk_cell_renderer_text_new();
-    tvcol = gtk_tree_view_column_new_with_attributes(0, rnd,
-        "text", COL_TEXT, "background", COL_BG, NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(fs_tree), tvcol);
-#endif
+// #ifdef NO_ICONS
+//     GtkCellRenderer *rnd = gtk_cell_renderer_text_new();
+//     GtkTreeViewColumn *tvcol = gtk_tree_view_column_new_with_attributes(0, rnd,
+//         "text", COL_TEXT, "background", COL_BG, NULL);
+//     gtk_tree_view_append_column(GTK_TREE_VIEW(fs_tree), tvcol);
+// #else
+//     GtkCellRenderer *rnd = gtk_cell_renderer_pixbuf_new();
+//     GtkTreeViewColumn *tvcol = gtk_tree_view_column_new_with_attributes(0, rnd,
+//         "pixbuf", COL_PBUF, NULL);
+//     gtk_tree_view_append_column(GTK_TREE_VIEW(fs_tree), tvcol);
+//     rnd = gtk_cell_renderer_text_new();
+//     tvcol = gtk_tree_view_column_new_with_attributes(0, rnd,
+//         "text", COL_TEXT, "background", COL_BG, NULL);
+//     gtk_tree_view_append_column(GTK_TREE_VIEW(fs_tree), tvcol);
+// #endif
 
-#if GTK_CHECK_VERSION(2,12,0)
-    gtk_tree_view_set_show_expanders(GTK_TREE_VIEW(fs_tree), true);
-#endif
-    gtk_tree_view_set_enable_tree_lines(GTK_TREE_VIEW(fs_tree), true);
-    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(fs_tree), false);
+// #if GTK_CHECK_VERSION(2,12,0)
+//     gtk_tree_view_set_show_expanders(GTK_TREE_VIEW(fs_tree), true);
+// #endif
+//     gtk_tree_view_set_enable_tree_lines(GTK_TREE_VIEW(fs_tree), true);
+//     gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(fs_tree), false);
 
-    GtkTreeSelection *sel =
-        gtk_tree_view_get_selection(GTK_TREE_VIEW(fs_tree));
-    gtk_tree_selection_set_select_function(sel,
-        (GtkTreeSelectionFunc)fs_tree_select_proc, this, 0);
+//     GtkTreeSelection *sel =
+//         gtk_tree_view_get_selection(GTK_TREE_VIEW(fs_tree));
+//     gtk_tree_selection_set_select_function(sel,
+//         (GtkTreeSelectionFunc)fs_tree_select_proc, this, 0);
 
-    gtk_container_add(GTK_CONTAINER(swin), fs_tree);
-    if (nofiles) {
-        gtk_table_attach(GTK_TABLE(form), swin, 0, 1, rowcnt, rowcnt+1,
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 2, 2);
-        rowcnt++;
-    }
+//     gtk_container_add(GTK_CONTAINER(swin), fs_tree);
+//     if (nofiles) {
+//         // gtk_table_attach(GTK_TABLE(form), swin, 0, 1, rowcnt, rowcnt+1,
+//         //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+//         //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 2, 2);
+//         rowcnt++;
+//     }
 
-    gtk_widget_add_events(fs_tree, GDK_BUTTON_PRESS_MASK);
+//     gtk_widget_add_events(fs_tree, GDK_BUTTON_PRESS_MASK);
 
-    gtk_signal_connect (GTK_OBJECT(fs_tree), "test-collapse-row",
-        (GtkSignalFunc)fs_tree_collapse_proc, this);
-    gtk_signal_connect (GTK_OBJECT(fs_tree), "test-expand-row",
-        (GtkSignalFunc)fs_tree_expand_proc, this);
+//     // TODO g_signal_connect (G_OBJECT(fs_tree), "test-collapse-row",
+//     //     G_CALLBACK(fs_tree_collapse_proc), this);
+//     // g_signal_connect (G_OBJECT(fs_tree), "test-expand-row",
+//     //     G_CALLBACK(fs_tree_expand_proc), this);
 
-    // directory list drag source (explicit drag start)
-    gtk_signal_connect(GTK_OBJECT(fs_tree), "drag-data-get",
-        GTK_SIGNAL_FUNC(fs_source_drag_data_get), this);
-    gtk_signal_connect(GTK_OBJECT(fs_tree), "button-press-event",
-        GTK_SIGNAL_FUNC(fs_button_press_proc), this);
-    gtk_signal_connect(GTK_OBJECT(fs_tree), "button-release-event",
-        GTK_SIGNAL_FUNC(fs_button_release_proc), this);
-    gtk_signal_connect(GTK_OBJECT(fs_tree), "motion-notify-event",
-        GTK_SIGNAL_FUNC(fs_motion_proc), this);
+//     // directory list drag source (explicit drag start)
+//     // TODO g_signal_connect(G_OBJECT(fs_tree), "drag-data-get",
+//     //     fs_source_drag_data_get, this);
+//     // g_signal_connect(G_OBJECT(fs_tree), "button-press-event",
+//     //     fs_button_press_proc, this);
+//     // g_signal_connect(G_OBJECT(fs_tree), "button-release-event",
+//     //     fs_button_release_proc, this);
+//     // g_signal_connect(G_OBJECT(fs_tree), "motion-notify-event",
+//     //     fs_motion_proc, this);
 
-    // directory list drop site
-    gtk_drag_dest_set(fs_tree, GTK_DEST_DEFAULT_ALL, target_table, n_targets,
-        (GdkDragAction)(GDK_ACTION_COPY | GDK_ACTION_MOVE | GDK_ACTION_LINK |
-        GDK_ACTION_ASK));
-    gtk_signal_connect_after(GTK_OBJECT(fs_tree), "drag-data-received",
-        GTK_SIGNAL_FUNC(fs_drag_data_received), this);
-    gtk_signal_connect(GTK_OBJECT(fs_tree), "drag-motion",
-        GTK_SIGNAL_FUNC(fs_dir_drag_motion), this);
-    gtk_signal_connect(GTK_OBJECT(fs_tree), "drag-leave",
-        GTK_SIGNAL_FUNC(fs_dir_drag_leave), this);
+//     // directory list drop site
+//     gtk_drag_dest_set(fs_tree, GTK_DEST_DEFAULT_ALL, target_table, n_targets,
+//         (GdkDragAction)(GDK_ACTION_COPY | GDK_ACTION_MOVE | GDK_ACTION_LINK |
+//         GDK_ACTION_ASK));
+//     // TODO g_signal_connect_after(G_OBJECT(fs_tree), "drag-data-received",
+//     //     fs_drag_data_received, this);
+//     // g_signal_connect(G_OBJECT(fs_tree), "drag-motion",
+//     //     fs_dir_drag_motion, this);
+//     // g_signal_connect(G_OBJECT(fs_tree), "drag-leave",
+//     //     fs_dir_drag_leave, this);
 
-    gtk_selection_add_targets(fs_tree, GDK_SELECTION_PRIMARY, target_table,
-        n_targets);
-    gtk_signal_connect(GTK_OBJECT(fs_tree), "selection-get",
-        GTK_SIGNAL_FUNC(fs_selection_get), 0);
+//     gtk_selection_add_targets(fs_tree, GDK_SELECTION_PRIMARY, target_table,
+//         n_targets);
+//     // TODO g_signal_connect(G_OBJECT(fs_tree), "selection-get",
+//     //     fs_selection_get, 0);
 
-    //
-    // files list
-    //
-    if (!nofiles) {
+//     //
+//     // files list
+//     //
+//     if (!nofiles) {
     
-        GtkWidget *contr;
-        text_scrollable_new(&contr, &wb_textarea, FNT_FIXED);
-        gtk_widget_set_usize(wb_textarea, DEF_TEXT_USWIDTH, 200);
-        fs_scrwin = contr;
+//         GtkWidget *contr;
+//         text_scrollable_new(&contr, &wb_textarea, FNT_FIXED);
+//         gtk_widget_set_size_request(wb_textarea, DEF_TEXT_USWIDTH, 200);
+//         fs_scrwin = contr;
 
-        GtkWidget *vbox = gtk_vbox_new(false, 2);
-        gtk_widget_show(vbox);
-        gtk_box_pack_start(GTK_BOX(vbox), contr, true, true, 0);
+//         GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
+//         gtk_widget_show(vbox);
+//         gtk_box_pack_start(GTK_BOX(vbox), contr, true, true, 0);
 
-        fs_filter = gtk_combo_new();
-        gtk_widget_hide(fs_filter);
-        gtk_entry_set_editable(GTK_ENTRY(GTK_COMBO(fs_filter)->entry), false);
-        gtk_combo_disable_activate(GTK_COMBO(fs_filter));
+//         fs_filter = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
+//         gtk_widget_hide(fs_filter);
+//         // TODO gtk_editable_set_editable(GTK_EDITABLE(G_COMBO(fs_filter)->entry), false);
+//         // gtk_combo_disable_activate(GTK_COMBO_BOX(fs_filter));
 
-        GList *items = 0;
-        for (const char **s = fs_filter_options; *s; s++)
-            items = g_list_append(items, (char*)*s);
-        gtk_combo_set_popdown_strings(GTK_COMBO(fs_filter), items);
-        gtk_signal_connect(GTK_OBJECT(GTK_COMBO(fs_filter)->list),
-            "select-child", GTK_SIGNAL_FUNC(fs_filter_sel_proc), this);
-        gtk_signal_connect(GTK_OBJECT(GTK_COMBO(fs_filter)->list),
-            "unselect-child", GTK_SIGNAL_FUNC(fs_filter_unsel_proc), this);
-        gtk_signal_connect(GTK_OBJECT(GTK_COMBO(fs_filter)->entry),
-            "activate", GTK_SIGNAL_FUNC(fs_filter_activate_proc), this);
-        gtk_box_pack_start(GTK_BOX(vbox), fs_filter, false, false, 0);
+//         GList *items = 0;
+//         for (const char **s = fs_filter_options; *s; s++)
+//             items = g_list_append(items, (char*)*s);
+//         // TODO gtk_combo_set_popdown_strings(GTK_COMBO_BOX(fs_filter), items);
+//         // g_signal_connect(G_OBJECT(GTK_COMBO_BOX(fs_filter)->list),
+//         //     "select-child", fs_filter_sel_proc, this);
+//         // g_signal_connect(G_OBJECT(GTK_COMBO_BOX(fs_filter)->list),
+//         //     "unselect-child", fs_filter_unsel_proc, this);
+//         // g_signal_connect(G_OBJECT(GTK_COMBO_BOX(fs_filter)->entry),
+//         //     "activate", fs_filter_activate_proc, this);
+//         gtk_box_pack_start(GTK_BOX(vbox), fs_filter, false, false, 0);
 
-        GtkWidget *paned = gtk_hpaned_new();
-        gtk_paned_add1(GTK_PANED(paned), swin);
-        gtk_paned_add2(GTK_PANED(paned), vbox);
-        gtk_widget_show(paned);
-        gtk_widget_set_size_request(swin, 150, -1);
-        gtk_table_attach(GTK_TABLE(form), paned, 0, 2, rowcnt, rowcnt+1,
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 2, 2);
-        rowcnt++;
+//         GtkWidget *paned = gtk_hpaned_new();
+//         gtk_paned_add1(GTK_PANED(paned), swin);
+//         gtk_paned_add2(GTK_PANED(paned), vbox);
+//         gtk_widget_show(paned);
+//         gtk_widget_set_size_request(swin, 150, -1);
+//         // TODO gtk_table_attach(GTK_TABLE(form), paned, 0, 2, rowcnt, rowcnt+1,
+//         //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+//         //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 2, 2);
+//         rowcnt++;
 
-        gtk_widget_add_events(wb_textarea, GDK_BUTTON_PRESS_MASK);
+//         gtk_widget_add_events(wb_textarea, GDK_BUTTON_PRESS_MASK);
 
-        // file list drag source (explicit drag start)
-        gtk_signal_connect(GTK_OBJECT(wb_textarea), "drag-begin",
-            GTK_SIGNAL_FUNC(fs_drag_begin), this);
-        gtk_signal_connect(GTK_OBJECT(wb_textarea), "drag-data-get",
-            GTK_SIGNAL_FUNC(fs_source_drag_data_get), this);
-        gtk_signal_connect(GTK_OBJECT(wb_textarea), "button-press-event",
-            GTK_SIGNAL_FUNC(fs_button_press_proc), this);
-        gtk_signal_connect(GTK_OBJECT(wb_textarea), "button-release-event",
-            GTK_SIGNAL_FUNC(fs_button_release_proc), this);
-        // This is needed to enable motion events when mouse buttons
-        // are not pressed.
-        gtk_widget_add_events(wb_textarea, GDK_POINTER_MOTION_MASK);
-        gtk_signal_connect(GTK_OBJECT(wb_textarea), "motion-notify-event",
-            GTK_SIGNAL_FUNC(fs_motion_proc), this);
-        gtk_signal_connect(GTK_OBJECT(wb_textarea), "size-allocate",
-            GTK_SIGNAL_FUNC(fs_resize_proc), this);
-        gtk_widget_add_events(wb_textarea, GDK_LEAVE_NOTIFY_MASK);
-        gtk_signal_connect(GTK_OBJECT(wb_textarea), "leave-notify-event",
-            GTK_SIGNAL_FUNC(fs_leave_proc), this);
-        gtk_signal_connect_after(GTK_OBJECT(wb_textarea), "realize",
-            GTK_SIGNAL_FUNC(fs_realize_proc), this);
-        gtk_signal_connect(GTK_OBJECT(wb_textarea), "unrealize",
-            GTK_SIGNAL_FUNC(fs_unrealize_proc), this);
+//         // file list drag source (explicit drag start)
+//         // TODO g_signal_connect(G_OBJECT(wb_textarea), "drag-begin",
+//         //     fs_drag_begin, this);
+//         // g_signal_connect(G_OBJECT(wb_textarea), "drag-data-get",
+//         //     fs_source_drag_data_get, this);
+//         // g_signal_connect(G_OBJECT(wb_textarea), "button-press-event",
+//         //     fs_button_press_proc, this);
+//         // g_signal_connect(G_OBJECT(wb_textarea), "button-release-event",
+//         //     fs_button_release_proc, this);
+//         // // This is needed to enable motion events when mouse buttons
+//         // // are not pressed.
+//         // gtk_widget_add_events(wb_textarea, GDK_POINTER_MOTION_MASK);
+//         // g_signal_connect(G_OBJECT(wb_textarea), "motion-notify-event",
+//         //     fs_motion_proc, this);
+//         // g_signal_connect(G_OBJECT(wb_textarea), "size-allocate",
+//         //     fs_resize_proc, this);
+//         // gtk_widget_add_events(wb_textarea, GDK_LEAVE_NOTIFY_MASK);
+//         // g_signal_connect(G_OBJECT(wb_textarea), "leave-notify-event",
+//         //     fs_leave_proc, this);
+//         // g_signal_connect_after(G_OBJECT(wb_textarea), "realize",
+//         //     fs_realize_proc, this);
+//         // g_signal_connect(G_OBJECT(wb_textarea), "unrealize",
+//         //     fs_unrealize_proc, this);
 
-        // file list drop site
-        gtk_drag_dest_set(wb_textarea, GTK_DEST_DEFAULT_ALL, target_table,
-            n_targets,
-            (GdkDragAction)(GDK_ACTION_COPY | GDK_ACTION_MOVE |
-            GDK_ACTION_LINK | GDK_ACTION_ASK));
-        gtk_signal_connect_after(GTK_OBJECT(wb_textarea), "drag-data-received",
-            GTK_SIGNAL_FUNC(fs_drag_data_received), this);
+//         // file list drop site
+//         gtk_drag_dest_set(wb_textarea, GTK_DEST_DEFAULT_ALL, target_table,
+//             n_targets,
+//             (GdkDragAction)(GDK_ACTION_COPY | GDK_ACTION_MOVE |
+//             GDK_ACTION_LINK | GDK_ACTION_ASK));
+//         // g_signal_connect_after(G_OBJECT(wb_textarea), "drag-data-received",
+//         //     fs_drag_data_received, this);
 
-        // Gtk-2 is tricky to overcome internal selection handling.
-        // Must remove clipboard (in fs_realize_proc), and explicitly
-        // call gtk_selection_owner_set after selecting text.  Note
-        // also that explicit clear-event handling is needed.
+//         // Gtk-2 is tricky to overcome internal selection handling.
+//         // Must remove clipboard (in fs_realize_proc), and explicitly
+//         // call gtk_selection_owner_set after selecting text.  Note
+//         // also that explicit clear-event handling is needed.
 
-        gtk_selection_add_targets(wb_textarea, GDK_SELECTION_PRIMARY,
-            target_table, n_targets);
-        gtk_signal_connect(GTK_OBJECT(wb_textarea), "selection-clear-event",
-            GTK_SIGNAL_FUNC(fs_selection_clear), 0);
-        gtk_signal_connect(GTK_OBJECT(wb_textarea), "selection-get",
-            GTK_SIGNAL_FUNC(fs_selection_get), 0);
+//         gtk_selection_add_targets(wb_textarea, GDK_SELECTION_PRIMARY,
+//             target_table, n_targets);
+//         // g_signal_connect(G_OBJECT(wb_textarea), "selection-clear-event",
+//         //     fs_selection_clear, 0);
+//         // g_signal_connect(G_OBJECT(wb_textarea), "selection-get",
+//         //     fs_selection_get, 0);
 
-        GtkTextBuffer *textbuf =
-            gtk_text_view_get_buffer(GTK_TEXT_VIEW(wb_textarea));
-        const char *bclr = GRpkgIf()->GetAttrColor(GRattrColorLocSel);
-        gtk_text_buffer_create_tag(textbuf, "primary", "background", bclr,
-            NULL);
-    }
+//         GtkTextBuffer *textbuf =
+//             gtk_text_view_get_buffer(GTK_TEXT_VIEW(wb_textarea));
+//         const char *bclr = GRpkgIf()->GetAttrColor(GRattrColorLocSel);
+//         gtk_text_buffer_create_tag(textbuf, "primary", "background", bclr,
+//             NULL);
+//     }
 
-    //
-    // root directory label or entry
-    //
-    if (fs_type == fsSEL || fs_type == fsOPEN || fs_type == fsDOWNLOAD) {
-        if (fs_type == fsDOWNLOAD)
-            fs_label = gtk_label_new("\n");
-        else
-            fs_label = gtk_label_new("\n\n");
-        gtk_widget_show(fs_label);
+//     //
+//     // root directory label or entry
+//     //
+//     if (fs_type == fsSEL || fs_type == fsOPEN || fs_type == fsDOWNLOAD) {
+//         if (fs_type == fsDOWNLOAD)
+//             fs_label = gtk_label_new("\n");
+//         else
+//             fs_label = gtk_label_new("\n\n");
+//         gtk_widget_show(fs_label);
 
-        // Use fixed-pitch font
-        const char *fname = FC.getName(FNT_SCREEN);
-        PangoFontDescription *pfd = pango_font_description_from_string(fname);
-        gtk_widget_modify_font(fs_label, pfd);
+//         // Use fixed-pitch font
+//         const char *fname = FC.getName(FNT_SCREEN);
+//         PangoFontDescription *pfd = pango_font_description_from_string(fname);
+//         gtk_widget_modify_font(fs_label, pfd);
 
-        gtk_label_set_justify(GTK_LABEL(fs_label), GTK_JUSTIFY_LEFT);
-        gtk_misc_set_alignment(GTK_MISC(fs_label), 0, 0.5);
-        gtk_misc_set_padding(GTK_MISC(fs_label), 4, 2);
+//         gtk_label_set_justify(GTK_LABEL(fs_label), GTK_JUSTIFY_LEFT);
+//         gtk_misc_set_alignment(GTK_MISC(fs_label), 0, 0.5);
+//         gtk_misc_set_padding(GTK_MISC(fs_label), 4, 2);
 
-        fs_label_frame = gtk_frame_new(0);
-        gtk_widget_show(fs_label_frame);
-        gtk_container_add(GTK_CONTAINER(fs_label_frame), fs_label);
+//         fs_label_frame = gtk_frame_new(0);
+//         gtk_widget_show(fs_label_frame);
+//         gtk_container_add(GTK_CONTAINER(fs_label_frame), fs_label);
 
-        gtk_table_attach(GTK_TABLE(form), fs_label_frame, 0, 2,
-            rowcnt, rowcnt+1,
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-            (GtkAttachOptions)0, 2, 2);
-        rowcnt++;
+//         // gtk_table_attach(GTK_TABLE(form), fs_label_frame, 0, 2,
+//         //     rowcnt, rowcnt+1,
+//         //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+//         //     (GtkAttachOptions)0, 2, 2);
+//         rowcnt++;
 
-        if (fs_type == fsSEL || fs_type == fsDOWNLOAD) {
-            if (!fs_sel_show_label)
-                gtk_widget_hide(fs_label_frame);
-        }
-        else if (fs_type == fsOPEN) {
-            if (!fs_open_show_label)
-                gtk_widget_hide(fs_label_frame);
-        }
-    }
-    if (fs_type == fsDOWNLOAD) {
-        GtkWidget *button = gtk_button_new_with_label("Dismiss");
-        gtk_widget_set_name(button, "Dismiss");
-        gtk_widget_show(button);
-        gtk_signal_connect(GTK_OBJECT(button), "clicked",
-            GTK_SIGNAL_FUNC(fs_quit_proc), this);
+//         if (fs_type == fsSEL || fs_type == fsDOWNLOAD) {
+//             if (!fs_sel_show_label)
+//                 gtk_widget_hide(fs_label_frame);
+//         }
+//         else if (fs_type == fsOPEN) {
+//             if (!fs_open_show_label)
+//                 gtk_widget_hide(fs_label_frame);
+//         }
+//     }
+//     if (fs_type == fsDOWNLOAD) {
+//         GtkWidget *button = gtk_button_new_with_label("Dismiss");
+//         gtk_widget_set_name(button, "Dismiss");
+//         gtk_widget_show(button);
+//         // g_signal_connect(G_OBJECT(button), "clicked",
+//         //     fs_quit_proc, this);
 
-        gtk_table_attach(GTK_TABLE(form), button, 0, 1, rowcnt, rowcnt+1,
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-            (GtkAttachOptions)0, 2, 2);
-        gtk_window_set_focus(GTK_WINDOW(wb_shell), button);
-        rowcnt++;
-    }
+//         // gtk_table_attach(GTK_TABLE(form), button, 0, 1, rowcnt, rowcnt+1,
+//         //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+//         //     (GtkAttachOptions)0, 2, 2);
+//         gtk_window_set_focus(GTK_WINDOW(wb_shell), button);
+//         rowcnt++;
+//     }
 
-    gtk_object_set_data(GTK_OBJECT(wb_shell), "fsbag", this);
-    gtk_object_set_data(GTK_OBJECT(fs_tree), "fsbag", this);
-    if (wb_textarea)
-        gtk_object_set_data(GTK_OBJECT(wb_textarea), "fsbag", this);
+//     g_object_set_data(G_OBJECT(wb_shell), "fsbag", this);
+//     g_object_set_data(G_OBJECT(fs_tree), "fsbag", this);
+//     if (wb_textarea)
+//         g_object_set_data(G_OBJECT(wb_textarea), "fsbag", this);
 
-    fs_bmap = new sFsBmap(this);
-    if (fs_type == fsDOWNLOAD || fs_type == fsSAVE || fs_type == fsOPEN) {
-        fs_bmap->enable(this, 1);
-        fs_bmap->no_disable_go = true;
-    }
-    init();
-    if (fs_type == fsSEL || fs_type == fsOPEN || fs_type == fsDOWNLOAD) {
-        GtkTreePath *p = gtk_tree_path_new_first();
-        gtk_tree_selection_select_path(sel, p);
-        gtk_tree_path_free(p);
-    }
-    monitor_setup();
-    if (fs_type == fsSAVE || fs_type == fsOPEN)
-        gtk_window_set_focus(GTK_WINDOW(wb_shell), fs_go_btn);
-    else if (fs_type != fsDOWNLOAD)
-        gtk_window_set_focus(GTK_WINDOW(wb_shell), fs_tree);
+//     fs_bmap = new sFsBmap(this);
+//     if (fs_type == fsDOWNLOAD || fs_type == fsSAVE || fs_type == fsOPEN) {
+//         fs_bmap->enable(this, 1);
+//         fs_bmap->no_disable_go = true;
+//     }
+//     init();
+//     if (fs_type == fsSEL || fs_type == fsOPEN || fs_type == fsDOWNLOAD) {
+//         GtkTreePath *p = gtk_tree_path_new_first();
+//         gtk_tree_selection_select_path(sel, p);
+//         gtk_tree_path_free(p);
+//     }
+//     monitor_setup();
+//     if (fs_type == fsSAVE || fs_type == fsOPEN)
+//         gtk_window_set_focus(GTK_WINDOW(wb_shell), fs_go_btn);
+//     else if (fs_type != fsDOWNLOAD)
+//         gtk_window_set_focus(GTK_WINDOW(wb_shell), fs_tree);
 }
 
 
@@ -1015,37 +1016,37 @@ GTKfilePopup::~GTKfilePopup()
             owner->MonitorRemove(this);
     }
 
-    FSmonitor.remove(this);
-    if (fs_timer_tag)
-        gtk_timeout_remove(fs_timer_tag);
-    if (p_cancel)
-        (*p_cancel)(this, p_cb_arg);
-    if (p_usrptr)
-        *p_usrptr = 0;
-    if (p_caller)
-        GRX->Deselect(p_caller);
-    if (fs_curnode)
-        gtk_tree_path_free(fs_curnode);
-    if (fs_drag_node)
-        gtk_tree_path_free(fs_drag_node);
-    if (fs_cset_node)
-        gtk_tree_path_free(fs_cset_node);
+    // FSmonitor.remove(this);
+    // if (fs_timer_tag)
+    //     g_source_remove(fs_timer_tag);
+    // if (p_cancel)
+    //     (*p_cancel)(this, p_cb_arg);
+    // if (p_usrptr)
+    //     *p_usrptr = 0;
+    // if (p_caller)
+    //     GRX->Deselect(p_caller);
+    // if (fs_curnode)
+    //     gtk_tree_path_free(fs_curnode);
+    // if (fs_drag_node)
+    //     gtk_tree_path_free(fs_drag_node);
+    // if (fs_cset_node)
+    //     gtk_tree_path_free(fs_cset_node);
 
-    delete [] fs_rootdir;
-    delete [] fs_curfile;
-    delete [] fs_cwd_bak;
-    delete [] fs_colwid;
-    delete fs_bmap;
+    // delete [] fs_rootdir;
+    // delete [] fs_curfile;
+    // delete [] fs_cwd_bak;
+    // delete [] fs_colwid;
+    // delete fs_bmap;
 
-    gtk_signal_disconnect_by_func(GTK_OBJECT(wb_shell),
-        GTK_SIGNAL_FUNC(fs_quit_proc), this);
+    // gtk_signal_disconnect_by_func(G_OBJECT(wb_shell),
+    //     fs_quit_proc, this);
 
-    // It seems that this is needed to avoid a memory leak.
-    if (fs_item_factory)
-        g_object_unref(fs_item_factory);
+    // // It seems that this is needed to avoid a memory leak.
+    // if (fs_item_factory)
+    //     g_object_unref(fs_item_factory);
 
-    gtk_widget_hide(wb_shell);
-    // shell destroyed in gtk_bag destructor
+    // gtk_widget_hide(wb_shell);
+    // // shell destroyed in gtk_bag destructor
 }
 
 
@@ -1190,57 +1191,57 @@ GTKfilePopup::check_update()
             free(cwd);
     }
 
-    GtkTreeStore *store =
-        GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(fs_tree)));
-    GtkTreeIter iter;
-    if (!gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter))
-        return;
+   //  GtkTreeStore *store =
+   //      GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(fs_tree)));
+   //  GtkTreeIter iter;
+   //  if (!gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter))
+   //      return;
 
-    for (;;) {
-        unsigned long mt;
-        gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, COL_MT, &mt, -1);
+   //  for (;;) {
+   //      unsigned long mt;
+   //      gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, COL_MT, &mt, -1);
 
-        char *dir = get_path(&iter, false);
-        unsigned long ptime = fs_dirtime(dir);
-        if (mt == ptime) {
-            delete [] dir;
-            if (!gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter))
-                break;
-            continue;
-        }
+   //      char *dir = get_path(&iter, false);
+   //      unsigned long ptime = fs_dirtime(dir);
+   //      if (mt == ptime) {
+   //          delete [] dir;
+   //          if (!gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter))
+   //              break;
+   //          continue;
+   //      }
 
-	    // We know that the content of the iter directory has changed.
-        gtk_tree_store_set(GTK_TREE_STORE(store), &iter, COL_MT, ptime, -1);
+	  //   // We know that the content of the iter directory has changed.
+   //      gtk_tree_store_set(GTK_TREE_STORE(store), &iter, COL_MT, ptime, -1);
 
-        GtkTreePath *p = gtk_tree_model_get_path(GTK_TREE_MODEL(store), &iter);
-        if (gtk_tree_path_compare(p, fs_curnode) == 0)
-			list_files();  // this is selected node, update files list
-        gtk_tree_path_free(p);
+   //      GtkTreePath *p = gtk_tree_model_get_path(GTK_TREE_MODEL(store), &iter);
+   //      if (gtk_tree_path_compare(p, fs_curnode) == 0)
+			// list_files();  // this is selected node, update files list
+   //      gtk_tree_path_free(p);
 
-        stringlist *fa = fs_list_subdirs(dir);
-        stringlist *fd = fs_list_node_children(&iter);
-	    fs_fdiff(&fa, &fd);
+   //      stringlist *fa = fs_list_subdirs(dir);
+   //      stringlist *fd = fs_list_node_children(&iter);
+	  //   fs_fdiff(&fa, &fd);
 
-        if (fa || fd) {
-            for (stringlist *f = fd; f; f = f->next) {
-                GtkTreeIter chiter;
-                if (fs_find_child(&iter, f->string, &chiter))
-                    gtk_tree_store_remove(GTK_TREE_STORE(store), &chiter);
-            }
-            for (stringlist *f = fa; f; f = f->next) {
-                char *ndir = fs_make_dir(dir, f->string);
-                GtkTreeIter chiter;
-                insert_node(ndir, &chiter, &iter);
-                delete [] ndir;
-            }
+   //      if (fa || fd) {
+   //          for (stringlist *f = fd; f; f = f->next) {
+   //              GtkTreeIter chiter;
+   //              if (fs_find_child(&iter, f->string, &chiter))
+   //                  gtk_tree_store_remove(GTK_TREE_STORE(store), &chiter);
+   //          }
+   //          for (stringlist *f = fa; f; f = f->next) {
+   //              char *ndir = fs_make_dir(dir, f->string);
+   //              GtkTreeIter chiter;
+   //              insert_node(ndir, &chiter, &iter);
+   //              delete [] ndir;
+   //          }
 
-            stringlist::destroy(fa);
-            stringlist::destroy(fd);
-        }
-        delete [] dir;
-        if (!gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter))
-            break;
-    }
+   //          stringlist::destroy(fa);
+   //          stringlist::destroy(fd);
+   //      }
+   //      delete [] dir;
+   //      if (!gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter))
+   //          break;
+   //  }
 }
 
 // Return the complete directory path to the node.  If noexpand is true,
@@ -1259,43 +1260,43 @@ GTKfilePopup::get_path(GtkTreePath *path, bool noexpand)
     if (noexpand && fs_has_child(&iter))
         return (0);
 
-    char *s;
-    gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, COL_TEXT, &s, -1);
-    s = lstring::tocpp(s);
-    for (;;) {
-        GtkTreeIter prnt;
-        if (!gtk_tree_model_iter_parent(GTK_TREE_MODEL(store), &prnt, &iter))
-            break;
-        char *c;
-        gtk_tree_model_get(GTK_TREE_MODEL(store), &prnt, COL_TEXT, &c, -1);
-        char *t = new char[strlen(s) + strlen(c) + 2];
-        strcpy(t, c);
-        char *tt = t + strlen(t);
-        *tt++ = '/';
-        strcpy(tt, s);
-        delete [] s;
-        free(c);
-        s = t;
-        iter = prnt;
-    }
-    if (is_root(fs_rootdir)) {
-        if (lstring::is_rooted(s))
-            return (s);
-        else {
-            char *t = new char[strlen(s) + 2];
-            *t = '/';
-            strcpy(t+1, s);
-            delete [] s;
-            return (t);
-        }
-    }
-    if (!lstring::strrdirsep(s)) {
-        delete [] s;
-        return (lstring::copy(fs_rootdir));
-    }
-    char *t = fs_make_dir(fs_rootdir, lstring::strdirsep(s) + 1);
-    delete [] s;
-    return (t);
+    // char *s;
+    // gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, COL_TEXT, &s, -1);
+    // s = lstring::tocpp(s);
+    // for (;;) {
+    //     GtkTreeIter prnt;
+    //     if (!gtk_tree_model_iter_parent(GTK_TREE_MODEL(store), &prnt, &iter))
+    //         break;
+    //     char *c;
+    //     gtk_tree_model_get(GTK_TREE_MODEL(store), &prnt, COL_TEXT, &c, -1);
+    //     char *t = new char[strlen(s) + strlen(c) + 2];
+    //     strcpy(t, c);
+    //     char *tt = t + strlen(t);
+    //     *tt++ = '/';
+    //     strcpy(tt, s);
+    //     delete [] s;
+    //     free(c);
+    //     s = t;
+    //     iter = prnt;
+    // }
+    // if (is_root(fs_rootdir)) {
+    //     if (lstring::is_rooted(s))
+    //         return (s);
+    //     else {
+    //         char *t = new char[strlen(s) + 2];
+    //         *t = '/';
+    //         strcpy(t+1, s);
+    //         delete [] s;
+    //         return (t);
+    //     }
+    // }
+    // if (!lstring::strrdirsep(s)) {
+    //     delete [] s;
+    //     return (lstring::copy(fs_rootdir));
+    // }
+    // char *t = fs_make_dir(fs_rootdir, lstring::strdirsep(s) + 1);
+    // delete [] s;
+    // return (t);
 }
 
 
@@ -1336,19 +1337,19 @@ GTKfilePopup::insert_node(char *dir, GtkTreeIter *iter,
     else {
         for (;;) {
             char *cname;
-            gtk_tree_model_get(tmod, iter, COL_TEXT, &cname, -1);
-            int cmp = strcmp(name, cname);
-            free(cname);
-            if (cmp < 0) {
-                gtk_tree_store_insert_before(store, iter, parent_iter, iter);
-                break;
-            }
-            GtkTreeIter titer = *iter;
-            if (!gtk_tree_model_iter_next(tmod, &titer)) {
-                gtk_tree_store_insert_after(store, iter, parent_iter, iter);
-                break;
-            }
-            *iter = titer;
+            // gtk_tree_model_get(tmod, iter, COL_TEXT, &cname, -1);
+            // int cmp = strcmp(name, cname);
+            // free(cname);
+            // if (cmp < 0) {
+            //     gtk_tree_store_insert_before(store, iter, parent_iter, iter);
+            //     break;
+            // }
+            // GtkTreeIter titer = *iter;
+            // if (!gtk_tree_model_iter_next(tmod, &titer)) {
+            //     gtk_tree_store_insert_after(store, iter, parent_iter, iter);
+            //     break;
+            // }
+            // *iter = titer;
         }
     }
 
@@ -1356,8 +1357,8 @@ GTKfilePopup::insert_node(char *dir, GtkTreeIter *iter,
     gtk_tree_store_set(store, iter, COL_TEXT, name,
         COL_MT, fs_dirtime(dir), -1);
 #else
-    gtk_tree_store_set(store, iter, COL_PBUF, fs_bmap->close_pb,
-        COL_TEXT, name, COL_MT, fs_dirtime(dir), -1);
+    // gtk_tree_store_set(store, iter, COL_PBUF, fs_bmap->close_pb,
+    //     COL_TEXT, name, COL_MT, fs_dirtime(dir), -1);
 #endif
 
     return (true);
@@ -1590,22 +1591,22 @@ GTKfilePopup::list_files()
     delete [] p;
     closedir(wdir);
     stringlist::destroy(filt);
-    int w = wb_textarea->allocation.width;
-    if (w <= 1)
-        w = DEF_TEXT_USWIDTH;
-    int ncols = w/GTKfont::stringWidth(wb_textarea, 0);
-    int *colwid;
-    char *s = fl.get_formatted_list(ncols, fs_mtime_sort, 0, &colwid);
+    // int w = wb_textarea->allocation.width;
+    // if (w <= 1)
+    //     w = DEF_TEXT_USWIDTH;
+    // int ncols = w/GTKfont::stringWidth(wb_textarea, 0);
+    // int *colwid;
+    // char *s = fl.get_formatted_list(ncols, fs_mtime_sort, 0, &colwid);
 
-    // maintain scroll position
-    double val = text_get_scroll_value(wb_textarea);
-    text_set_chars(wb_textarea, s);
-    text_set_scroll_value(wb_textarea, val);
-    delete [] fs_colwid;
-    fs_colwid = colwid;
+    // // maintain scroll position
+    // double val = text_get_scroll_value(wb_textarea);
+    // text_set_chars(wb_textarea, s);
+    // text_set_scroll_value(wb_textarea, val);
+    // delete [] fs_colwid;
+    // fs_colwid = colwid;
 
-    select_file(0);
-    delete [] s;
+    // select_file(0);
+    // delete [] s;
 }
 
 
@@ -1712,38 +1713,38 @@ GTKfilePopup::set_label()
     }
 
     if (fs_anc_btn) {
-        GtkWidget *menu = GTK_MENU_ITEM(fs_anc_btn)->submenu;
-        if (menu)
-            gtk_widget_destroy(menu);
-        menu = gtk_menu_new();
+        // GtkWidget *menu = GTK_MENU_ITEM(fs_anc_btn)->submenu;
+        // if (menu)
+        //     gtk_widget_destroy(menu);
+        // menu = gtk_menu_new();
 
-        char buf[256];
-        char *s = fs_rootdir;
-        char *e = lstring::strdirsep(fs_rootdir);
-        if (e)
-            e++;
-        else
-            e = fs_rootdir + strlen(fs_rootdir);
-        for (;;) {
-            strncpy(buf, s, e-s);
-            buf[e-s] = 0;
-            s = e;
-            GtkWidget *menu_item = gtk_menu_item_new_with_label(buf);
-            gtk_widget_set_name(menu_item, buf);
-            gtk_menu_append(GTK_MENU(menu), menu_item);
-            gtk_object_set_data(GTK_OBJECT(menu_item), "offset",
-                (void*)(e - fs_rootdir - 1));
-            gtk_signal_connect(GTK_OBJECT(menu_item), "activate",
-                GTK_SIGNAL_FUNC(fs_upmenu_proc), this);
-            gtk_widget_show(menu_item);
-            if (!*s)
-                break;
-            e = lstring::strdirsep(s);
-            if (!e)
-                break;
-            e++;
-        }
-        gtk_menu_item_set_submenu(GTK_MENU_ITEM(fs_anc_btn), menu);
+        // char buf[256];
+        // char *s = fs_rootdir;
+        // char *e = lstring::strdirsep(fs_rootdir);
+        // if (e)
+        //     e++;
+        // else
+        //     e = fs_rootdir + strlen(fs_rootdir);
+        // for (;;) {
+        //     strncpy(buf, s, e-s);
+        //     buf[e-s] = 0;
+        //     s = e;
+        //     GtkWidget *menu_item = gtk_menu_item_new_with_label(buf);
+        //     gtk_widget_set_name(menu_item, buf);
+        //     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
+        //     g_object_set_data(G_OBJECT(menu_item), "offset",
+        //         (void*)(e - fs_rootdir - 1));
+        //     g_signal_connect(G_OBJECT(menu_item), "activate",
+        //         fs_upmenu_proc, this);
+        //     gtk_widget_show(menu_item);
+        //     if (!*s)
+        //         break;
+        //     e = lstring::strdirsep(s);
+        //     if (!e)
+        //         break;
+        //     e++;
+        // }
+        // gtk_menu_item_set_submenu(GTK_MENU_ITEM(fs_anc_btn), menu);
     }
 }
 
@@ -1823,8 +1824,8 @@ GTKfilePopup::menu_handler(GtkWidget *widget, int code)
                     data = new fs_data(this, sel);
             }
         }
-        if (data)
-            gtk_idle_add((GtkFunction)fs_open_idle, data);
+        // if (data)
+        //     g_idle_add((GtkFunction)fs_open_idle, data);
     }
     else if (code == fsNew) {
         char *path = get_path(fs_curnode, false);
@@ -2031,9 +2032,9 @@ GTKfilePopup::fs_list_node_children(GtkTreeIter *parent_iter)
         return (0);
     while (n--) {
         char *cname;
-        gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, COL_TEXT, &cname, -1);
-        s0 = new stringlist(lstring::tocpp(cname), s0);
-        gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter);
+        // gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, COL_TEXT, &cname, -1);
+        // s0 = new stringlist(lstring::tocpp(cname), s0);
+        // gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter);
     }
     return (s0);
 }
@@ -2070,13 +2071,13 @@ GTKfilePopup::fs_find_child(GtkTreeIter *parent_iter, const char *name,
         return (false);
     while (n--) {
         char *cname;
-        gtk_tree_model_get(GTK_TREE_MODEL(store), iter, COL_TEXT, &cname, -1);
-        if (!strcmp(cname, name)) {
-            free(cname);
-            return (true);
-        }
-        free(cname);
-        gtk_tree_model_iter_next(GTK_TREE_MODEL(store), iter);
+        // gtk_tree_model_get(GTK_TREE_MODEL(store), iter, COL_TEXT, &cname, -1);
+        // if (!strcmp(cname, name)) {
+        //     free(cname);
+        //     return (true);
+        // }
+        // free(cname);
+        // gtk_tree_model_iter_next(GTK_TREE_MODEL(store), iter);
     }
     return (false);
 }
@@ -2103,8 +2104,8 @@ GTKfilePopup::fs_focus_hdlr(GtkWidget *widget, GdkEvent*, void*)
 {
     if (GRX->MainFrame() && GRX->MainFrame()->PositionReferenceWidget())
         GRX->SetFocus(GRX->MainFrame()->PositionReferenceWidget());
-    gtk_signal_disconnect_by_func(GTK_OBJECT(widget),
-        GTK_SIGNAL_FUNC(fs_focus_hdlr), 0);
+    // gtk_signal_disconnect_by_func(G_OBJECT(widget),
+    //     fs_focus_hdlr, 0);
     return (0);
 }
 
@@ -2143,8 +2144,8 @@ GTKfilePopup::fs_tree_select_proc(GtkTreeSelection*, GtkTreeModel*,
     GTKfilePopup *fs = static_cast<GTKfilePopup*>(data);
     if (!fs)
         return (false);
-    if (!fs->fs_tid)
-        fs->fs_tid = gtk_idle_add(fs_sel_test_idle, fs);
+    // if (!fs->fs_tid)
+    //     fs->fs_tid = g_idle_add(fs_sel_test_idle, fs);
     return (true);
 }
 
@@ -2183,7 +2184,7 @@ GTKfilePopup::fs_tree_collapse_proc(GtkTreeView *tv, GtkTreeIter *iter,
     (void)iter;
 #else
     GtkTreeStore *store = GTK_TREE_STORE(gtk_tree_view_get_model(tv));
-    gtk_tree_store_set(store, iter, COL_PBUF, fs->fs_bmap->close_pb, -1);
+    // gtk_tree_store_set(store, iter, COL_PBUF, fs->fs_bmap->close_pb, -1);
 #endif
 
     if (fs->fs_curnode && gtk_tree_path_is_ancestor(path, fs->fs_curnode)) {
@@ -2207,7 +2208,7 @@ GTKfilePopup::fs_tree_expand_proc(GtkTreeView *tv, GtkTreeIter *iter,
     if (!fs)
         return (true);
     GtkTreeStore *store = GTK_TREE_STORE(gtk_tree_view_get_model(tv));
-    gtk_tree_store_set(store, iter, COL_PBUF, fs->fs_bmap->open_pb, -1);
+    // gtk_tree_store_set(store, iter, COL_PBUF, fs->fs_bmap->open_pb, -1);
 #endif
     return (false);
 }
@@ -2221,7 +2222,7 @@ GTKfilePopup::fs_upmenu_proc(GtkWidget *widget, void *client_data)
 {
     GTKfilePopup *fs = static_cast<GTKfilePopup*>(client_data);
     if (fs) {
-        long offset = (long)gtk_object_get_data(GTK_OBJECT(widget), "offset");
+        long offset = (long)g_object_get_data(G_OBJECT(widget), "offset");
         if (offset <= 0)
             offset = 1;
         if (offset >= 256)
@@ -2261,162 +2262,162 @@ GTKfilePopup::fs_open_proc(GtkWidget *widget, void *client_data)
 // A new filter entry has been selected, update the index and toggle
 // the editable flag.
 //
-void
-GTKfilePopup::fs_filter_sel_proc(GtkList *list, GtkWidget *widget, void *fsp)
-{
-    GTKfilePopup *fs = static_cast<GTKfilePopup*>(fsp);
-    if (fs) {
-        int ox = fs->fs_filter_index;
-        fs->fs_filter_index = gtk_list_child_position(list, widget);
-        gtk_entry_set_editable(GTK_ENTRY(GTK_COMBO(fs->fs_filter)->entry),
-            (fs->fs_filter_index > 1));
-        if (fs->fs_filter_index != ox)
-            fs->list_files();
-    }
-}
+// void
+// GTKfilePopup::fs_filter_sel_proc(GtkList *list, GtkWidget *widget, void *fsp)
+// {
+//     GTKfilePopup *fs = static_cast<GTKfilePopup*>(fsp);
+//     if (fs) {
+//         int ox = fs->fs_filter_index;
+//         fs->fs_filter_index = gtk_list_child_position(list, widget);
+//         gtk_editable_set_editable(GTK_EDITABLE(GTK_COMBO_BOX(fs->fs_filter)->entry),
+//             (fs->fs_filter_index > 1));
+//         if (fs->fs_filter_index != ox)
+//             fs->list_files();
+//     }
+// }
 
 
 // Private static GTK signal handler.
 // A filter entry has been selected, update the text for this entry.
 //
-void
-GTKfilePopup::fs_filter_unsel_proc(GtkList *list, GtkWidget *widget, void *fsp)
-{
-    GTKfilePopup *fs = static_cast<GTKfilePopup*>(fsp);
-    if (fs) {
-        int i = gtk_list_child_position(list, widget);
-        if (i > 1) {
-            // update entry
-            const char *text =
-                gtk_entry_get_text(GTK_ENTRY(GTK_COMBO(fs->fs_filter)->entry));
-            gtk_label_set_text(GTK_LABEL(GTK_BIN(widget)->child), text);
-            delete [] fs_filter_options[i];
-            fs_filter_options[i] = lstring::copy(text);
-        }
-    }
-}
+// void
+// GTKfilePopup::fs_filter_unsel_proc(GtkList *list, GtkWidget *widget, void *fsp)
+// {
+//     GTKfilePopup *fs = static_cast<GTKfilePopup*>(fsp);
+//     if (fs) {
+//         int i = gtk_list_child_position(list, widget);
+//         if (i > 1) {
+//             // update entry
+//             const char *text =
+//                 gtk_entry_get_text(GTK_ENTRY(GTK_COMBO_BOX(fs->fs_filter)->entry));
+//             gtk_label_set_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(widget))), text);
+//             delete [] fs_filter_options[i];
+//             fs_filter_options[i] = lstring::copy(text);
+//         }
+//     }
+// }
 
 
 // Private static GTK signal handler.
 // Called when Enter pressed while editing combo box string.
 //
-void
-GTKfilePopup::fs_filter_activate_proc(GtkWidget*, void *fsp)
-{
-    GTKfilePopup *fs = static_cast<GTKfilePopup*>(fsp);
-    if (fs)
-        fs->list_files();
-}
+// void
+// GTKfilePopup::fs_filter_activate_proc(GtkWidget*, void *fsp)
+// {
+//     GTKfilePopup *fs = static_cast<GTKfilePopup*>(fsp);
+//     if (fs)
+//         fs->list_files();
+// }
 
 
 // Private static GTK signal handler.
 // Handler for the "up" button, changes the root directory to the parent
 // directory.  This clears and resets both windows.
 //
-void
-GTKfilePopup::fs_up_btn_proc(GtkWidget*, void *fsp)
-{
-    GTKfilePopup *fs = static_cast<GTKfilePopup*>(fsp);
-    if (fs) {
-        if (!fs->fs_rootdir || is_root(fs->fs_rootdir))
-            return;
+// void
+// GTKfilePopup::fs_up_btn_proc(GtkWidget*, void *fsp)
+// {
+//     GTKfilePopup *fs = static_cast<GTKfilePopup*>(fsp);
+//     if (fs) {
+//         if (!fs->fs_rootdir || is_root(fs->fs_rootdir))
+//             return;
 
-        char *s = lstring::strrdirsep(fs->fs_rootdir);
-        if (s) {
-            if (s == lstring::strdirsep(fs->fs_rootdir))
-                s++;
-            *s = 0;
-            s = lstring::copy(fs->fs_rootdir);
-            delete [] fs->fs_rootdir;
-            fs->fs_rootdir = s;
-        }
-        fs->init();
-    }
-}
-
-
-// Private static GTK signal handler.
-void
-GTKfilePopup::fs_realize_proc(GtkWidget *widget, void *fsp)
-{
-    // Remove the primary selection clipboard before selection. 
-    // In order to return the full path, we have to handle
-    // selections ourselves.
-    //
-    if (GTK_IS_TEXT_VIEW(widget))
-        gtk_text_buffer_remove_selection_clipboard(
-            gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)),
-            gtk_widget_get_clipboard(widget, GDK_SELECTION_PRIMARY));
-    text_realize_proc(widget, fsp);
-}
+//         char *s = lstring::strrdirsep(fs->fs_rootdir);
+//         if (s) {
+//             if (s == lstring::strdirsep(fs->fs_rootdir))
+//                 s++;
+//             *s = 0;
+//             s = lstring::copy(fs->fs_rootdir);
+//             delete [] fs->fs_rootdir;
+//             fs->fs_rootdir = s;
+//         }
+//         fs->init();
+//     }
+// }
 
 
 // Private static GTK signal handler.
-void
-GTKfilePopup::fs_unrealize_proc(GtkWidget *widget, void*)
-{
-    // Stupid alert:  put the clipboard back into the buffer to
-    // avoid a whine when remove_selection_clipboard is called in
-    // unrealize.
+// void
+// GTKfilePopup::fs_realize_proc(GtkWidget *widget, void *fsp)
+// {
+//     // Remove the primary selection clipboard before selection. 
+//     // In order to return the full path, we have to handle
+//     // selections ourselves.
+//     //
+//     if (GTK_IS_TEXT_VIEW(widget))
+//         gtk_text_buffer_remove_selection_clipboard(
+//             gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)),
+//             gtk_widget_get_clipboard(widget, GDK_SELECTION_PRIMARY));
+//     text_realize_proc(widget, fsp);
+// }
 
-    if (GTK_IS_TEXT_VIEW(widget))
-        gtk_text_buffer_add_selection_clipboard(
-            gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)),
-            gtk_widget_get_clipboard(widget, GDK_SELECTION_PRIMARY));
-}
+
+// // Private static GTK signal handler.
+// void
+// GTKfilePopup::fs_unrealize_proc(GtkWidget *widget, void*)
+// {
+//     // Stupid alert:  put the clipboard back into the buffer to
+//     // avoid a whine when remove_selection_clipboard is called in
+//     // unrealize.
+
+//     if (GTK_IS_TEXT_VIEW(widget))
+//         gtk_text_buffer_add_selection_clipboard(
+//             gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)),
+//             gtk_widget_get_clipboard(widget, GDK_SELECTION_PRIMARY));
+// }
 
 
 // Compute new column layout on resize.
 //
-void
-GTKfilePopup::fs_resize_proc(GtkWidget *widget, GtkAllocation *a, void *fsp)
-{
-    if (GTK_WIDGET_REALIZED(widget) && fsp) {
-        GTKfilePopup *fs = static_cast<GTKfilePopup*>(fsp);
-        if (fs) {
-            // This handler is called when a scrollbar is added or
-            // removed.  We actually only care about the containing
-            // window size, which includes the scrollbars.  Probably
-            // should attach this handler to the container, but maybe
-            // we will want to deal with scrollbar changes in future.
-            a = &fs->fs_scrwin->allocation;
+// void
+// GTKfilePopup::fs_resize_proc(GtkWidget *widget, GtkAllocation *a, void *fsp)
+// {
+//     // if (gtk_widget_get_realized(widget) && fsp) {
+//     //     GTKfilePopup *fs = static_cast<GTKfilePopup*>(fsp);
+//     //     if (fs) {
+//     //         // This handler is called when a scrollbar is added or
+//     //         // removed.  We actually only care about the containing
+//     //         // window size, which includes the scrollbars.  Probably
+//     //         // should attach this handler to the container, but maybe
+//     //         // we will want to deal with scrollbar changes in future.
+//     //         a = &fs->fs_scrwin->allocation;
 
-            if (a->width == fs->fs_alloc_width)
-                return;
+//     //         if (a->width == fs->fs_alloc_width)
+//     //             return;
 
-            fs->fs_alloc_width = a->width;
-            fs->list_files();
-        }
-    }
-}
+//     //         fs->fs_alloc_width = a->width;
+//     //         fs->list_files();
+//     //     }
+//     // }
+// }
 
 
 // Private static GTK signal handler.
 // Handler for button presses in the directory and file listing windows.
 //
-int
-GTKfilePopup::fs_button_press_proc(GtkWidget *widget, GdkEvent *event,
-    void *fsp)
-{
-    GTKfilePopup *fs = static_cast<GTKfilePopup*>(fsp);
-    if (fs)
-        return (fs->button_handler(widget, event, false));
-    return (false);
-}
+// int
+// GTKfilePopup::fs_button_press_proc(GtkWidget *widget, GdkEvent *event,
+//     void *fsp)
+// {
+//     GTKfilePopup *fs = static_cast<GTKfilePopup*>(fsp);
+//     if (fs)
+//         return (fs->button_handler(widget, event, false));
+//     return (false);
+// }
 
 
 // Private static GTK signal handler.
 // Handler for button releases in the directory and file listing windows.
 //
-int
-GTKfilePopup::fs_button_release_proc(GtkWidget *widget, GdkEvent *event,
-    void *fsp)
-{
-    GTKfilePopup *fs = static_cast<GTKfilePopup*>(fsp);
-    if (fs)
-        return (fs->button_handler(widget, event, true));
-    return (false);
-}
+// int
+// GTKfilePopup::fs_button_release_proc(GtkWidget *widget, GdkEvent *event,
+//     void *fsp)
+// {
+//     GTKfilePopup *fs = static_cast<GTKfilePopup*>(fsp);
+//     if (fs)
+//         return (fs->button_handler(widget, event, true));
+//     return (false);
+// }
 
 
 
@@ -2424,245 +2425,245 @@ GTKfilePopup::fs_button_release_proc(GtkWidget *widget, GdkEvent *event,
 // Start the drag if we are over text and the pointer moved, or show the
 // "ls -l" string in the label.
 //
-int
-GTKfilePopup::fs_motion_proc(GtkWidget *widget, GdkEvent *event, void *fsp)
-{
-    GTKfilePopup *fs = static_cast<GTKfilePopup*>(fsp);
-    if (fs) {
-        if (fs->fs_dragging) {
-#if GTK_CHECK_VERSION(2,12,0)
-            if (event->motion.is_hint)
-                gdk_event_request_motions((GdkEventMotion*)event);
-#else
-            // Strange voodoo to "turn on" motion events, that are
-            // otherwise suppressed since GDK_POINTER_MOTION_HINT_MASK
-            // is set.  See GdkEventMask doc.
-            gdk_window_get_pointer(widget->window, 0, 0, 0);
-#endif
-            if ((abs((int)event->motion.x - fs->fs_drag_x) > 4 ||
-                    abs((int)event->motion.y - fs->fs_drag_y) > 4)) {
-                fs->fs_dragging = false;
-                if (widget == fs->fs_tree) {
-                    gtk_selection_owner_set(widget, GDK_SELECTION_PRIMARY,
-                        GDK_CURRENT_TIME);
-                }
-                GtkTargetList *targets =
-                    gtk_target_list_new(target_table, n_targets);
-                gtk_drag_begin(widget, targets,
-                    (GdkDragAction)(GDK_ACTION_COPY | GDK_ACTION_MOVE |
-                    GDK_ACTION_LINK | GDK_ACTION_ASK), fs->fs_drag_btn, event);
-                // Hmmmm, somebody set a keyboard grab.  This causes the
-                // clist to lose focus, which erases the box marking the
-                // press location.
-                if (widget == fs->fs_tree)
-                    gdk_keyboard_ungrab(GDK_CURRENT_TIME);
-                return (true);
-            }
-        }
-        if (fs->fs_label && widget == fs->wb_textarea)  {
-            char *fn = fs->file_name_at((int)event->motion.x,
-                (int)event->motion.y, 0, 0);
-            if (fn) {
-                char *dir = fs->get_path(fs->fs_curnode, false);
-                char *path = pathlist::mk_path(dir, fn);
-                delete [] fn;
-                delete [] dir;
+// int
+// GTKfilePopup::fs_motion_proc(GtkWidget *widget, GdkEvent *event, void *fsp)
+// {
+//     GTKfilePopup *fs = static_cast<GTKfilePopup*>(fsp);
+//     if (fs) {
+//         if (fs->fs_dragging) {
+// #if GTK_CHECK_VERSION(2,12,0)
+//             if (event->motion.is_hint)
+//                 gdk_event_request_motions((GdkEventMotion*)event);
+// #else
+//             // Strange voodoo to "turn on" motion events, that are
+//             // otherwise suppressed since GDK_POINTER_MOTION_HINT_MASK
+//             // is set.  See GdkEventMask doc.
+//             gdk_window_get_pointer(gtk_widget_get_window(widget), 0, 0, 0);
+// #endif
+//             if ((abs((int)event->motion.x - fs->fs_drag_x) > 4 ||
+//                     abs((int)event->motion.y - fs->fs_drag_y) > 4)) {
+//                 fs->fs_dragging = false;
+//                 if (widget == fs->fs_tree) {
+//                     gtk_selection_owner_set(widget, GDK_SELECTION_PRIMARY,
+//                         GDK_CURRENT_TIME);
+//                 }
+//                 GtkTargetList *targets =
+//                     gtk_target_list_new(target_table, n_targets);
+//                 // gtk_drag_begin(widget, targets,
+//                 //     (GdkDragAction)(GDK_ACTION_COPY | GDK_ACTION_MOVE |
+//                 //     GDK_ACTION_LINK | GDK_ACTION_ASK), fs->fs_drag_btn, event);
+//                 // Hmmmm, somebody set a keyboard grab.  This causes the
+//                 // clist to lose focus, which erases the box marking the
+//                 // press location.
+//                 // if (widget == fs->fs_tree)
+//                 //     gdk_keyboard_ungrab(GDK_CURRENT_TIME);
+//                 return (true);
+//             }
+//         }
+//         if (fs->fs_label && widget == fs->wb_textarea)  {
+//             char *fn = fs->file_name_at((int)event->motion.x,
+//                 (int)event->motion.y, 0, 0);
+//             if (fn) {
+//                 char *dir = fs->get_path(fs->fs_curnode, false);
+//                 char *path = pathlist::mk_path(dir, fn);
+//                 delete [] fn;
+//                 delete [] dir;
 
-                char *text = pathlist::ls_longform(path, true);
-                delete [] path;
-                gtk_label_set_text(GTK_LABEL(fs->fs_label), text);
-                delete [] text;
-            }
-        }
-    }
-    return (false);
-}
+//                 char *text = pathlist::ls_longform(path, true);
+//                 delete [] path;
+//                 gtk_label_set_text(GTK_LABEL(fs->fs_label), text);
+//                 delete [] text;
+//             }
+//         }
+//     }
+//     return (false);
+// }
 
 
 // Private static GTK signal handler.
 // Restore the label.
-int
-GTKfilePopup::fs_leave_proc(GtkWidget*, GdkEvent*, void *fsp)
-{
-    GTKfilePopup *fs = static_cast<GTKfilePopup*>(fsp);
-    if (fs)
-        fs->set_label();
-    return (false);
-}
+// int
+// GTKfilePopup::fs_leave_proc(GtkWidget*, GdkEvent*, void *fsp)
+// {
+//     GTKfilePopup *fs = static_cast<GTKfilePopup*>(fsp);
+//     if (fs)
+//         fs->set_label();
+//     return (false);
+// }
 
 
 // Private static GTK signal handler.
 // If dragging from the text widget, set the drag icon, so that it looks
 // the same as when starting from the ctree.
 //
-void
-GTKfilePopup::fs_drag_begin(GtkWidget*, GdkDragContext *context)
-{
-    gtk_drag_set_icon_default(context);
-}
+// void
+// GTKfilePopup::fs_drag_begin(GtkWidget*, GdkDragContext *context)
+// {
+//     gtk_drag_set_icon_default(context);
+// }
 
 
 // Private static GTK signal handler.
 // Process the path name received in the drop.
 //
-void
-GTKfilePopup::fs_drag_data_received(GtkWidget *widget, GdkDragContext *context,
-    gint x, gint y, GtkSelectionData *data, guint, guint time)
-{
-    if (data->length >= 0 && data->format == 8 && data->data) {
-        GTKfilePopup *fs =
-            (GTKfilePopup*)gtk_object_get_data(GTK_OBJECT(widget), "fsbag");
-        if (fs) {
-            char *dst = 0;
-            if (widget == fs->wb_textarea)
-                dst = fs->get_path(fs->fs_curnode, false);
-            else if (widget == fs->fs_tree) {
-                GtkTreePath *p;
-                if (gtk_tree_view_get_path_at_pos(
-                        GTK_TREE_VIEW(fs->fs_tree), x, y, &p, 0, 0, 0)) {
-                    GtkTreeModel *store = 
-                        gtk_tree_view_get_model(GTK_TREE_VIEW(fs->fs_tree));
+// void
+// GTKfilePopup::fs_drag_data_received(GtkWidget *widget, GdkDragContext *context,
+//     gint x, gint y, GtkSelectionData *data, guint, guint time)
+// {
+//     if (gtk_selection_data_get_length(data) >= 0 && gtk_selection_data_get_format(data) == 8 && gtk_selection_data_get_data(data)) {
+//         GTKfilePopup *fs =
+//             (GTKfilePopup*)g_object_get_data(G_OBJECT(widget), "fsbag");
+//         if (fs) {
+//             char *dst = 0;
+//             if (widget == fs->wb_textarea)
+//                 dst = fs->get_path(fs->fs_curnode, false);
+//             else if (widget == fs->fs_tree) {
+//                 GtkTreePath *p;
+//                 if (gtk_tree_view_get_path_at_pos(
+//                         GTK_TREE_VIEW(fs->fs_tree), x, y, &p, 0, 0, 0)) {
+//                     GtkTreeModel *store = 
+//                         gtk_tree_view_get_model(GTK_TREE_VIEW(fs->fs_tree));
 
-                    GtkTreeIter iter;
-                    if (gtk_tree_model_get_iter(store, &iter, p))
-                        dst = fs->get_path(&iter, false);
-                    gtk_tree_path_free(p);
-                }
-            }
-            if (dst) {
-                gtk_DoFileAction(fs->wb_shell, (char*)data->data, dst,
-                    context, true);
-                delete [] dst;
-            }
-            gtk_drag_finish(context, true, false, time);
-            return;
-        }
-    }
-    gtk_drag_finish(context, false, false, time);
-}
+//                     GtkTreeIter iter;
+//                     if (gtk_tree_model_get_iter(store, &iter, p))
+//                         dst = fs->get_path(&iter, false);
+//                     gtk_tree_path_free(p);
+//                 }
+//             }
+//             if (dst) {
+//                 gtk_DoFileAction(fs->wb_shell, (char*)data->data, dst,
+//                     context, true);
+//                 delete [] dst;
+//             }
+//             gtk_drag_finish(context, true, false, time);
+//             return;
+//         }
+//     }
+//     gtk_drag_finish(context, false, false, time);
+// }
 
 
 // Private static GTK signal handler.
 // Set the drag source data.
 //
-void
-GTKfilePopup::fs_source_drag_data_get(GtkWidget *widget, GdkDragContext*,
-    GtkSelectionData *selection_data, guint, guint, gpointer)
-{
-    // stop native handler
-    gtk_signal_emit_stop_by_name(GTK_OBJECT(widget), "drag-data-get");
+// void
+// GTKfilePopup::fs_source_drag_data_get(GtkWidget *widget, GdkDragContext*,
+//     GtkSelectionData *selection_data, guint, guint, gpointer)
+// {
+//     // stop native handler
+//     g_signal_stop_emission_by_name(G_OBJECT(widget), "drag-data-get");
 
-    GTKfilePopup *fs =
-        (GTKfilePopup*)gtk_object_get_data(GTK_OBJECT(widget), "fsbag");
-    if (fs) {
-        char *path;
-        if (GTK_IS_TREE_VIEW(widget))
-            path = fs->get_path(fs->fs_drag_node, false);
-        else
-            path = fs->get_selection();
-        if (path) {
-            gtk_selection_data_set(selection_data, selection_data->target,
-                8, (unsigned char*)path, strlen(path));
-            delete [] path;
-        }
-    }
-}
+//     GTKfilePopup *fs =
+//         (GTKfilePopup*)g_object_get_data(G_OBJECT(widget), "fsbag");
+//     if (fs) {
+//         char *path;
+//         if (GTK_IS_TREE_VIEW(widget))
+//             path = fs->get_path(fs->fs_drag_node, false);
+//         else
+//             path = fs->get_selection();
+//         if (path) {
+//             gtk_selection_data_set(selection_data, selection_gtk_selection_data_get_target(data),
+//                 8, (unsigned char*)path, strlen(path));
+//             delete [] path;
+//         }
+//     }
+// }
 
 
 // Private static GTK signal handler.
 // If the pointer is in the directory list and a drag is active,
 // highlight the underlying directory (will be the destination).
 //
-int
-GTKfilePopup::fs_dir_drag_motion(GtkWidget *widget, GdkDragContext*, int x,
-    int y, guint)
-{
-    GTKfilePopup *fs =
-        (GTKfilePopup*)gtk_object_get_data(GTK_OBJECT(widget), "fsbag");
-    if (!fs)
-        return (true);
-    fs_scroll_hdlr(widget);
-    GtkTreeModel *store = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
-    GtkTreePath *p;
-    if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), 
-            x, y, &p, 0, 0, 0)) {
-        if (fs->fs_cset_node && !gtk_tree_path_compare(fs->fs_cset_node, p)) {
-            gtk_tree_path_free(p);
-            return (true);
-        }
-        GtkTreeIter iter;
-        if (fs->fs_cset_node &&
-                gtk_tree_model_get_iter(store, &iter, fs->fs_cset_node))
-            gtk_tree_store_set(GTK_TREE_STORE(store), &iter, COL_BG, 0, -1);
-        gtk_tree_path_free(fs->fs_cset_node);
-        fs->fs_cset_node = p;
-        gtk_tree_model_get_iter(store, &iter, p);
-        const char *c = GRpkgIf()->GetAttrColor(GRattrColorLocSel);
-        gtk_tree_store_set(GTK_TREE_STORE(store), &iter, COL_BG, c, -1);
-    }
-    return (true);
-}
+// int
+// GTKfilePopup::fs_dir_drag_motion(GtkWidget *widget, GdkDragContext*, int x,
+//     int y, guint)
+// {
+//     GTKfilePopup *fs =
+//         (GTKfilePopup*)g_object_get_data(G_OBJECT(widget), "fsbag");
+//     if (!fs)
+//         return (true);
+//     fs_scroll_hdlr(widget);
+//     GtkTreeModel *store = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
+//     GtkTreePath *p;
+//     if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(widget), 
+//             x, y, &p, 0, 0, 0)) {
+//         if (fs->fs_cset_node && !gtk_tree_path_compare(fs->fs_cset_node, p)) {
+//             gtk_tree_path_free(p);
+//             return (true);
+//         }
+//         GtkTreeIter iter;
+//         if (fs->fs_cset_node &&
+//                 gtk_tree_model_get_iter(store, &iter, fs->fs_cset_node))
+//             gtk_tree_store_set(GTK_TREE_STORE(store), &iter, COL_BG, 0, -1);
+//         gtk_tree_path_free(fs->fs_cset_node);
+//         fs->fs_cset_node = p;
+//         gtk_tree_model_get_iter(store, &iter, p);
+//         const char *c = GRpkgIf()->GetAttrColor(GRattrColorLocSel);
+//         gtk_tree_store_set(GTK_TREE_STORE(store), &iter, COL_BG, c, -1);
+//     }
+//     return (true);
+// }
 
 
 // Private static GTK signal handler.
 // In GTK-2, this overrides the built-in selection-get function.
 //
-void
-GTKfilePopup::fs_selection_get(GtkWidget *widget,
-    GtkSelectionData *selection_data, guint, guint, void*)
-{
-    if (selection_data->selection != GDK_SELECTION_PRIMARY)
-        return;  
+// void
+// GTKfilePopup::fs_selection_get(GtkWidget *widget,
+//     GtkSelectionData *selection_data, guint, guint, void*)
+// {
+//     if (selection_data->selection != GDK_SELECTION_PRIMARY)
+//         return;  
 
-    // stop native handler
-    gtk_signal_emit_stop_by_name(GTK_OBJECT(widget), "selection-get");
+//     // stop native handler
+//     g_signal_stop_emission_by_name(G_OBJECT(widget), "selection-get");
 
-    GTKfilePopup *fs =
-        (GTKfilePopup*)gtk_object_get_data(GTK_OBJECT(widget), "fsbag");
-    if (fs) {
-        char *path;
-        if (GTK_IS_TREE_VIEW(widget))
-            path = fs->get_path(fs->fs_drag_node, false);
-        else
-            path = fs->get_selection();
-        if (path) {
-            gtk_selection_data_set(selection_data, selection_data->target,
-                8, (unsigned char*)path, strlen(path));
-            delete [] path;
-        }
-    }
-}
+//     GTKfilePopup *fs =
+//         (GTKfilePopup*)g_object_get_data(G_OBJECT(widget), "fsbag");
+//     if (fs) {
+//         char *path;
+//         if (GTK_IS_TREE_VIEW(widget))
+//             path = fs->get_path(fs->fs_drag_node, false);
+//         else
+//             path = fs->get_selection();
+//         if (path) {
+//             gtk_selection_data_set(selection_data, selection_gtk_selection_data_get_target(data),
+//                 8, (unsigned char*)path, strlen(path));
+//             delete [] path;
+//         }
+//     }
+// }
 
 
 // Private static GTK signal handler.
 // Selection clear handler, need to do this ourselves in GTK-2.
 //
-int
-GTKfilePopup::fs_selection_clear(GtkWidget *widget, GdkEventSelection*, void*)  
-{
-    text_select_range(widget, 0, 0);
-    return (true);
-}
+// int
+// GTKfilePopup::fs_selection_clear(GtkWidget *widget, GdkEventSelection*, void*)  
+// {
+//     text_select_range(widget, 0, 0);
+//     return (true);
+// }
 
 
 // Private static GTK signal handler.
 // Unhighlight the directory list when leaving.
 //
-void
-GTKfilePopup::fs_dir_drag_leave(GtkWidget *widget, GdkDragContext*, guint)
-{
-    GTKfilePopup *fs =
-        (GTKfilePopup*)gtk_object_get_data(GTK_OBJECT(widget), "fsbag");
-    if (!fs)
-        return;
-    if (fs->fs_cset_node) {
-        GtkTreeModel *store = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
-        GtkTreeIter iter;
-        if (gtk_tree_model_get_iter(store, &iter, fs->fs_cset_node))
-            gtk_tree_store_set(GTK_TREE_STORE(store), &iter, COL_BG, 0, -1);
-    }
-    fs_scroll_hdlr(widget);
-}
+// void
+// GTKfilePopup::fs_dir_drag_leave(GtkWidget *widget, GdkDragContext*, guint)
+// {
+//     GTKfilePopup *fs =
+//         (GTKfilePopup*)g_object_get_data(G_OBJECT(widget), "fsbag");
+//     if (!fs)
+//         return;
+//     if (fs->fs_cset_node) {
+//         GtkTreeModel *store = gtk_tree_view_get_model(GTK_TREE_VIEW(widget));
+//         GtkTreeIter iter;
+//         if (gtk_tree_model_get_iter(store, &iter, fs->fs_cset_node))
+//             gtk_tree_store_set(GTK_TREE_STORE(store), &iter, COL_BG, 0, -1);
+//     }
+//     fs_scroll_hdlr(widget);
+// }
 
 
 // Approx. line height.
@@ -2683,17 +2684,16 @@ namespace {
 #else
             GdkWindow *window = GTK_WIDGET(tree)->window;
 #endif
-            int hei;
-            gdk_window_get_size(window, 0, &hei);
-            float value = vadj->value;
-            float upper = vadj->upper - hei;
+            int hei = gdk_window_get_height(window);
+            float value = gtk_adjustment_get_value(vadj);
+            float upper = gtk_adjustment_get_upper(vadj) - hei;
             value += VINCR;
             if (value > upper)
                 value = upper;
             gtk_adjustment_set_value(vadj, value);
         }
         else {
-            float value = vadj->value;
+            float value = gtk_adjustment_get_value(vadj);
             value -= VINCR;
             if (value < 0)
                 value = 0;
@@ -2728,7 +2728,7 @@ GTKfilePopup::fs_scroll_hdlr(GtkWidget *tree)
 #if GTK_CHECK_VERSION(2,12,0)
     GdkWindow *window = gtk_widget_get_window(tree);
 #else
-    GdkWindow *window = tree->window;
+    GdkWindow *window = gtk_widget_get_window(tree);
 #endif
     if (!window)
         return;
@@ -2738,29 +2738,29 @@ GTKfilePopup::fs_scroll_hdlr(GtkWidget *tree)
     if (!(mask & (GDK_BUTTON1_MASK | GDK_BUTTON2_MASK | GDK_BUTTON3_MASK)))
         return;
     GTKfilePopup *fs =
-        (GTKfilePopup*)gtk_object_get_data(GTK_OBJECT(tree), "fsbag");
+        (GTKfilePopup*)g_object_get_data(G_OBJECT(tree), "fsbag");
     if (!fs)
         return;
     int hei;
-    gdk_window_get_size(window, 0, &hei);
+    gdk_window_get_height(window);
 #define SENS_PIXELS 4
 #define VT_REP 200
     if (y < SENS_PIXELS) {
         if (fs->fs_vtimer)
             return;
         move_vertical(GTK_TREE_VIEW(tree), false);
-        fs->fs_vtimer = gtk_timeout_add(VT_REP,
-            (GtkFunction)fs_vertical_timeout, fs);
+        fs->fs_vtimer = g_timeout_add(VT_REP,
+            fs_vertical_timeout, fs);
     }
     else if (hei - y < SENS_PIXELS) {
         if (fs->fs_vtimer)
             return;
         move_vertical(GTK_TREE_VIEW(tree), true);
-        fs->fs_vtimer = gtk_timeout_add(VT_REP,
-            (GtkFunction)fs_vertical_timeout, fs);
+        fs->fs_vtimer = g_timeout_add(VT_REP,
+            fs_vertical_timeout, fs);
     }
     else if (fs->fs_vtimer) {
-        gtk_timeout_remove(fs->fs_vtimer);
+        g_source_remove(fs->fs_vtimer);
         fs->fs_vtimer = 0;
     }
 }
@@ -3145,7 +3145,7 @@ gtkinterf::gtk_DoFileAction(GtkWidget *shell, const char *src, const char *dst,
 
     sLstr lstr;
     GtkWidget *prog = 0;
-    switch (context->suggested_action) {
+    switch (gdk_drag_context_get_suggested_action(context)) {
     default:
     case GDK_ACTION_COPY:
 #ifdef WIN32
@@ -3200,7 +3200,7 @@ gtkinterf::gtk_DoFileAction(GtkWidget *shell, const char *src, const char *dst,
         return;
     }
     if (prog)
-        gtk_timeout_add(1000, (GtkFunction)progress_destroy_timeout,
+        g_timeout_add(1000, progress_destroy_timeout,
             prog);
 
     if (lstr.string())
@@ -3214,13 +3214,13 @@ namespace {
     void
     action_cancel(GtkWidget *caller, void*)
     {
-        GtkWidget *popup = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(caller),
+        GtkWidget *popup = (GtkWidget*)g_object_get_data(G_OBJECT(caller),
             "popup");
         if (!popup)
             popup  = caller;
         if (popup) {
-            gtk_signal_disconnect_by_func(GTK_OBJECT(popup),
-                GTK_SIGNAL_FUNC(action_cancel), popup);
+            // gtk_signal_disconnect_by_func(G_OBJECT(popup),
+            //     action_cancel, popup);
             gtk_widget_destroy(popup);
         }
     }
@@ -3235,26 +3235,26 @@ namespace {
             action_cancel(caller, 0);
             return;
         }
-        GtkWidget *popup = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(caller),
+        GtkWidget *popup = (GtkWidget*)g_object_get_data(G_OBJECT(caller),
             "popup");
         if (popup) {
             const char *src = 0, *dst = 0;
             GtkWidget *entry_src =
-                (GtkWidget*)gtk_object_get_data(GTK_OBJECT(popup), "source");
+                (GtkWidget*)g_object_get_data(G_OBJECT(popup), "source");
             if (entry_src)
                 src = gtk_entry_get_text(GTK_ENTRY(entry_src));
             GtkWidget *entry_dst =
-                (GtkWidget*)gtk_object_get_data(GTK_OBJECT(popup), "dest");
+                (GtkWidget*)g_object_get_data(G_OBJECT(popup), "dest");
             if (entry_dst)
                 dst = gtk_entry_get_text(GTK_ENTRY(entry_dst));
 
             GdkDragAction action =
-                (GdkDragAction)(long)gtk_object_get_data(GTK_OBJECT(caller),
+                (GdkDragAction)(long)g_object_get_data(G_OBJECT(caller),
                     "action");
             if (action == GDK_ACTION_MOVE || action == GDK_ACTION_COPY ||
                     action == GDK_ACTION_LINK) {
                 GdkDragContext *context = (GdkDragContext*)client_data;
-                context->suggested_action = action;
+                // gdk_drag_context_set_suggested_action(context, action);
                 gtk_DoFileAction(popup, src, dst, context, false);
             }
         }
@@ -3292,7 +3292,7 @@ gtkinterf::gtk_FileAction(GtkWidget *shell, const char *src, const char *dst,
     GtkWidget *frame = gtk_frame_new("Source");
     gtk_widget_show(frame);
     gtk_container_add(GTK_CONTAINER(frame), entry_src);
-    gtk_object_set_data(GTK_OBJECT(popup), "source", entry_src);
+    g_object_set_data(G_OBJECT(popup), "source", entry_src);
     gtk_table_attach(GTK_TABLE(form), frame, 0, 1, 0, 1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -3303,7 +3303,7 @@ gtkinterf::gtk_FileAction(GtkWidget *shell, const char *src, const char *dst,
     frame = gtk_frame_new("Destination");
     gtk_widget_show(frame);
     gtk_container_add(GTK_CONTAINER(frame), entry_dst);
-    gtk_object_set_data(GTK_OBJECT(popup), "dest", entry_dst);
+    g_object_set_data(G_OBJECT(popup), "dest", entry_dst);
     gtk_table_attach(GTK_TABLE(form), frame, 0, 1, 1, 2,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -3314,39 +3314,39 @@ gtkinterf::gtk_FileAction(GtkWidget *shell, const char *src, const char *dst,
     GtkWidget *button = gtk_button_new_with_label("Move");
     gtk_widget_set_name(button, "Move");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(action_proc), context);
-    gtk_object_set_data(GTK_OBJECT(button), "popup", popup);
-    gtk_object_set_data(GTK_OBJECT(button), "action",
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     action_proc, context);
+    g_object_set_data(G_OBJECT(button), "popup", popup);
+    g_object_set_data(G_OBJECT(button), "action",
         (void*)GDK_ACTION_MOVE);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     button = gtk_button_new_with_label("Copy");
     gtk_widget_set_name(button, "Copy");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(action_proc), context);
-    gtk_object_set_data(GTK_OBJECT(button), "popup", popup);
-    gtk_object_set_data(GTK_OBJECT(button), "action",
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     action_proc, context);
+    g_object_set_data(G_OBJECT(button), "popup", popup);
+    g_object_set_data(G_OBJECT(button), "action",
         (void*)GDK_ACTION_COPY);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     button = gtk_button_new_with_label("Link");
     gtk_widget_set_name(button, "Link");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(action_proc), context);
-    gtk_object_set_data(GTK_OBJECT(button), "popup", popup);
-    gtk_object_set_data(GTK_OBJECT(button), "action",
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     action_proc, context);
+    g_object_set_data(G_OBJECT(button), "popup", popup);
+    g_object_set_data(G_OBJECT(button), "action",
         (void*)GDK_ACTION_LINK);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     button = gtk_button_new_with_label("Cancel");
     gtk_widget_set_name(button, "Cancel");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(action_proc), 0);
-    gtk_object_set_data(GTK_OBJECT(button), "popup", popup);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     action_proc, 0);
+    g_object_set_data(G_OBJECT(button), "popup", popup);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 2, 3,
@@ -3354,7 +3354,7 @@ gtkinterf::gtk_FileAction(GtkWidget *shell, const char *src, const char *dst,
         (GtkAttachOptions)0, 2, 2);
     gtk_window_set_focus(GTK_WINDOW(popup), button);
 
-    gtk_widget_set_usize(popup, 400, -1);
+    gtk_widget_set_size_request(popup, 400, -1);
     if (shell) {
         gtk_window_set_transient_for(GTK_WINDOW(popup), GTK_WINDOW(shell));
         GRX->SetPopupLocation(GRloc(), popup, shell);
@@ -3376,11 +3376,11 @@ namespace {
         GtkWidget *popup = (GtkWidget*)client_data;
         if (popup) {
             unsigned long timer =
-                (unsigned long)gtk_object_get_data(GTK_OBJECT(popup), "timer");
+                (unsigned long)g_object_get_data(G_OBJECT(popup), "timer");
             if (timer)
-                gtk_timeout_remove(timer);
-            gtk_signal_disconnect_by_func(GTK_OBJECT(popup),
-                GTK_SIGNAL_FUNC(progress_cancel), popup);
+                g_source_remove(timer);
+            // gtk_signal_disconnect_by_func(G_OBJECT(popup),
+            //     progress_cancel, popup);
             gtk_widget_destroy(popup);
         }
     }
@@ -3392,11 +3392,11 @@ namespace {
     progress_timeout(void *data)
     {
 
-        float new_val = gtk_progress_get_value(GTK_PROGRESS(data)) + 2;
-        GtkAdjustment *adj = GTK_PROGRESS(data)->adjustment;
-        if (new_val > adj->upper)
-            new_val = adj->lower;
-        gtk_progress_set_value(GTK_PROGRESS(data), new_val);
+        // float new_val = gtk_progress_get_value(GTK_PROGRESS(data)) + 2;
+        // GtkAdjustment *adj = GTK_PROGRESS(data)->adjustment;
+        // if (new_val > adj->upper)
+        //     new_val = adj->lower;
+        // gtk_progress_set_value(GTK_PROGRESS(data), new_val);
         return (true);
     }
 
@@ -3440,26 +3440,26 @@ gtkinterf::gtk_Progress(GtkWidget *shell, const char *msg)
 
     GtkAdjustment *adj =
         (GtkAdjustment*)gtk_adjustment_new(0, 1, 100, 0, 0, 0);
-    GtkWidget *pbar = gtk_progress_bar_new_with_adjustment(adj);
-    gtk_widget_show(pbar);
-    gtk_progress_bar_set_bar_style(GTK_PROGRESS_BAR(pbar),
-        GTK_PROGRESS_CONTINUOUS);
-    gtk_progress_set_activity_mode(GTK_PROGRESS(pbar), true);
-    unsigned timer = gtk_timeout_add(100, (GtkFunction)progress_timeout,
-        pbar);
-    gtk_object_set_data(GTK_OBJECT(popup), "timer", (void*)(long)timer);
+    // GtkWidget *pbar = gtk_progress_bar_new_with_adjustment(adj);
+    // gtk_widget_show(pbar);
+    // gtk_progress_bar_set_bar_style(GTK_PROGRESS_BAR(pbar),
+    //     GTK_PROGRESS_CONTINUOUS);
+    // gtk_progress_set_activity_mode(GTK_PROGRESS(pbar), true);
+    // unsigned timer = g_timeout_add(100, (GtkFunction)progress_timeout,
+    //     pbar);
+    // g_object_set_data(G_OBJECT(popup), "timer", (void*)(long)timer);
 
-    gtk_table_attach(GTK_TABLE(form), pbar, 0, 1, 1, 2,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
+    // gtk_table_attach(GTK_TABLE(form), pbar, 0, 1, 1, 2,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
 
-    if (shell) {
-        gtk_window_set_transient_for(GTK_WINDOW(popup), GTK_WINDOW(shell));
-        GRX->SetPopupLocation(GRloc(), popup, shell);
-    }
-    gtk_widget_show(popup);
-    gdk_flush();
-    gtk_DoEvents(100);
+    // if (shell) {
+    //     gtk_window_set_transient_for(GTK_WINDOW(popup), GTK_WINDOW(shell));
+    //     GRX->SetPopupLocation(GRloc(), popup, shell);
+    // }
+    // gtk_widget_show(popup);
+    // gdk_flush();
+    // gtk_DoEvents(100);
     return (popup);
 }
 
@@ -3474,13 +3474,13 @@ namespace {
     void
     fail_cancel(GtkWidget *caller, void*)
     {
-        GtkWidget *popup = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(caller),
+        GtkWidget *popup = (GtkWidget*)g_object_get_data(G_OBJECT(caller),
             "popup");
         if (!popup)
             popup = caller;
         if (popup) {
-            gtk_signal_disconnect_by_func(GTK_OBJECT(popup),
-                GTK_SIGNAL_FUNC(fail_cancel), popup);
+            // gtk_signal_disconnect_by_func(G_OBJECT(popup),
+            //     fail_cancel, popup);
             gtk_widget_destroy(popup);
         }
     }
@@ -3497,7 +3497,7 @@ gtkinterf::gtk_Message(GtkWidget *shell, bool failed, const char *msg)
 {
     GtkWidget *popup = gtk_NewPopup(0,
         failed ? "Action Failed" : "Action Complete", fail_cancel, 0);
-    gtk_widget_set_usize(popup, 240, -1);
+    gtk_widget_set_size_request(popup, 240, -1);
 
     GtkWidget *form = gtk_table_new(1, 2, false);
     gtk_widget_show(form);
@@ -3518,9 +3518,9 @@ gtkinterf::gtk_Message(GtkWidget *shell, bool failed, const char *msg)
     GtkWidget *button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fail_cancel), 0);
-    gtk_object_set_data(GTK_OBJECT(button), "popup", popup);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     fail_cancel, 0);
+    g_object_set_data(G_OBJECT(button), "popup", popup);
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, 1, 2,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),

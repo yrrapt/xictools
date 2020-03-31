@@ -62,8 +62,8 @@ namespace gtkinterf {
 
         static void trackFontChange(GtkWidget*, int);
         static void setupFont(GtkWidget*, int, bool);
-        static char *fontNameFromFont(GdkFont*);
-        static GdkFont *getWidgetFont(GtkWidget*);
+        static char *fontNameFromFont(PangoFont*);
+        static PangoFont *getWidgetFont(GtkWidget*);
         static bool stringBounds(int, const char*, int*, int*);
         static int stringWidth(GtkWidget*, const char*);
         static int stringHeight(GtkWidget*, const char*);
@@ -93,7 +93,7 @@ namespace gtkinterf {
             sFrec() { name = 0; font = 0; cbs = 0; }
 
             const char *name;
-            GdkFont *font;  // gtk1 only
+            PangoFont *font;  // gtk1 only
             FcbRec *cbs;
         } fonts[MAX_NUM_APP_FONTS];
 

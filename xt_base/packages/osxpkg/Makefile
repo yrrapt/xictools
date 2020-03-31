@@ -1,6 +1,6 @@
 BASE = ../../../xt_base
 
-APPNAME = gtk2_bundle_x11
+APPNAME = gtk3_bundle_x11
 
 VERSION = 4.3.1
 PKGFILE = $(APPNAME)-$(OSNAME)-$(VERSION)-$(ARCH).pkg

@@ -451,7 +451,7 @@ htmImageManager::readPNG(ImageBuffer *ib)
         // read it
         png_read_image(png_ptr, row_ptrs);
 
-        img_data->data = png_data;          // raw image data
+        img_gtk_selection_data_get_data(data) = png_data;          // raw image data
 
         // no longer needed
         delete [] row_ptrs;
@@ -484,13 +484,13 @@ htmImageManager::readPNG(ImageBuffer *ib)
     // We're lucky: having a colormap means we have an indexed image.
 
     if (pd.has_cmap) {
-        img_data->data = pd.data;
+        img_gtk_selection_data_get_data(data) = pd.data;
         pd.data = 0;
     }
     else {
         // RGB image.  Convert to paletted image.  First allocate a
         // buffer which will receive the final image data.
-        img_data->data = new unsigned char[width*height];
+        img_gtk_selection_data_get_data(data) = new unsigned char[width*height];
         convert24to8(pd.data, img_data,
             im_html->htm_max_image_colors, im_html->htm_rgb_conv_mode);
 
@@ -556,7 +556,7 @@ htmImageManager::reReadPNG(htmRawImageData *raw_data, int x, int y,
     img_data = new htmRawImageData(width, height);
 
     // raw png image data (source buffer)
-    unsigned char *png = raw_data->data;
+    unsigned char *png = raw_gtk_selection_data_get_data(data);
     // intermediate destination buffer, contains alpha-corrected values
     unsigned char *currLine = new unsigned char[width*height*3];
     unsigned char *rgb = currLine;

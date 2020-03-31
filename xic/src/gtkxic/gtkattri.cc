@@ -117,24 +117,24 @@ namespace {
 #define cursor_x_hot 8
 #define cursor_y_hot 7
 
-    char cursorCross_bits[] = {
-        char(0x00), char(0x01), char(0x00), char(0x01),
-        char(0x00), char(0x01), char(0x00), char(0x01),
-        char(0x00), char(0x01), char(0x00), char(0x01),
-        char(0x00), char(0x00), char(0x7e), char(0xfc),
-        char(0x00), char(0x00), char(0x00), char(0x01),
-        char(0x00), char(0x01), char(0x00), char(0x01),
-        char(0x00), char(0x01), char(0x00), char(0x01),
-        char(0x00), char(0x01), char(0x00), char(0x00) };
-    char cursorCross_mask[] = {
-        char(0x80), char(0x03), char(0x80), char(0x03),
-        char(0x80), char(0x03), char(0x80), char(0x03),
-        char(0x80), char(0x03), char(0x80), char(0x03),
-        char(0x7e), char(0xfc), char(0x7e), char(0xfc),
-        char(0x7e), char(0xfc), char(0x80), char(0x03),
-        char(0x80), char(0x03), char(0x80), char(0x03),
-        char(0x80), char(0x03), char(0x80), char(0x03),
-        char(0x80), char(0x03), char(0x00), char(0x00) };
+    guint8 cursorCross_bits[] = {
+        guint8(0x00), guint8(0x01), guint8(0x00), guint8(0x01),
+        guint8(0x00), guint8(0x01), guint8(0x00), guint8(0x01),
+        guint8(0x00), guint8(0x01), guint8(0x00), guint8(0x01),
+        guint8(0x00), guint8(0x00), guint8(0x7e), guint8(0xfc),
+        guint8(0x00), guint8(0x00), guint8(0x00), guint8(0x01),
+        guint8(0x00), guint8(0x01), guint8(0x00), guint8(0x01),
+        guint8(0x00), guint8(0x01), guint8(0x00), guint8(0x01),
+        guint8(0x00), guint8(0x01), guint8(0x00), guint8(0x00) };
+    guint8 cursorCross_mask[] = {
+        guint8(0x80), guint8(0x03), guint8(0x80), guint8(0x03),
+        guint8(0x80), guint8(0x03), guint8(0x80), guint8(0x03),
+        guint8(0x80), guint8(0x03), guint8(0x80), guint8(0x03),
+        guint8(0x7e), guint8(0xfc), guint8(0x7e), guint8(0xfc),
+        guint8(0x7e), guint8(0xfc), guint8(0x80), guint8(0x03),
+        guint8(0x80), guint8(0x03), guint8(0x80), guint8(0x03),
+        guint8(0x80), guint8(0x03), guint8(0x80), guint8(0x03),
+        guint8(0x80), guint8(0x03), guint8(0x00), guint8(0x00) };
 }
 
 using namespace gtkattri;
@@ -180,7 +180,7 @@ cMain::UpdateCursor(WindowDesc *wd, CursorType t, bool force)
         if (wd) {
             win_bag *w = dynamic_cast<win_bag*>(wd->Wbag());
             if (w && w->Window()) {
-                if (!GDK_IS_PIXMAP(w->Window()))
+                if (!w->Window())
                     gdk_window_set_cursor(w->Window(), 0);
             }
             return;
@@ -189,7 +189,7 @@ cMain::UpdateCursor(WindowDesc *wd, CursorType t, bool force)
         while ((wd = wgen.next()) != 0) {
             win_bag *w = dynamic_cast<win_bag*>(wd->Wbag());
             if (w && w->Window()) {
-                if (!GDK_IS_PIXMAP(w->Window()))
+                if (!w->Window())
                     gdk_window_set_cursor(w->Window(), 0);
             }
         }
@@ -199,23 +199,30 @@ cMain::UpdateCursor(WindowDesc *wd, CursorType t, bool force)
         if (wd) {
             win_bag *w = dynamic_cast<win_bag*>(wd->Wbag());
             if (w && w->Window()) {
-                if (!GDK_IS_PIXMAP(w->Window())) {
+                if (!w->Window()) {
 
-                    GdkPixmap *data = gdk_bitmap_create_from_data(w->Window(),
-                        cursorCross_bits, cursor_width, cursor_height);
-                    GdkPixmap *mask = gdk_bitmap_create_from_data(w->Window(),
-                        cursorCross_mask, cursor_width, cursor_height);
+                    GdkPixbufLoader *loader;
+                    GdkPixbuf *pixbuf;
 
-                    GdkColor foreg, backg;
-                    backg.pixel = w->GetBackgPixel();
-                    foreg.pixel = w->GetForegPixel();
-                    gtk_QueryColor(&backg);
-                    gtk_QueryColor(&foreg);
-                    GdkCursor *cursor = gdk_cursor_new_from_pixmap(data, mask,
-                        &foreg, &backg, cursor_x_hot, cursor_y_hot);
-                    gdk_pixmap_unref(data);
-                    gdk_pixmap_unref(mask);
-                    gdk_window_set_cursor(w->Window(), cursor);
+                    // loader = gdk_pixbuf_loader_new();
+
+                    // gdk_pixbuf_loader_write(loader, cursorCross_bits, 32, NULL);
+                    // GdkCursor *data = gdk_cursor_new_from_pixbuf(gdk_window_get_display(w->Window()),
+                    //     gdk_pixbuf_loader_get_pixbuf(loader), cursor_width, cursor_height);
+                    // gdk_pixbuf_loader_write(loader, cursorCross_mask, 32, NULL);
+                    // GdkCursor *mask = gdk_cursor_new_from_pixbuf(gdk_window_get_display(w->Window()),
+                    //     gdk_pixbuf_loader_get_pixbuf(loader), cursor_width, cursor_height);
+
+                    // GdkColor foreg, backg;
+                    // backg.pixel = w->GetBackgPixel();
+                    // foreg.pixel = w->GetForegPixel();
+                    // gtk_QueryColor(&backg);
+                    // gtk_QueryColor(&foreg);
+                    // GdkCursor *cursor = gdk_cursor_new_from_surface(data, mask,
+                    //     &foreg, &backg, cursor_x_hot, cursor_y_hot);
+                    // g_object_unref(data);
+                    // g_object_unref(mask);
+                    // gdk_window_set_cursor(w->Window(), cursor);
                 }
             }
             return;
@@ -224,23 +231,23 @@ cMain::UpdateCursor(WindowDesc *wd, CursorType t, bool force)
         while ((wd = wgen.next()) != 0) {
             win_bag *w = dynamic_cast<win_bag*>(wd->Wbag());
             if (w && w->Window()) {
-                if (!GDK_IS_PIXMAP(w->Window())) {
-                    GdkPixmap *data = gdk_bitmap_create_from_data(w->Window(),
-                        cursorCross_bits, cursor_width, cursor_height);
-                    GdkPixmap *mask = gdk_bitmap_create_from_data(w->Window(),
-                        cursorCross_mask, cursor_width, cursor_height);
+                // if (!GDK_IS_PIXMAP(w->Window())) {
+                //     cairo_surface_t *data = gdk_bitmap_create_from_data(w->Window(),
+                //         cursorCross_bits, cursor_width, cursor_height);
+                //     cairo_surface_t *mask = gdk_bitmap_create_from_data(w->Window(),
+                //         cursorCross_mask, cursor_width, cursor_height);
 
-                    GdkColor foreg, backg;
-                    backg.pixel = w->GetBackgPixel();
-                    foreg.pixel = w->GetForegPixel();
-                    gtk_QueryColor(&backg);
-                    gtk_QueryColor(&foreg);
-                    GdkCursor *cursor = gdk_cursor_new_from_pixmap(data, mask,
-                        &foreg, &backg, cursor_x_hot, cursor_y_hot);
-                    gdk_pixmap_unref(data);
-                    gdk_pixmap_unref(mask);
-                    gdk_window_set_cursor(w->Window(), cursor);
-                }
+                //     GdkColor foreg, backg;
+                //     backg.pixel = w->GetBackgPixel();
+                //     foreg.pixel = w->GetForegPixel();
+                //     gtk_QueryColor(&backg);
+                //     gtk_QueryColor(&foreg);
+                //     GdkCursor *cursor = gdk_cursor_new_from_pixmap(data, mask,
+                //         &foreg, &backg, cursor_x_hot, cursor_y_hot);
+                //     g_object_unref(data);
+                //     g_object_unref(mask);
+                //     gdk_window_set_cursor(w->Window(), cursor);
+                // }
             }
         }
     }
@@ -251,7 +258,7 @@ cMain::UpdateCursor(WindowDesc *wd, CursorType t, bool force)
         if (wd) {
             win_bag *w = dynamic_cast<win_bag*>(wd->Wbag());
             if (w && w->Window()) {
-                if (!GDK_IS_PIXMAP(w->Window()))
+                if (!w->Window())
                     gdk_window_set_cursor(w->Window(), left_cursor);
             }
             return;
@@ -260,7 +267,7 @@ cMain::UpdateCursor(WindowDesc *wd, CursorType t, bool force)
         while ((wd = wgen.next()) != 0) {
             win_bag *w = dynamic_cast<win_bag*>(wd->Wbag());
             if (w && w->Window()) {
-                if (!GDK_IS_PIXMAP(w->Window()))
+                if (!w->Window())
                     gdk_window_set_cursor(w->Window(), left_cursor);
             }
         }
@@ -272,7 +279,7 @@ cMain::UpdateCursor(WindowDesc *wd, CursorType t, bool force)
         if (wd) {
             win_bag *w = dynamic_cast<win_bag*>(wd->Wbag());
             if (w && w->Window()) {
-                if (!GDK_IS_PIXMAP(w->Window()))
+                if (!w->Window())
                     gdk_window_set_cursor(w->Window(), right_cursor);
             }
             return;
@@ -281,7 +288,7 @@ cMain::UpdateCursor(WindowDesc *wd, CursorType t, bool force)
         while ((wd = wgen.next()) != 0) {
             win_bag *w = dynamic_cast<win_bag*>(wd->Wbag());
             if (w && w->Window()) {
-                if (!GDK_IS_PIXMAP(w->Window()))
+                if (!w->Window())
                     gdk_window_set_cursor(w->Window(), right_cursor);
             }
         }
@@ -293,7 +300,7 @@ cMain::UpdateCursor(WindowDesc *wd, CursorType t, bool force)
         if (wd) {
             win_bag *w = dynamic_cast<win_bag*>(wd->Wbag());
             if (w && w->Window()) {
-                if (!GDK_IS_PIXMAP(w->Window()))
+                if (!w->Window())
                     gdk_window_set_cursor(w->Window(), busy_cursor);
             }
             return;
@@ -302,7 +309,7 @@ cMain::UpdateCursor(WindowDesc *wd, CursorType t, bool force)
         while ((wd = wgen.next()) != 0) {
             win_bag *w = dynamic_cast<win_bag*>(wd->Wbag());
             if (w && w->Window()) {
-                if (!GDK_IS_PIXMAP(w->Window())) {
+                if (!w->Window()) {
                     gdk_window_set_cursor(w->Window(), busy_cursor);
                     // Force immediate display of busy cursor.
                     dspPkgIf()->CheckForInterrupt();
@@ -381,8 +388,8 @@ sAttr::sAttr(GRobject c)
     GtkWidget *button = gtk_button_new_with_label("Help");
     gtk_widget_set_name(button, "Help");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(at_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(at_action), 0);
     gtk_box_pack_end(GTK_BOX(row), button, false, false, 0);
     gtk_table_attach(GTK_TABLE(topform), row, 0, 1, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -411,28 +418,26 @@ sAttr::sAttr(GRobject c)
     gtk_misc_set_padding(GTK_MISC(label), 2, 2);
     gtk_box_pack_start(GTK_BOX(row), label, false, false, 0);
 
-    GtkWidget *entry = gtk_option_menu_new();
+    GtkWidget *entry = gtk_combo_box_text_new();
     gtk_widget_set_name(entry, "cursmenu");
     gtk_widget_show(entry);
     GtkWidget *menu = gtk_menu_new();
     gtk_widget_set_name(menu, "cursmenu");
     for (int i = 0; cursvals[i]; i++) {
-        GtkWidget *mi = gtk_menu_item_new_with_label(cursvals[i]);
-        gtk_widget_show(mi);
-        gtk_menu_append(GTK_MENU(menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(at_curs_menu_proc), (void*)(long)i);
+        gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(menu), cursvals[i]);
+        g_signal_connect(GTK_COMBO_BOX_TEXT(menu), "activate",
+            G_CALLBACK(at_curs_menu_proc), (void*)(long)i);
     }
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
-    at_cursor = entry;
-    gtk_box_pack_start(GTK_BOX(row), entry, false, false, 0);
+    // // gtk_option_menu_set_menu(entry, menu);
+    // at_cursor = entry;
+    // gtk_box_pack_start(GTK_BOX(row), entry, false, false, 0);
 
     button = gtk_check_button_new_with_label(
         "Use full-window cursor");
     gtk_widget_set_name(button, "fullscr");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(at_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(at_action), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
     at_fullscr = button;
 
@@ -452,8 +457,8 @@ sAttr::sAttr(GRobject c)
 
     GtkWidget *sb = sb_cellthr.init(DSP_DEF_CELL_THRESHOLD,
         DSP_MIN_CELL_THRESHOLD, DSP_MAX_CELL_THRESHOLD, 0);
-    sb_cellthr.connect_changed(GTK_SIGNAL_FUNC(at_val_changed), 0, "cellthr");
-    gtk_widget_set_usize(sb, 80, -1);
+    // // (at_val_changed, 0, "cellthr");
+    gtk_widget_set_size_request(sb, 80, -1);
     gtk_box_pack_end(GTK_BOX(row), sb, false, false, 0);
 
     gtk_table_attach(GTK_TABLE(form), row, 0, 1, rcnt, rcnt+1,
@@ -471,8 +476,8 @@ sAttr::sAttr(GRobject c)
     gtk_box_pack_start(GTK_BOX(row), label, false, false, 0);
 
     sb = sb_cxpct.init(DSP_DEF_CX_DARK_PCNT, DSP_MIN_CX_DARK_PCNT, 100.0, 0);
-    sb_cxpct.connect_changed(GTK_SIGNAL_FUNC(at_val_changed), 0, "cxpct");
-    gtk_widget_set_usize(sb, 80, -1);
+    // // (at_val_changed, 0, "cxpct");
+    gtk_widget_set_size_request(sb, 80, -1);
     gtk_box_pack_end(GTK_BOX(row), sb, false, false, 0);
 
     gtk_table_attach(GTK_TABLE(form), row, 0, 1, rcnt, rcnt+1,
@@ -490,8 +495,8 @@ sAttr::sAttr(GRobject c)
     gtk_box_pack_start(GTK_BOX(row), label, false, false, 0);
 
     sb = sb_offset.init(0, -16, 16, 0);
-    sb_offset.connect_changed(GTK_SIGNAL_FUNC(at_val_changed), 0, "offset");
-    gtk_widget_set_usize(sb, 80, -1);
+    // // (at_val_changed, 0, "offset");
+    gtk_widget_set_size_request(sb, 80, -1);
     gtk_box_pack_end(GTK_BOX(row), sb, false, false, 0);
 
     gtk_table_attach(GTK_TABLE(form), row, 0, 1, rcnt, rcnt+1,
@@ -513,8 +518,8 @@ sAttr::sAttr(GRobject c)
         "Show origin of selected physical instances");
     gtk_widget_set_name(button, "mark");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(at_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(at_action), 0);
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, rcnt, rcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -525,8 +530,8 @@ sAttr::sAttr(GRobject c)
         "Show centroids of selected physical objects");
     gtk_widget_set_name(button, "centr");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(at_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(at_action), 0);
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, rcnt, rcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -548,8 +553,8 @@ sAttr::sAttr(GRobject c)
         "Erase behind physical properties text");
     gtk_widget_set_name(button, "ebprop");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(at_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(at_action), 0);
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, rcnt, rcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -567,8 +572,8 @@ sAttr::sAttr(GRobject c)
 
     sb = sb_tsize.init(DSP_DEF_PTRM_TXTHT, DSP_MIN_PTRM_TXTHT,
         DSP_MAX_PTRM_TXTHT, 0);
-    sb_tsize.connect_changed(GTK_SIGNAL_FUNC(at_val_changed), 0, "tsize");
-    gtk_widget_set_usize(sb, 80, -1);
+    // // (at_val_changed, 0, "tsize");
+    gtk_widget_set_size_request(sb, 80, -1);
     gtk_box_pack_end(GTK_BOX(row), sb, false, false, 0);
 
     gtk_table_attach(GTK_TABLE(form), row, 0, 1, rcnt, rcnt+1,
@@ -596,7 +601,7 @@ sAttr::sAttr(GRobject c)
     gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
     gtk_box_pack_start(GTK_BOX(row), label, false, false, 0);
 
-    at_ebterms = gtk_option_menu_new();
+    at_ebterms = gtk_combo_box_text_new();
     gtk_widget_set_name(at_ebterms, "EBTerms");
     gtk_widget_show(at_ebterms);
     menu = gtk_menu_new();
@@ -605,22 +610,24 @@ sAttr::sAttr(GRobject c)
     GtkWidget *mi = gtk_menu_item_new_with_label("Don't erase");
     gtk_widget_set_name(mi, "0");
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(at_ebt_proc), 0);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(at_ebt_proc), 0);
     mi = gtk_menu_item_new_with_label("Cell terminals only");
     gtk_widget_set_name(mi, "1");
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(at_ebt_proc), 0);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(at_ebt_proc), 0);
     mi = gtk_menu_item_new_with_label("All terminals");
     gtk_widget_set_name(mi, "2");
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(at_ebt_proc), 0);
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(at_ebterms), menu);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(at_ebt_proc), 0);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(at_ebt_proc), 0);
+    // // gtk_option_menu_set_menu(GTK_OPTION_MENU(at_ebterms), menu);
     gtk_box_pack_end(GTK_BOX(row), at_ebterms, false, false, 0);
 
     gtk_table_attach(GTK_TABLE(form), row, 0, 1, rcnt, rcnt+1,
@@ -639,8 +646,8 @@ sAttr::sAttr(GRobject c)
 
     sb = sb_ttsize.init(DSP()->TermTextSize(), DSP_MIN_PTRM_TXTHT,
         DSP_MAX_PTRM_TXTHT, 0);
-    sb_ttsize.connect_changed(GTK_SIGNAL_FUNC(at_val_changed), 0, "TTSize");
-    gtk_widget_set_usize(sb, 80, -1);
+    // // (at_val_changed, 0, "TTSize");
+    gtk_widget_set_size_request(sb, 80, -1);
     gtk_box_pack_end(GTK_BOX(row), sb, false, false, 0);
 
     gtk_table_attach(GTK_TABLE(form), row, 0, 1, rcnt, rcnt+1,
@@ -659,8 +666,8 @@ sAttr::sAttr(GRobject c)
 
     sb = sb_tmsize.init(DSP()->TermMarkSize(), DSP_MIN_PTRM_DELTA,
         DSP_MAX_PTRM_DELTA, 0);
-    sb_tmsize.connect_changed(GTK_SIGNAL_FUNC(at_val_changed), 0, "TMSize");
-    gtk_widget_set_usize(sb, 80, -1);
+    // // (at_val_changed, 0, "TMSize");
+    gtk_widget_set_size_request(sb, 80, -1);
     gtk_box_pack_end(GTK_BOX(row), sb, false, false, 0);
 
     gtk_table_attach(GTK_TABLE(form), row, 0, 1, rcnt, rcnt+1,
@@ -687,7 +694,7 @@ sAttr::sAttr(GRobject c)
     gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_LEFT);
     gtk_box_pack_start(GTK_BOX(row), label, false, false, 0);
 
-    entry = gtk_option_menu_new();
+    entry = gtk_combo_box_text_new();
     gtk_widget_set_name(entry, "hidn");
     gtk_widget_show(entry);
     menu = gtk_menu_new();
@@ -696,12 +703,12 @@ sAttr::sAttr(GRobject c)
         mi = gtk_menu_item_new_with_label(hdn_menu[i]);
         gtk_widget_set_name(mi, hdn_menu[i]);
         gtk_widget_show(mi);
-        gtk_menu_append(GTK_MENU(menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(at_menuproc), (void*)(long)i);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(at_menuproc), (void*)(long)i);
     }
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
-    gtk_option_menu_set_history(GTK_OPTION_MENU(entry), 0);
+    // gtk_option_menu_set_menu(entry, menu);
+    // gtk_option_menu_set_history(GTK_OPTION_MENU(entry), 0);
     gtk_box_pack_end(GTK_BOX(row), entry, false, false, 0);
     at_hdn = entry;
 
@@ -721,8 +728,8 @@ sAttr::sAttr(GRobject c)
 
     sb = sb_lheight.init(CD_DEF_TEXT_HEI, CD_MIN_TEXT_HEI,
         CD_MAX_TEXT_HEI, 2);
-    sb_lheight.connect_changed(GTK_SIGNAL_FUNC(at_val_changed), 0, "lheight");
-    gtk_widget_set_usize(sb, 80, -1);
+    // // (at_val_changed, 0, "lheight");
+    gtk_widget_set_size_request(sb, 80, -1);
     gtk_box_pack_end(GTK_BOX(row), sb, false, false, 0);
 
     gtk_table_attach(GTK_TABLE(form), row, 0, 1, rcnt, rcnt+1,
@@ -741,8 +748,8 @@ sAttr::sAttr(GRobject c)
 
     sb = sb_llen.init(DSP_DEF_MAX_LABEL_LEN, DSP_MIN_MAX_LABEL_LEN,
         DSP_MAX_MAX_LABEL_LEN, 0);
-    sb_llen.connect_changed(GTK_SIGNAL_FUNC(at_val_changed), 0, "llen");
-    gtk_widget_set_usize(sb, 80, -1);
+    // // (at_val_changed, 0, "llen");
+    gtk_widget_set_size_request(sb, 80, -1);
     gtk_box_pack_end(GTK_BOX(row), sb, false, false, 0);
 
     gtk_table_attach(GTK_TABLE(form), row, 0, 1, rcnt, rcnt+1,
@@ -761,8 +768,8 @@ sAttr::sAttr(GRobject c)
 
     sb = sb_llines.init(DSP_DEF_MAX_LABEL_LINES, DSP_MIN_MAX_LABEL_LINES,
         DSP_MAX_MAX_LABEL_LINES, 0);
-    sb_llines.connect_changed(GTK_SIGNAL_FUNC(at_val_changed), 0, "llines");
-    gtk_widget_set_usize(sb, 80, -1);
+    // // (at_val_changed, 0, "llines");
+    gtk_widget_set_size_request(sb, 80, -1);
     gtk_box_pack_end(GTK_BOX(row), sb, false, false, 0);
 
     gtk_table_attach(GTK_TABLE(form), row, 0, 1, rcnt, rcnt+1,
@@ -786,8 +793,8 @@ sAttr::sAttr(GRobject c)
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(at_cancel_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(at_cancel_proc), 0);
 
     gtk_table_attach(GTK_TABLE(topform), button, 0, 1, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -825,8 +832,8 @@ sAttr::update()
     sb_tsize.set_value(d);
 
     if (at_ebthst != (int)DSP()->EraseBehindTerms()) {
-        gtk_option_menu_set_history(GTK_OPTION_MENU(at_ebterms),
-            DSP()->EraseBehindTerms());
+        // gtk_option_menu_set_history(GTK_OPTION_MENU(at_ebterms),
+        //     DSP()->EraseBehindTerms());
         at_ebthst = DSP()->EraseBehindTerms();
     }
 
@@ -871,7 +878,7 @@ sAttr::update()
 
     str = CDvdb()->getVariable(VA_LabelHiddenMode);
     d = str ? atoi(str) : 0;
-    gtk_option_menu_set_history(GTK_OPTION_MENU(at_hdn), d);
+    // gtk_option_menu_set_history(GTK_OPTION_MENU(at_hdn), d);
 
     double dd;
     str = CDvdb()->getVariable(VA_LabelDefHeight);

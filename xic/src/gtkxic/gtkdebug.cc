@@ -237,7 +237,7 @@ namespace {
             GtkWidget *db_filemenu;
             GtkWidget *db_editmenu;
             GtkWidget *db_execmenu;
-            GtkItemFactory *db_item_factory;
+            GtkUIManager *db_item_factory;
             GRledPopup *db_load_pop;
             sDbV *db_vars_pop;
 
@@ -338,7 +338,7 @@ cMain::DbgLoad(MenuEnt *ent)
 #define IFINIT(i, a, b, c, d, e) { \
     menu_items[i].path = (char*)a; \
     menu_items[i].accelerator = (char*)b; \
-    menu_items[i].callback = (GtkItemFactoryCallback)c; \
+    menu_items[i].callback = (GtkUIManagerCallback)c; \
     menu_items[i].callback_action = d; \
     menu_items[i].item_type = (char*)e; \
     i++; }
@@ -381,10 +381,11 @@ sDbg::sDbg(GRobject c)
     memset(db_breaks, 0, NUMBKPTS*sizeof(sBp));
 
     wb_shell = gtk_NewPopup(0, "Script Debugger", db_cancel_proc, 0);
+    wb_window = gtk_widget_get_window(wb_shell);
     if (!wb_shell)
         return;
     // don't propogate unhandled key events to main window
-    gtk_object_set_data(GTK_OBJECT(wb_shell), "no_prop_key", (void*)1);
+    g_object_set_data(G_OBJECT(wb_shell), "no_prop_key", (void*)1);
 
     GtkWidget *form = gtk_table_new(1, 4, false);
     gtk_widget_show(form);
@@ -393,174 +394,174 @@ sDbg::sDbg(GRobject c)
     //
     // menu bar
     //
-    GtkItemFactoryEntry menu_items[30];
-    int nitems = 0;
+//     GtkUIManagerEntry menu_items[30];
+//     int nitems = 0;
 
-    IFINIT(nitems, "/_File", 0, 0, 0, "<Branch>")
-    IFINIT(nitems, "/File/_New", 0, db_action_proc, NewCode, 0);
-    IFINIT(nitems, "/File/_Load", "<control>L", db_action_proc,
-        LoadCode, 0);
-    IFINIT(nitems, "/File/_Print", "<control>P", db_action_proc,
-        PrintCode, 0);
-    IFINIT(nitems, "/File/_Save As", "<alt>A", db_action_proc,
-        SaveAsCode, 0);
-#ifdef WIN32
-    IFINIT(nitems, "/File/_Write CRLF", 0, db_action_proc,
-        CRLFcode, "<CheckItem>");
-#endif
-    IFINIT(nitems, "/File/sep1", 0, 0, 0, "<Separator>");
-    IFINIT(nitems, "/File/_Quit", "<control>Q", db_action_proc,
-        CancelCode, 0);
+//     IFINIT(nitems, "/_File", 0, 0, 0, "<Branch>")
+//     IFINIT(nitems, "/File/_New", 0, db_action_proc, NewCode, 0);
+//     IFINIT(nitems, "/File/_Load", "<control>L", db_action_proc,
+//         LoadCode, 0);
+//     IFINIT(nitems, "/File/_Print", "<control>P", db_action_proc,
+//         PrintCode, 0);
+//     IFINIT(nitems, "/File/_Save As", "<alt>A", db_action_proc,
+//         SaveAsCode, 0);
+// #ifdef WIN32
+//     IFINIT(nitems, "/File/_Write CRLF", 0, db_action_proc,
+//         CRLFcode, "<CheckItem>");
+// #endif
+//     IFINIT(nitems, "/File/sep1", 0, 0, 0, "<Separator>");
+//     IFINIT(nitems, "/File/_Quit", "<control>Q", db_action_proc,
+//         CancelCode, 0);
 
-    IFINIT(nitems, "/_Edit", 0, 0, 0, "<Branch>")
-    IFINIT(nitems, "/Edit/Undo", "<Alt>U", db_undo_proc, 0, 0);
-    IFINIT(nitems, "/Edit/Redo", "<Alt>R", db_redo_proc, 0, 0);
-    IFINIT(nitems, "/Edit/sep1", 0, 0, 0, "<Separator>");
-    IFINIT(nitems, "/Edit/Cut to Clipboard", "<control>X", db_cut_proc, 0, 0);
-    IFINIT(nitems, "/Edit/Copy to Clipboard", "<control>C", db_copy_proc,  
-        0, 0);
-    IFINIT(nitems, "/Edit/Paste from Clipboard", "<control>V",
-        db_paste_proc, 0, 0);
-    IFINIT(nitems, "/Edit/Paste Primary", "<alt>P", db_paste_prim_proc,
-        0, 0);
+//     IFINIT(nitems, "/_Edit", 0, 0, 0, "<Branch>")
+//     IFINIT(nitems, "/Edit/Undo", "<Alt>U", db_undo_proc, 0, 0);
+//     IFINIT(nitems, "/Edit/Redo", "<Alt>R", db_redo_proc, 0, 0);
+//     IFINIT(nitems, "/Edit/sep1", 0, 0, 0, "<Separator>");
+//     IFINIT(nitems, "/Edit/Cut to Clipboard", "<control>X", db_cut_proc, 0, 0);
+//     IFINIT(nitems, "/Edit/Copy to Clipboard", "<control>C", db_copy_proc,  
+//         0, 0);
+//     IFINIT(nitems, "/Edit/Paste from Clipboard", "<control>V",
+//         db_paste_proc, 0, 0);
+//     IFINIT(nitems, "/Edit/Paste Primary", "<alt>P", db_paste_prim_proc,
+//         0, 0);
 
-    IFINIT(nitems, "/E_xecute", 0, 0, 0, "<Branch>")
-    IFINIT(nitems, "/Execute/_Run", "<control>R", db_action_proc,
-        RunCode, 0);
-    IFINIT(nitems, "/Execute/S_tep", "<control>T", db_action_proc,
-        StepCode, 0);
-    IFINIT(nitems, "/Execute/R_eset", "<control>E", db_action_proc,
-        StartCode, 0);
-    IFINIT(nitems, "/Execute/_Monitor","<control>M",db_action_proc,
-        MonitorCode,0);
+//     IFINIT(nitems, "/E_xecute", 0, 0, 0, "<Branch>")
+//     IFINIT(nitems, "/Execute/_Run", "<control>R", db_action_proc,
+//         RunCode, 0);
+//     IFINIT(nitems, "/Execute/S_tep", "<control>T", db_action_proc,
+//         StepCode, 0);
+//     IFINIT(nitems, "/Execute/R_eset", "<control>E", db_action_proc,
+//         StartCode, 0);
+//     IFINIT(nitems, "/Execute/_Monitor","<control>M",db_action_proc,
+//         MonitorCode,0);
 
-    IFINIT(nitems, "/_Options", 0, 0, 0, "<Branch>")
-    IFINIT(nitems, "/Options/_Search", 0, db_search_proc, 0, "<CheckItem>");
-    IFINIT(nitems, "/Options/_Font", 0, db_font_proc, 0, "<CheckItem>");
+//     IFINIT(nitems, "/_Options", 0, 0, 0, "<Branch>")
+//     IFINIT(nitems, "/Options/_Search", 0, db_search_proc, 0, "<CheckItem>");
+//     IFINIT(nitems, "/Options/_Font", 0, db_font_proc, 0, "<CheckItem>");
 
-    IFINIT(nitems, "/_Help", 0, 0, 0, "<LastBranch>");
-    IFINIT(nitems, "/Help/_Help", "<control>H", db_action_proc,
-        HelpCode, 0);
+//     IFINIT(nitems, "/_Help", 0, 0, 0, "<LastBranch>");
+//     IFINIT(nitems, "/Help/_Help", "<control>H", db_action_proc,
+//         HelpCode, 0);
 
-    GtkAccelGroup *accel_group = gtk_accel_group_new();
-    db_item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<debug>",
-        accel_group);
-    for (int i = 0; i < nitems; i++)
-        gtk_item_factory_create_item(db_item_factory, menu_items + i, 0, 2);
-    gtk_window_add_accel_group(GTK_WINDOW(wb_shell), accel_group);
+//     GtkAccelGroup *accel_group = gtk_accel_group_new();
+//     db_item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<debug>",
+//         accel_group);
+//     for (int i = 0; i < nitems; i++)
+//         gtk_item_factory_create_item(db_item_factory, menu_items + i, 0, 2);
+//     gtk_window_add_accel_group(GTK_WINDOW(wb_shell), accel_group);
 
-    GtkWidget *menubar = gtk_item_factory_get_widget(db_item_factory,
-        "<debug>");
-    gtk_widget_show(menubar);
+//     GtkWidget *menubar = gtk_item_factory_get_widget(db_item_factory,
+//         "<debug>");
+//     gtk_widget_show(menubar);
 
-    // name the menubar objects
-    GtkWidget *widget = gtk_item_factory_get_item(db_item_factory, "/File");
-    if (widget)
-        gtk_widget_set_name(widget, "File");
-    widget = gtk_item_factory_get_item(db_item_factory, "/Execute");
-    if (widget)
-        gtk_widget_set_name(widget, "Execute");
-    widget = gtk_item_factory_get_item(db_item_factory, "/Help");
-    if (widget)
-        gtk_widget_set_name(widget, "Help");
-#ifdef WIN32
-    widget = gtk_item_factory_get_item(db_item_factory, "/File/Write CRLF");
-    if (widget)
-        GRX->SetStatus(widget, GRX->GetCRLFtermination());
-#endif
+//     // name the menubar objects
+//     GtkWidget *widget = gtk_item_factory_get_item(db_item_factory, "/File");
+//     if (widget)
+//         gtk_widget_set_name(widget, "File");
+//     widget = gtk_item_factory_get_item(db_item_factory, "/Execute");
+//     if (widget)
+//         gtk_widget_set_name(widget, "Execute");
+//     widget = gtk_item_factory_get_item(db_item_factory, "/Help");
+//     if (widget)
+//         gtk_widget_set_name(widget, "Help");
+// #ifdef WIN32
+//     widget = gtk_item_factory_get_item(db_item_factory, "/File/Write CRLF");
+//     if (widget)
+//         GRX->SetStatus(widget, GRX->GetCRLFtermination());
+// #endif
 
-    gtk_table_attach(GTK_TABLE(form), menubar, 0, 1, 0, 1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
+//     gtk_table_attach(GTK_TABLE(form), menubar, 0, 1, 0, 1,
+//         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+//         (GtkAttachOptions)0, 2, 2);
 
-    db_filemenu = gtk_item_factory_get_item(db_item_factory, "/File");
-    db_editmenu = gtk_item_factory_get_item(db_item_factory, "/Edit");
-    db_execmenu = gtk_item_factory_get_item(db_item_factory, "/Execute");
-    db_saveas = gtk_item_factory_get_item(db_item_factory, "/File/Save As");
-    db_undo = gtk_item_factory_get_item(db_item_factory, "/Edit/Undo");
-    db_redo = gtk_item_factory_get_item(db_item_factory, "/Edit/Redo");
+//     db_filemenu = gtk_item_factory_get_item(db_item_factory, "/File");
+//     db_editmenu = gtk_item_factory_get_item(db_item_factory, "/Edit");
+//     db_execmenu = gtk_item_factory_get_item(db_item_factory, "/Execute");
+//     db_saveas = gtk_item_factory_get_item(db_item_factory, "/File/Save As");
+//     db_undo = gtk_item_factory_get_item(db_item_factory, "/Edit/Undo");
+//     db_redo = gtk_item_factory_get_item(db_item_factory, "/Edit/Redo");
 
-    //
-    // label area
-    //
-    GtkWidget *hbox = gtk_hbox_new(false, 0);
-    gtk_widget_show(hbox);
+//     //
+//     // label area
+//     //
+//     GtkWidget *hbox = gtk_hbox_new(false, 0);
+//     gtk_widget_show(hbox);
 
-    db_modelabel = gtk_label_new("Edit Mode");
-    gtk_widget_show(db_modelabel);
-    gtk_label_set_justify(GTK_LABEL(db_modelabel), GTK_JUSTIFY_LEFT);
-    gtk_box_pack_start(GTK_BOX(hbox), db_modelabel, false, false, 2);
+//     db_modelabel = gtk_label_new("Edit Mode");
+//     gtk_widget_show(db_modelabel);
+//     gtk_label_set_justify(GTK_LABEL(db_modelabel), GTK_JUSTIFY_LEFT);
+//     gtk_box_pack_start(GTK_BOX(hbox), db_modelabel, false, false, 2);
 
-    db_title = gtk_label_new("");
-    gtk_widget_show(db_title);
-    gtk_box_pack_end(GTK_BOX(hbox), db_title, true, true, 2);
+//     db_title = gtk_label_new("");
+//     gtk_widget_show(db_title);
+//     gtk_box_pack_end(GTK_BOX(hbox), db_title, true, true, 2);
 
-    GtkWidget *frame = gtk_frame_new(0);
-    gtk_widget_show(frame);
-    gtk_container_add(GTK_CONTAINER(frame), hbox);
+//     GtkWidget *frame = gtk_frame_new(0);
+//     gtk_widget_show(frame);
+//     gtk_container_add(GTK_CONTAINER(frame), hbox);
 
-    hbox = gtk_hbox_new(false, 0);
-    gtk_widget_show(hbox);
+//     hbox = gtk_hbox_new(false, 0);
+//     gtk_widget_show(hbox);
 
-    db_modebtn = gtk_button_new_with_label("Run");
-    gtk_widget_set_name(db_modebtn, "Mode");
-    gtk_widget_set_sensitive(db_modebtn, false);
-    gtk_widget_show(db_modebtn);
-    gtk_signal_connect(GTK_OBJECT(db_modebtn), "clicked",
-        GTK_SIGNAL_FUNC(db_mode_proc), 0);
-    gtk_box_pack_start(GTK_BOX(hbox), db_modebtn, false, false, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), frame, true, true, 0);
+//     db_modebtn = gtk_button_new_with_label("Run");
+//     gtk_widget_set_name(db_modebtn, "Mode");
+//     gtk_widget_set_sensitive(db_modebtn, false);
+//     gtk_widget_show(db_modebtn);
+//     g_signal_connect(G_OBJECT(db_modebtn), "clicked",
+//         G_CALLBACK(db_mode_proc), 0);
+//     gtk_box_pack_start(GTK_BOX(hbox), db_modebtn, false, false, 0);
+//     gtk_box_pack_start(GTK_BOX(hbox), frame, true, true, 0);
 
-    gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 1, 2,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
+//     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 1, 2,
+//         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+//         (GtkAttachOptions)0, 2, 2);
 
-    //
-    // text window with scroll bar
-    //
-    GtkWidget *contr;
-    text_scrollable_new(&contr, &wb_textarea, FNT_FIXED);
+//     //
+//     // text window with scroll bar
+//     //
+//     GtkWidget *contr;
+//     text_scrollable_new(&contr, &wb_textarea, FNT_FIXED);
 
-    gtk_signal_connect(GTK_OBJECT(wb_textarea), "button-press-event",
-        GTK_SIGNAL_FUNC(db_text_btn_hdlr), 0);
+//     g_signal_connect(G_OBJECT(wb_textarea), "button-press-event",
+//         G_CALLBACK(db_text_btn_hdlr), 0);
 
-    gtk_widget_add_events(wb_shell, GDK_KEY_PRESS_MASK);
-    gtk_signal_connect(GTK_OBJECT(wb_shell), "key-press-event",
-        GTK_SIGNAL_FUNC(db_key_dn_hdlr), 0);
+//     gtk_widget_add_events(wb_shell, GDK_KEY_PRESS_MASK);
+//     g_signal_connect(G_OBJECT(wb_shell), "key-press-event",
+//         G_CALLBACK(db_key_dn_hdlr), 0);
 
-    gtk_widget_set_usize(wb_textarea, DEF_WIDTH, DEF_HEIGHT);
+//     gtk_widget_set_size_request(wb_textarea, DEF_WIDTH, DEF_HEIGHT);
 
-    // The font change pop-up uses this to redraw the widget
-    gtk_object_set_data(GTK_OBJECT(wb_textarea), "font_changed",
-        (void*)db_font_changed);
+//     // The font change pop-up uses this to redraw the widget
+//     g_object_set_data(G_OBJECT(wb_textarea), "font_changed",
+//         (void*)db_font_changed);
 
-    gtk_table_attach(GTK_TABLE(form), contr, 0, 1, 2, 3,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 2, 0);
+//     gtk_table_attach(GTK_TABLE(form), contr, 0, 1, 2, 3,
+//         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+//         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 2, 0);
 
-    // drop site
-    gtk_drag_dest_set(wb_textarea, GTK_DEST_DEFAULT_ALL, target_table,
-        n_targets, GDK_ACTION_COPY);
-    gtk_signal_connect_after(GTK_OBJECT(wb_textarea), "drag-data-received",
-        GTK_SIGNAL_FUNC(db_drag_data_received), 0);
+//     // drop site
+//     gtk_drag_dest_set(wb_textarea, GTK_DEST_DEFAULT_ALL, target_table,
+//         n_targets, GDK_ACTION_COPY);
+//     g_signal_connect_after(G_OBJECT(wb_textarea), "drag-data-received",
+//         G_CALLBACK(db_drag_data_received), 0);
 
-    GtkTextBuffer *tbf =
-        gtk_text_view_get_buffer(GTK_TEXT_VIEW(wb_textarea));
-    g_signal_connect(G_OBJECT(tbf), "insert-text",
-        GTK_SIGNAL_FUNC(db_insert_text_proc), this);
-    g_signal_connect(G_OBJECT(tbf), "delete-range",
-        GTK_SIGNAL_FUNC(db_delete_range_proc), this);
-    db_in_undo = false;
-    check_sens();
+//     GtkTextBuffer *tbf =
+//         gtk_text_view_get_buffer(GTK_TEXT_VIEW(wb_textarea));
+//     g_signal_connect(G_OBJECT(tbf), "insert-text",
+//         G_CALLBACK(db_insert_text_proc), this);
+//     g_signal_connect(G_OBJECT(tbf), "delete-range",
+//         G_CALLBACK(db_delete_range_proc), this);
+//     db_in_undo = false;
+//     check_sens();
 
-    if (db_caller)
-        gtk_signal_connect(GTK_OBJECT(db_caller), "toggled",
-            GTK_SIGNAL_FUNC(db_cancel_proc), wb_shell);
+//     if (db_caller)
+//         g_signal_connect(G_OBJECT(db_caller), "toggled",
+//             G_CALLBACK(db_cancel_proc), wb_shell);
 
-    text_set_editable(wb_textarea, true);
-    text_set_change_hdlr(wb_textarea, db_change_proc, 0, true);
-    gtk_widget_set_sensitive(db_execmenu, false);
-    gtk_window_set_focus(GTK_WINDOW(wb_shell), wb_textarea);
+//     text_set_editable(wb_textarea, true);
+//     text_set_change_hdlr(wb_textarea, db_change_proc, 0, true);
+//     gtk_widget_set_sensitive(db_execmenu, false);
+//     gtk_window_set_focus(GTK_WINDOW(wb_shell), wb_textarea);
 }
 
 
@@ -579,8 +580,8 @@ sDbg::~sDbg()
     if (db_vars_pop)
         db_vars_pop->popdown();
     if (db_caller) {
-        gtk_signal_disconnect_by_func(GTK_OBJECT(db_caller),
-            GTK_SIGNAL_FUNC(db_cancel_proc), wb_shell);
+        g_signal_handlers_disconnect_by_func(G_OBJECT(db_caller),
+            (gpointer)db_cancel_proc, wb_shell);
         GRX->Deselect(db_caller);
     }
     histlist::destroy(db_undo_list);
@@ -588,8 +589,8 @@ sDbg::~sDbg()
 
     SI()->Clear();
     if (wb_shell)
-        gtk_signal_disconnect_by_func(GTK_OBJECT(wb_shell),
-            GTK_SIGNAL_FUNC(db_cancel_proc), wb_shell);
+        g_signal_handlers_disconnect_by_func(G_OBJECT(wb_shell),
+            (gpointer)db_cancel_proc, wb_shell);
 
     if (db_item_factory)
         g_object_unref(db_item_factory);
@@ -622,13 +623,13 @@ sDbg::set_mode(DBmode mode)
             gtk_label_set_text(GTK_LABEL(db_modelabel), "Edit Mode");
             gtk_widget_set_sensitive(db_execmenu, false);
             gtk_widget_set_sensitive(db_editmenu, true);
-            gtk_widget_set(db_modebtn, "label", "Run", (char*)0);
+            g_object_set(db_modebtn, "label", "Run", (char*)0);
 
             GdkCursor *c = gdk_cursor_new(GDK_XTERM);
             gdk_window_set_cursor(
                 gtk_text_view_get_window(GTK_TEXT_VIEW(wb_textarea),
                 GTK_TEXT_WINDOW_TEXT), c);
-            gdk_cursor_destroy(c);
+            g_object_unref(c);
         }
     }
     else if (mode == DBrun) {
@@ -641,13 +642,13 @@ sDbg::set_mode(DBmode mode)
             gtk_label_set_text(GTK_LABEL(db_modelabel), "Exec Mode");
             gtk_widget_set_sensitive(db_execmenu, true);
             gtk_widget_set_sensitive(db_editmenu, false);
-            gtk_widget_set(db_modebtn, "label", "Edit", (char*)0);
+            g_object_set(db_modebtn, "label", "Edit", (char*)0);
 
             GdkCursor *c = gdk_cursor_new(GDK_TOP_LEFT_ARROW);
             gdk_window_set_cursor(
                 gtk_text_view_get_window(GTK_TEXT_VIEW(wb_textarea),
                 GTK_TEXT_WINDOW_TEXT),  c);
-            gdk_cursor_destroy(c);
+            g_object_unref(c);
         }
     }
 }
@@ -1487,7 +1488,9 @@ sDbg::db_change_proc(GtkWidget*, void*)
     gtk_widget_set_sensitive(Dbg->db_saveas, true);
     char buf[256];
     char *fname;
-    gtk_label_get(GTK_LABEL(Dbg->db_title), &fname);
+    const gchar *fname_const;
+    fname_const = gtk_label_get_text(GTK_LABEL(Dbg->db_title));
+    strcpy(fname, fname_const);
     strcpy(buf, DEF_FILE);
     if (fname)
         while (isspace(*fname))
@@ -1678,7 +1681,7 @@ sDbg::db_action_proc(GtkWidget *caller, void *client_data, unsigned code)
         Dbg->breakpoint(-1);
         Dbg->db_line = 0;
         gtk_widget_set_sensitive(Dbg->db_saveas, false);
-        gtk_label_set(GTK_LABEL(Dbg->db_title), DEF_FILE);
+        gtk_label_set_text(GTK_LABEL(Dbg->db_title), DEF_FILE);
         Dbg->set_mode(DBedit);
         Dbg->db_text_changed = false;
         break;
@@ -1847,9 +1850,9 @@ void
 sDbg::db_drag_data_received(GtkWidget *caller, GdkDragContext *context, gint,
     gint, GtkSelectionData *data, guint, guint time, void*)
 {
-    if (data->length >= 0 && data->format == 8 && data->data) {
+    if (gtk_selection_data_get_length(data) >= 0 && gtk_selection_data_get_format(data) == 8 && gtk_selection_data_get_data(data)) {
         if (Dbg) {
-            char *src = (char*)data->data;
+            char *src = (char*)gtk_selection_data_get_data(data);
             if (Dbg->db_mode == DBedit) {
                 GdkModifierType mask;
                 gdk_window_get_pointer(0, 0, 0, &mask);
@@ -1861,7 +1864,7 @@ sDbg::db_drag_data_received(GtkWidget *caller, GdkDragContext *context, gint,
                     return;
                 }
             }
-            if (data->target == gdk_atom_intern("TWOSTRING", true)) {
+            if (gtk_selection_data_get_target(data) == gdk_atom_intern("TWOSTRING", true)) {
                 // Drops from content lists may be in the form
                 // "fname_or_chd\ncellname".  Keep the filename.
                 char *t = strchr(src, '\n');
@@ -2009,7 +2012,7 @@ sDbV::sDbV(void *p)
     //
     GtkWidget *swin = gtk_scrolled_window_new(0, 0);
     gtk_widget_show(swin);
-    gtk_widget_set_usize(swin, 220, 200);
+    gtk_widget_set_size_request(swin, 220, 200);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swin),
         GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
     gtk_container_set_border_width(GTK_CONTAINER(swin), 2);
@@ -2033,8 +2036,8 @@ sDbV::sDbV(void *p)
         gtk_tree_view_get_selection(GTK_TREE_VIEW(dv_list));
     gtk_tree_selection_set_select_function(sel, dv_select_proc, 0, 0);
     // TreeView bug hack, see note with handlers.   
-    gtk_signal_connect(GTK_OBJECT(dv_list), "focus",
-        GTK_SIGNAL_FUNC(dv_focus_proc), this);
+    g_signal_connect(G_OBJECT(dv_list), "focus",
+        G_CALLBACK(dv_focus_proc), this);
 
     gtk_container_add(GTK_CONTAINER(swin), dv_list);
 
@@ -2051,8 +2054,8 @@ sDbV::sDbV(void *p)
     GtkWidget *button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(dv_cancel_proc), this);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(dv_cancel_proc), this);
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, 1, 2,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -2066,8 +2069,8 @@ sDbV::~sDbV()
     if (dv_pointer)
         *(void**)dv_pointer = 0;
     if (dv_popup) {
-        gtk_signal_disconnect_by_func(GTK_OBJECT(dv_popup),
-            GTK_SIGNAL_FUNC(dv_cancel_proc), this);
+        g_signal_handlers_disconnect_by_func(G_OBJECT(dv_popup),
+            (gpointer)dv_cancel_proc, this);
         gtk_widget_destroy(dv_popup);
     }
 }

@@ -138,6 +138,7 @@ sTb::sTb(GRobject c)
     tb_namelist = 0;
 
     wb_shell = gtk_NewPopup(0, "Symbol Tables", tb_cancel_proc, 0);
+    wb_window = gtk_widget_get_window(wb_shell);
     if (!wb_shell)
         return;
     gtk_window_set_resizable(GTK_WINDOW(wb_shell), false);
@@ -164,8 +165,8 @@ sTb::sTb(GRobject c)
     GtkWidget *button = gtk_button_new_with_label("Help");
     gtk_widget_set_name(button, "Help");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(tb_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(tb_action), 0);
     gtk_box_pack_end(GTK_BOX(row), button, false, false, 0);
     gtk_table_attach(GTK_TABLE(form), row, 0, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -174,7 +175,7 @@ sTb::sTb(GRobject c)
 
     row = gtk_hbox_new(false, 2);
     gtk_widget_show(row);
-    GtkWidget *entry = gtk_option_menu_new();
+    GtkWidget *entry = gtk_combo_box_text_new();
     gtk_widget_set_name(entry, "tables");
     gtk_widget_show(entry);
     GtkWidget *menu = gtk_menu_new();
@@ -185,36 +186,36 @@ sTb::sTb(GRobject c)
         GtkWidget *mi = gtk_menu_item_new_with_label(s->string);
         gtk_widget_set_name(mi, s->string);
         gtk_widget_show(mi);
-        gtk_menu_append(GTK_MENU(menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(tb_menu_proc), 0);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(tb_menu_proc), 0);
     }
     tb_namelist = list;
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
-    gtk_option_menu_set_history(GTK_OPTION_MENU(entry), 0);
+    // gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
+    // gtk_option_menu_set_history(GTK_OPTION_MENU(entry), 0);
     gtk_box_pack_start(GTK_BOX(row), entry, true, true, 0);
-    gtk_widget_set_usize(entry, 100, -1);
+    gtk_widget_set_size_request(entry, 100, -1);
     tb_tables = entry;
 
     tb_add = gtk_toggle_button_new_with_label("Add");
     gtk_widget_set_name(tb_add, "add");
     gtk_widget_show(tb_add);
-    gtk_signal_connect(GTK_OBJECT(tb_add), "clicked",
-        GTK_SIGNAL_FUNC(tb_action), 0);
+    g_signal_connect(G_OBJECT(tb_add), "clicked",
+        G_CALLBACK(tb_action), 0);
     gtk_box_pack_start(GTK_BOX(row), tb_add, true, true, 0);
 
     tb_clr = gtk_toggle_button_new_with_label("Clear");
     gtk_widget_set_name(tb_clr, "clr");
     gtk_widget_show(tb_clr);
-    gtk_signal_connect(GTK_OBJECT(tb_clr), "clicked",
-        GTK_SIGNAL_FUNC(tb_action), 0);
+    g_signal_connect(G_OBJECT(tb_clr), "clicked",
+        G_CALLBACK(tb_action), 0);
     gtk_box_pack_start(GTK_BOX(row), tb_clr, true, true, 0);
 
     tb_del = gtk_toggle_button_new_with_label("Destroy");
     gtk_widget_set_name(tb_del, "del");
     gtk_widget_show(tb_del);
-    gtk_signal_connect(GTK_OBJECT(tb_del), "clicked",
-        GTK_SIGNAL_FUNC(tb_action), 0);
+    g_signal_connect(G_OBJECT(tb_del), "clicked",
+        G_CALLBACK(tb_action), 0);
     gtk_box_pack_start(GTK_BOX(row), tb_del, true, true, 0);
 
     gtk_table_attach(GTK_TABLE(form), row, 0, 2, rowcnt, rowcnt+1,
@@ -231,8 +232,8 @@ sTb::sTb(GRobject c)
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(tb_cancel_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(tb_cancel_proc), 0);
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -276,13 +277,13 @@ sTb::update()
             GtkWidget *mi = gtk_menu_item_new_with_label(s->string);
             gtk_widget_set_name(mi, s->string);
             gtk_widget_show(mi);
-            gtk_menu_append(GTK_MENU(menu), mi);
-            gtk_signal_connect(GTK_OBJECT(mi), "activate",
-                GTK_SIGNAL_FUNC(tb_menu_proc), 0);
+            gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+            g_signal_connect(G_OBJECT(mi), "activate",
+                G_CALLBACK(tb_menu_proc), 0);
         }
-        gtk_option_menu_remove_menu(GTK_OPTION_MENU(tb_tables));
-        gtk_option_menu_set_menu(GTK_OPTION_MENU(tb_tables), menu);
-        gtk_option_menu_set_history(GTK_OPTION_MENU(tb_tables), 0);
+        // gtk_option_menu_remove_menu(GTK_OPTION_MENU(tb_tables));
+        // gtk_option_menu_set_menu(GTK_OPTION_MENU(tb_tables), menu);
+        // gtk_option_menu_set_history(GTK_OPTION_MENU(tb_tables), 0);
         stringlist::destroy(tb_namelist);
         tb_namelist = list;
     }

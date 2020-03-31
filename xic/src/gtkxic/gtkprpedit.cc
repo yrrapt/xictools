@@ -262,6 +262,7 @@ sPo::sPo(CDo *odesc, PRPmode activ)
     po_dspmode = -1;
 
     wb_shell = gtk_NewPopup(0, "Property Editor", po_cancel_proc, 0);
+    wb_window = gtk_widget_get_window(wb_shell);
     if (!wb_shell)
         return;
 
@@ -279,16 +280,16 @@ sPo::sPo(CDo *odesc, PRPmode activ)
     gtk_widget_set_name(button, "Edit");
     gtk_widget_show(button);
     po_edit = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(po_action_proc), (void*)EditCode);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(po_action_proc), (void*)EditCode);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     button = gtk_toggle_button_new_with_label("Delete");
     gtk_widget_set_name(button, "Delete");
     gtk_widget_show(button);
     po_del = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(po_action_proc), (void*)DeleteCode);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(po_action_proc), (void*)DeleteCode);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     // Add button and its menu
@@ -300,32 +301,32 @@ sPo::sPo(CDo *odesc, PRPmode activ)
     po_item = gtk_menu_item_new_with_label("Add");
     gtk_widget_set_name(po_item, "AddI");
     gtk_widget_show(po_item);
-    gtk_menu_bar_append(GTK_MENU_BAR(menubar), po_item);
-    gtk_signal_connect(GTK_OBJECT(po_item), "event",
-        GTK_SIGNAL_FUNC(po_button_press), 0);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menubar), po_item);
+    g_signal_connect(G_OBJECT(po_item), "event",
+        G_CALLBACK(po_button_press), 0);
     gtk_box_pack_start(GTK_BOX(hbox), menubar, true, true, 0);
 
     button = gtk_toggle_button_new_with_label("Global");
     gtk_widget_set_name(button, "Global");
     gtk_widget_show(button);
     po_global = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(po_action_proc), (void*)GlobCode);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(po_action_proc), (void*)GlobCode);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     button = gtk_toggle_button_new_with_label("Info");
     gtk_widget_set_name(button, "Info");
     gtk_widget_show(button);
     po_info = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(po_action_proc), (void*)InfoCode);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(po_action_proc), (void*)InfoCode);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     button = gtk_button_new_with_label("Help");
     gtk_widget_set_name(button, "Help");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(po_help_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(po_help_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 0, 1,
@@ -338,24 +339,24 @@ sPo::sPo(CDo *odesc, PRPmode activ)
     GtkWidget *contr;
     text_scrollable_new(&contr, &wb_textarea, FNT_FIXED);
 
-    gtk_signal_connect(GTK_OBJECT(wb_textarea), "button-press-event",
-        GTK_SIGNAL_FUNC(po_text_btn_hdlr), 0);
-    gtk_signal_connect(GTK_OBJECT(wb_textarea), "button-release-event",
-        GTK_SIGNAL_FUNC(po_text_btn_release_hdlr), 0);
+    g_signal_connect(G_OBJECT(wb_textarea), "button-press-event",
+        G_CALLBACK(po_text_btn_hdlr), 0);
+    g_signal_connect(G_OBJECT(wb_textarea), "button-release-event",
+        G_CALLBACK(po_text_btn_release_hdlr), 0);
 
     // dnd stuff
-    gtk_signal_connect(GTK_OBJECT(wb_textarea), "motion-notify-event",
-        GTK_SIGNAL_FUNC(po_motion_hdlr), 0);
-    gtk_signal_connect(GTK_OBJECT(wb_textarea), "drag-data-get",
-        GTK_SIGNAL_FUNC(po_drag_data_get), 0);
+    g_signal_connect(G_OBJECT(wb_textarea), "motion-notify-event",
+        G_CALLBACK(po_motion_hdlr), 0);
+    g_signal_connect(G_OBJECT(wb_textarea), "drag-data-get",
+        G_CALLBACK(po_drag_data_get), 0);
     GtkDestDefaults DD = (GtkDestDefaults)
         (GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_DROP);
     gtk_drag_dest_set(wb_textarea, DD, target_table, n_targets,
         GDK_ACTION_COPY);
-    gtk_signal_connect_after(GTK_OBJECT(wb_textarea), "drag-data-received",
-        GTK_SIGNAL_FUNC(po_drag_data_received), 0);
-    gtk_signal_connect_after(GTK_OBJECT(wb_textarea), "realize",
-        GTK_SIGNAL_FUNC(text_realize_proc), 0);
+    g_signal_connect_after(G_OBJECT(wb_textarea), "drag-data-received",
+        G_CALLBACK(po_drag_data_received), 0);
+    g_signal_connect_after(G_OBJECT(wb_textarea), "realize",
+        G_CALLBACK(text_realize_proc), 0);
 
     GtkTextBuffer *textbuf =
         gtk_text_view_get_buffer(GTK_TEXT_VIEW(wb_textarea));
@@ -367,12 +368,12 @@ sPo::sPo(CDo *odesc, PRPmode activ)
         NULL);
 
     // for passing hypertext via selections, see gtkhtext.cc
-    gtk_object_set_data(GTK_OBJECT(wb_textarea), "hyexport", (void*)1);
+    g_object_set_data(G_OBJECT(wb_textarea), "hyexport", (void*)1);
 
-    gtk_widget_set_usize(wb_textarea, 400, 200);
+    gtk_widget_set_size_request(wb_textarea, 400, 200);
 
     // The font change pop-up uses this to redraw the widget
-    gtk_object_set_data(GTK_OBJECT(wb_textarea), "font_changed",
+    g_object_set_data(G_OBJECT(wb_textarea), "font_changed",
         (void*)po_font_changed);
 
     gtk_table_attach(GTK_TABLE(form), contr, 0, 1, 1, 2,
@@ -395,15 +396,15 @@ sPo::sPo(CDo *odesc, PRPmode activ)
     gtk_widget_set_name(button, "Activate");
     gtk_widget_show(button);
     po_activ = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(po_action_proc), (void*)ActivCode);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(po_action_proc), (void*)ActivCode);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(po_cancel_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(po_cancel_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 3, 4,
@@ -424,8 +425,8 @@ sPo::~sPo()
             DSP()->ShowCurrentObject(ERASE, pi_odesc, MarkerColor);
     }
     if (wb_shell)
-        gtk_signal_disconnect_by_func(GTK_OBJECT(wb_shell),
-            GTK_SIGNAL_FUNC(po_cancel_proc), wb_shell);
+        g_signal_handlers_disconnect_by_func(G_OBJECT(wb_shell),
+            (gpointer)po_cancel_proc, wb_shell);
 }
 
 
@@ -476,9 +477,9 @@ sPo::update(CDo *odesc, PRPmode activ)
                 break;
             GtkWidget *menu_item = gtk_menu_item_new_with_label(s);
             gtk_widget_set_name(menu_item, s);
-            gtk_menu_append(GTK_MENU(menu), menu_item);
-            gtk_signal_connect(GTK_OBJECT(menu_item), "activate",
-                GTK_SIGNAL_FUNC(po_menu_proc), &po_phys_addmenu[i]);
+            gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
+            g_signal_connect(G_OBJECT(menu_item), "activate",
+                G_CALLBACK(po_menu_proc), &po_phys_addmenu[i]);
             gtk_widget_show(menu_item);
         }
     }
@@ -489,9 +490,9 @@ sPo::update(CDo *odesc, PRPmode activ)
                 break;
             GtkWidget *menu_item = gtk_menu_item_new_with_label(s);
             gtk_widget_set_name(menu_item, s);
-            gtk_menu_append(GTK_MENU(menu), menu_item);
-            gtk_signal_connect(GTK_OBJECT(menu_item), "activate",
-                GTK_SIGNAL_FUNC(po_menu_proc), &po_elec_addmenu[i]);
+            gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
+            g_signal_connect(G_OBJECT(menu_item), "activate",
+                G_CALLBACK(po_menu_proc), &po_elec_addmenu[i]);
             gtk_widget_show(menu_item);
 
             // Hard-code name button, index 0
@@ -756,7 +757,7 @@ sPo::po_menu_proc(GtkWidget *caller, void *client_data)
 int
 sPo::po_button_press(GtkWidget *widget, GdkEvent *event)
 {
-    GtkWidget *menu = GTK_MENU_ITEM(widget)->submenu;
+    GtkWidget *menu = gtk_menu_item_get_submenu(GTK_MENU_ITEM(widget));
     if (event->type == GDK_BUTTON_PRESS) {
         GRX->Deselect(Po->po_edit);
         GRX->Deselect(Po->po_del);

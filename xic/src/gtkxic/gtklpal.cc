@@ -183,12 +183,12 @@ sLpalette::sLpalette(GRobject caller)
         GtkWidget *mi = gtk_menu_item_new_with_label(buf);
         gtk_widget_set_name(mi, buf);
         gtk_widget_show(mi);
-        gtk_menu_append(GTK_MENU(recall_menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(lp_recall_proc), (void*)(long)i);
+        gtk_menu_shell_append(GTK_MENU_SHELL(recall_menu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(lp_recall_proc), (void*)(long)i);
     }
-    gtk_signal_connect(GTK_OBJECT(recall_btn), "button-press-event",
-        GTK_SIGNAL_FUNC(lp_popup_menu), recall_menu);
+    g_signal_connect(G_OBJECT(recall_btn), "button-press-event",
+        G_CALLBACK(lp_popup_menu), recall_menu);
     gtk_box_pack_start(GTK_BOX(row), recall_btn, true, true, 2);
 
     GtkWidget *save_btn = gtk_button_new_with_label("Save");
@@ -203,12 +203,12 @@ sLpalette::sLpalette(GRobject caller)
         GtkWidget *mi = gtk_menu_item_new_with_label(buf);
         gtk_widget_set_name(mi, buf);
         gtk_widget_show(mi);
-        gtk_menu_append(GTK_MENU(save_menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(lp_save_proc), (void*)(long)i);
+        gtk_menu_shell_append(GTK_MENU_SHELL(save_menu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(lp_save_proc), (void*)(long)i);
     }
-    gtk_signal_connect(GTK_OBJECT(save_btn), "button-press-event",
-        GTK_SIGNAL_FUNC(lp_popup_menu), save_menu);
+    g_signal_connect(G_OBJECT(save_btn), "button-press-event",
+        G_CALLBACK(lp_popup_menu), save_menu);
     gtk_box_pack_start(GTK_BOX(row), save_btn, true, true, 2);
 
     lp_remove = gtk_toggle_button_new_with_label("Remove");
@@ -219,8 +219,8 @@ sLpalette::sLpalette(GRobject caller)
     GtkWidget *button = gtk_button_new_with_label("Help");
     gtk_widget_set_name(button, "Help");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(lp_help_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(lp_help_proc), 0);
     gtk_box_pack_end(GTK_BOX(row), button, false, false, 0);
 
     int rowcnt = 0;
@@ -242,40 +242,40 @@ sLpalette::sLpalette(GRobject caller)
     rowcnt++;
 
     gtk_widget_add_events(gd_viewport, GDK_STRUCTURE_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "configure-event",
-        GTK_SIGNAL_FUNC(lp_resize_hdlr), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "configure-event",
+        G_CALLBACK(lp_resize_hdlr), 0);
     gtk_widget_add_events(gd_viewport, GDK_EXPOSURE_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "expose-event",
-        GTK_SIGNAL_FUNC(lp_redraw_hdlr), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "expose-event",
+        G_CALLBACK(lp_redraw_hdlr), 0);
     gtk_widget_add_events(gd_viewport, GDK_BUTTON_PRESS_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "button-press-event",
-        GTK_SIGNAL_FUNC(lp_button_down_hdlr), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "button-press-event",
+        G_CALLBACK(lp_button_down_hdlr), 0);
     gtk_widget_add_events(gd_viewport, GDK_BUTTON_RELEASE_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "button-release-event",
-        GTK_SIGNAL_FUNC(lp_button_up_hdlr), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "button-release-event",
+        G_CALLBACK(lp_button_up_hdlr), 0);
     gtk_widget_add_events(gd_viewport, GDK_POINTER_MOTION_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "motion-notify-event",
-        GTK_SIGNAL_FUNC(lp_motion_hdlr), 0);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "drag-begin",
-        GTK_SIGNAL_FUNC(lp_drag_begin), 0);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "drag-end",
-        GTK_SIGNAL_FUNC(lp_drag_end), 0);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "drag-data-get",
-        GTK_SIGNAL_FUNC(lp_drag_data_get), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "motion-notify-event",
+        G_CALLBACK(lp_motion_hdlr), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "drag-begin",
+        G_CALLBACK(lp_drag_begin), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "drag-end",
+        G_CALLBACK(lp_drag_end), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "drag-data-get",
+        G_CALLBACK(lp_drag_data_get), 0);
     gtk_drag_dest_set(gd_viewport, GTK_DEST_DEFAULT_ALL, lp_targets,
         n_lp_targets, GDK_ACTION_COPY);
-    gtk_signal_connect_after(GTK_OBJECT(gd_viewport), "drag-data-received",
-        GTK_SIGNAL_FUNC(lp_drag_data_received), 0);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "style-set",
-        GTK_SIGNAL_FUNC(lp_font_change_hdlr), 0);
+    g_signal_connect_after(G_OBJECT(gd_viewport), "drag-data-received",
+        G_CALLBACK(lp_drag_data_received), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "style-set",
+        G_CALLBACK(lp_font_change_hdlr), 0);
 
     GTKfont::setupFont(gd_viewport, FNT_SCREEN, true);
 
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(lp_cancel_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(lp_cancel_proc), 0);
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -298,7 +298,7 @@ sLpalette::~sLpalette()
     if (lp_shell)
         gtk_widget_destroy(lp_shell);
     if (lp_pixmap)
-        gdk_pixmap_unref(lp_pixmap);
+        g_object_unref(lp_pixmap);
 }
 
 
@@ -308,25 +308,26 @@ void
 sLpalette::update_info(CDl *ldesc)
 {
     if (!gd_window)
-        gd_window = gd_viewport->window;
+        gd_window = gtk_widget_get_window(gd_viewport);
     if (!gd_window)
         return;
 
     int win_width, win_height;
-    gdk_window_get_size(gd_window, &win_width, &win_height);
+    win_width = gdk_window_get_width(gd_window);
+    win_height = gdk_window_get_height(gd_window);
     if (!lp_pixmap || lp_pmap_width != win_width ||
             lp_pmap_height != win_height) {
         if (lp_pixmap)
-            gdk_pixmap_unref(lp_pixmap);
+            g_object_unref(lp_pixmap);
         lp_pmap_width = win_width;
         lp_pmap_height = win_height;
-        lp_pixmap = gdk_pixmap_new(gd_window, lp_pmap_width, lp_pmap_height,
-            GRX->Visual()->depth);
+        // lp_pixmap = gdk_pixmap_new(gd_window, lp_pmap_width, lp_pmap_height,
+        //     GRX->Visual()->depth);
         lp_pmap_dirty = true;
     }
 
-    GdkWindow *win = gd_window;
-    gd_window = lp_pixmap;
+    // GdkWindow *win = gd_window;
+    // gd_window = lp_pixmap;
 
     int fwid, fhei;
     TextExtent(0, &fwid, &fhei);
@@ -427,8 +428,8 @@ sLpalette::update_info(CDl *ldesc)
         Text(buf, x, y, 0);
     }
 
-    gdk_window_copy_area(win, GC(), 0, 0, gd_window, 0, 0, win_width, 5*fhei);
-    gd_window = win;
+    // gdk_window_copy_area(win, GC(), 0, 0, gd_window, 0, 0, win_width, 5*fhei);
+    // gd_window = win;
 }
 
 
@@ -556,7 +557,7 @@ sLpalette::init_size()
 
     int wid = LP_PALETTE_COLS*lp_entry_width + 4;
     int hei = lp_user_y + (2*fhei + fhei/2)*LP_PALETTE_ROWS;
-    gtk_drawing_area_size(GTK_DRAWING_AREA(Lpal->gd_viewport), wid, hei);
+    gtk_widget_set_size_request(Lpal->gd_viewport, wid, hei);
 }
 
 
@@ -566,7 +567,8 @@ void
 sLpalette::redraw()
 {
     int win_width, win_height;
-    gdk_window_get_size(gd_window, &win_width, &win_height);
+    win_width = gdk_window_get_width(gd_window);
+    win_height = gdk_window_get_height(gd_window);
     SetFillpattern(0);
     SetColor(user_backg());
     Box(0, lp_hist_y - 8, win_width, lp_hist_y - 6);
@@ -713,12 +715,13 @@ void
 sLpalette::refresh(int x, int y, int w, int h)
 {
     if (!gd_window)
-        gd_window = gd_viewport->window;
+        gd_window = gtk_widget_get_window(gd_viewport);
     if (!gd_window)
         return;
 
     int win_width, win_height;
-    gdk_window_get_size(gd_window, &win_width, &win_height);
+    win_width = gdk_window_get_width(gd_window);
+    win_height = gdk_window_get_height(gd_window);
     if (w <= 0)
         w = win_width;
     if (h <= 0)
@@ -728,24 +731,24 @@ sLpalette::refresh(int x, int y, int w, int h)
             lp_pmap_height != win_height) {
         // Widget is not currently resizable.
         if (lp_pixmap)
-            gdk_pixmap_unref(lp_pixmap);
+            g_object_unref(lp_pixmap);
         lp_pmap_width = win_width;
         lp_pmap_height = win_height;
-        lp_pixmap = gdk_pixmap_new(gd_window, lp_pmap_width, lp_pmap_height,
-            GRX->Visual()->depth);
+        // lp_pixmap = gdk_pixmap_new(gd_window, lp_pmap_width, lp_pmap_height,
+        //     GRX->Visual()->depth);
         lp_pmap_dirty = true;
     }
 
-    GdkWindow *win = gd_window;
-    gd_window = lp_pixmap;
+    // GdkWindow *win = gd_window;
+    // gd_window = lp_pixmap;
 
     if (lp_pmap_dirty) {
         redraw();
         lp_pmap_dirty = false;
     }
 
-    gdk_window_copy_area(win, GC(), x, y, gd_window, x, y, w, h);
-    gd_window = win;
+    // gdk_window_copy_area(win, GC(), x, y, gd_window, x, y, w, h);
+    // gd_window = win;
 }
 
 
@@ -934,13 +937,13 @@ sLpalette::lp_resize_hdlr(GtkWidget*, GdkEvent*, void*)
     if (!Lpal)
         return (0);
     if (!Lpal->gd_window) {
-        Lpal->gd_window = Lpal->gd_viewport->window;
+        // Lpal->gd_window = Lpal->gtk_widget_get_window(gd_viewport);
 
-        if (!Lpal->lp_gbag.main_gc()) {
-            Lpal->lp_gbag.set_gc(gdk_gc_new(Lpal->gd_window));
-            Lpal->lp_gbag.set_xorgc(gdk_gc_new(Lpal->gd_window));
-        }
-        Lpal->SetGbag(&Lpal->lp_gbag);
+        // if (!Lpal->lp_gbag.main_gc()) {
+        //     Lpal->lp_gbag.set_gc(gdk_gc_new(Lpal->gd_window));
+        //     Lpal->lp_gbag.set_xorgc(gdk_gc_new(Lpal->gd_window));
+        // }
+        // Lpal->SetGbag(&Lpal->lp_gbag);
     }
     Lpal->update_layer(LT()->CurLayer());
     Lpal->update_info(LT()->CurLayer());
@@ -1080,7 +1083,7 @@ sLpalette::lp_drag_data_get(GtkWidget*, GdkDragContext*,
     if (!ld)
         return;
     LayerFillData dd(ld);
-    gtk_selection_data_set(selection_data, selection_data->target,
+    gtk_selection_data_set(selection_data, gtk_selection_data_get_target(selection_data),
         8, (unsigned char*)&dd, sizeof(LayerFillData));
 }
 
@@ -1096,8 +1099,8 @@ sLpalette::lp_drag_data_received(GtkWidget*, GdkDragContext *context,
     // datum is a guint16 array of the format:
     //  R G B opacity
     GdkAtom a = gdk_atom_intern("fillpattern", true);
-    if (data->target == a) {
-        LayerFillData *dd = (LayerFillData*)data->data;
+    if (gtk_selection_data_get_target(data) == a) {
+        LayerFillData *dd = (LayerFillData*)gtk_selection_data_get_data(data);
         if (dd->d_from_layer) {
             if (dd->d_layernum > 0) {
                 CDl *ld = CDldb()->layer(dd->d_layernum, DSP()->CurMode());
@@ -1107,7 +1110,7 @@ sLpalette::lp_drag_data_received(GtkWidget*, GdkDragContext *context,
         }
         else {
             CDl *ld = Lpal->ldesc_at(x, y);
-            XM()->FillLoadCallback((LayerFillData*)data->data, ld);
+            XM()->FillLoadCallback((LayerFillData*)gtk_selection_data_get_data(data), ld);
             if (dspPkgIf()->IsTrueColor()) {
                 // update the colors
                 Lpal->update_layer(0);
@@ -1117,16 +1120,16 @@ sLpalette::lp_drag_data_received(GtkWidget*, GdkDragContext *context,
         }
     }
     else {
-        if (data->length < 0) {
+        if (gtk_selection_data_get_length(data) < 0) {
             gtk_drag_finish(context, false, false, time);
             return;
         }
-        if (data->format != 16 || data->length != 8) {
+        if (gtk_selection_data_get_format(data) != 16 || gtk_selection_data_get_length(data) != 8) {
             fprintf(stderr, "Received invalid color data\n");
             gtk_drag_finish(context, false, false, time);
             return;
         }
-        guint16 *vals = (guint16*)data->data;
+        guint16 *vals = (guint16*)gtk_selection_data_get_data(data);
 
         CDl *ld = Lpal->ldesc_at(x, y);
 
@@ -1162,9 +1165,11 @@ namespace {
         *pushin = true;
         GtkWidget *btn = GTK_WIDGET(data);
         GRX->Location(btn, x, y);
-        GtkAllocation *a = &btn->allocation;;
+        GtkAllocation *a = g_new0 (GtkAllocation, 1);
+        gtk_widget_get_allocation(GTK_WIDGET(btn), a);
         (*x) -= a->width;
         (*y) += a->height;
+        g_free(a);
     }
 }
 

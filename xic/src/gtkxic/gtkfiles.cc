@@ -187,7 +187,7 @@ cConvert::PopUpFiles(GRobject caller, ShowMode mode)
 
     // This is needed to reliable show the busy cursor.
     dspPkgIf()->SetWorking(true);
-    gtk_timeout_add(500, msw_timeout, caller);
+    g_timeout_add(500, msw_timeout, caller);
 
     /****
     new sFL(caller);
@@ -214,16 +214,16 @@ sFL::sFL(GRobject c) :
     update();
 
     if (fl_caller)
-        gtk_signal_connect_after(GTK_OBJECT(fl_caller), "toggled",
-            GTK_SIGNAL_FUNC(fl_down_cb), this);
+        g_signal_connect_after(G_OBJECT(fl_caller), "toggled",
+            G_CALLBACK(fl_down_cb), this);
 }
 
 
 sFL::~sFL()
 {
     if (fl_caller) {
-        gtk_signal_disconnect_by_func(GTK_OBJECT(fl_caller),
-            GTK_SIGNAL_FUNC(fl_down_cb), this);
+        g_signal_handlers_disconnect_by_func(G_OBJECT(fl_caller),
+            (gpointer)fl_down_cb, this);
         GRX->Deselect(fl_caller);
     }
     if (fl_content_pop)

@@ -161,7 +161,7 @@ namespace {
             static void drawghost(int, int, int, int, bool = false);
 
             GRobject fp_caller;
-            GdkPixmap *fp_pixmap;
+            cairo_surface_t *fp_pixmap;
             GtkWidget *fp_pm_widget;
             GtkWidget *fp_outl;
             GtkWidget *fp_fat;
@@ -291,12 +291,13 @@ sFpe::sFpe(GRobject c)
     fp_nx = 8;
     fp_ny = 8;
     wb_shell = gtk_NewPopup(0, "Fill Pattern Editor", fp_cancel_proc, 0);
+    wb_window = gtk_widget_get_window(wb_shell);
     if (!wb_shell)
         return;
     gtk_window_set_resizable(GTK_WINDOW(wb_shell), false);
 
-    gtk_signal_connect(GTK_OBJECT(wb_shell), "configure-event",
-        GTK_SIGNAL_FUNC(fp_config_hdlr), 0);
+    g_signal_connect(G_OBJECT(wb_shell), "configure-event",
+        G_CALLBACK(fp_config_hdlr), 0);
 
     fp_width = 466;
 //    fp_height = 300;
@@ -331,15 +332,15 @@ sFpe::sFpe(GRobject c)
     GtkWidget *darea = gtk_drawing_area_new();
     gtk_widget_show(darea);
     fp_editor = darea;
-    gtk_drawing_area_size(GTK_DRAWING_AREA(darea), fp_edt_box_dim,
+    gtk_widget_set_size_request(darea, fp_edt_box_dim,
         fp_edt_box_dim);
     gtk_widget_add_events(darea, GDK_ENTER_NOTIFY_MASK);
     gtk_container_add(GTK_CONTAINER(frame), darea);
     fp_connect_sigs(darea, false, true);
-    gtk_signal_connect(GTK_OBJECT(darea), "enter-notify-event",
-        GTK_SIGNAL_FUNC(fp_enter_hdlr), 0);
-    gtk_signal_connect(GTK_OBJECT(darea), "expose-event",
-        GTK_SIGNAL_FUNC(fp_redraw_edit_hdlr), 0);
+    g_signal_connect(G_OBJECT(darea), "enter-notify-event",
+        G_CALLBACK(fp_enter_hdlr), 0);
+    g_signal_connect(G_OBJECT(darea), "expose-event",
+        G_CALLBACK(fp_redraw_edit_hdlr), 0);
 
     //
     // Pixel editor controls
@@ -357,15 +358,15 @@ sFpe::sFpe(GRobject c)
     GtkWidget *sb = sb_nx.init(8.0, 2.0, 32.0, 0);
     sb_nx.set_wrap(false);
     sb_nx.set_editable(true);
-    sb_nx.connect_changed(GTK_SIGNAL_FUNC(fp_nxy_proc), (void*)(long)1, "nx");
-    gtk_widget_set_usize(sb, 50, -1);
+    // (fp_nxy_proc, (void*)(long)1, "nx");
+    gtk_widget_set_size_request(sb, 50, -1);
     gtk_box_pack_start(GTK_BOX(echbox), sb, false, false, 0);
 
     sb = sb_ny.init(8.0, 2.0, 32.0, 0);
     sb_ny.set_wrap(false);
     sb_ny.set_editable(true);
-    sb_ny.connect_changed(GTK_SIGNAL_FUNC(fp_nxy_proc), (void*)(long)2, "ny");
-    gtk_widget_set_usize(sb, 50, -1);
+    // (fp_nxy_proc, (void*)(long)2, "ny");
+    gtk_widget_set_size_request(sb, 50, -1);
     gtk_box_pack_start(GTK_BOX(echbox), sb, false, false, 0);
     gtk_container_add(GTK_CONTAINER(frame), echbox);
     gtk_box_pack_start(GTK_BOX(ecvbox), frame, false, false, 0);
@@ -376,22 +377,22 @@ sFpe::sFpe(GRobject c)
     GtkWidget *button = gtk_button_new_with_label("Rot90");
     gtk_widget_set_name(button, "Rot90");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fp_rot90_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fp_rot90_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
 
     button = gtk_button_new_with_label("X");
     gtk_widget_set_name(button, "MX");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fp_refl_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fp_refl_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
 
     button = gtk_button_new_with_label("Y");
     gtk_widget_set_name(button, "MY");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fp_refl_proc), (void*)1L);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fp_refl_proc), (void*)1L);
     gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
     gtk_box_pack_start(GTK_BOX(ecvbox), hbox, false, false, 0);
 
@@ -402,8 +403,8 @@ sFpe::sFpe(GRobject c)
     button = gtk_button_new_with_label("Stores");
     gtk_widget_set_name(button, "ShowStores");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fp_mode_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fp_mode_proc), 0);
     gtk_box_pack_start(GTK_BOX(ecvbox), button, false, false, 0);
 
     hsep = gtk_hseparator_new();
@@ -423,8 +424,8 @@ sFpe::sFpe(GRobject c)
     sb = sb_defpats.init(1.0, 1.0, 4.0, 0);
     sb_defpats.set_wrap(true);
     sb_defpats.set_editable(false);
-    sb_defpats.connect_changed(GTK_SIGNAL_FUNC(fp_bank_proc), 0, "Defpats");
-    gtk_widget_set_usize(sb, 50, -1);
+    // (fp_bank_proc, 0, "Defpats");
+    gtk_widget_set_size_request(sb, 50, -1);
     gtk_container_add(GTK_CONTAINER(frame), sb);
     gtk_box_pack_start(GTK_BOX(scvbox), frame, false, false, 0);
 
@@ -435,8 +436,8 @@ sFpe::sFpe(GRobject c)
     button = gtk_button_new_with_label("Dump Defs");
     gtk_widget_set_name(button, "Dumpdefs");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fp_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fp_btn_proc), 0);
     gtk_box_pack_start(GTK_BOX(scvbox), button, false, false, 0);
 
     hsep = gtk_hseparator_new();
@@ -446,8 +447,8 @@ sFpe::sFpe(GRobject c)
     button = gtk_button_new_with_label("Pixel Editor");
     gtk_widget_set_name(button, "PexEd");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fp_mode_proc), (void*)(long)1);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fp_mode_proc), (void*)(long)1);
     gtk_box_pack_start(GTK_BOX(scvbox), button, false, false, 0);
 
     hsep = gtk_hseparator_new();
@@ -463,7 +464,7 @@ sFpe::sFpe(GRobject c)
     darea = gtk_drawing_area_new();
     gtk_widget_show(darea);
     fp_sample = darea;
-    gtk_drawing_area_size(GTK_DRAWING_AREA(darea), fp_def_box_h,
+    gtk_widget_set_size_request(darea, fp_def_box_h,
         fp_pat_box_h);
     gtk_container_add(GTK_CONTAINER(frame), darea);
     fp_connect_sigs(darea, true, true);
@@ -471,8 +472,8 @@ sFpe::sFpe(GRobject c)
     gtk_box_pack_start(GTK_BOX(vbox), fp_stoctrl, true, true, 0);
     gtk_box_pack_start(GTK_BOX(vbox), frame, true, true, 0);
     gtk_box_pack_start(GTK_BOX(row), vbox, true, true, 0);
-    gtk_signal_connect(GTK_OBJECT(darea), "expose-event",
-        GTK_SIGNAL_FUNC(fp_redraw_sample_hdlr), 0);
+    g_signal_connect(G_OBJECT(darea), "expose-event",
+        G_CALLBACK(fp_redraw_sample_hdlr), 0);
 
     //
     // Patterns
@@ -492,7 +493,7 @@ sFpe::sFpe(GRobject c)
             darea = gtk_drawing_area_new();
             gtk_widget_show(darea);
             fp_stores[i + j*3] = darea;
-            gtk_drawing_area_size(GTK_DRAWING_AREA(darea), fp_def_box_w,
+            gtk_widget_set_size_request(darea, fp_def_box_w,
                 fp_def_box_h);
             gtk_container_add(GTK_CONTAINER(iframe), darea);
             if (j == 0 && i <= 1)
@@ -500,8 +501,8 @@ sFpe::sFpe(GRobject c)
             else
                 fp_connect_sigs(darea, true, true);
             gtk_box_pack_start(GTK_BOX(hbox), iframe, true, true, 0);
-            gtk_signal_connect(GTK_OBJECT(darea), "expose-event",
-                GTK_SIGNAL_FUNC(fp_redraw_store_hdlr),
+            g_signal_connect(G_OBJECT(darea), "expose-event",
+                G_CALLBACK(fp_redraw_store_hdlr),
                 (void*)(long)(i + j*3));
         }
         gtk_box_pack_start(GTK_BOX(vbox), hbox, true, true, 0);
@@ -525,53 +526,53 @@ sFpe::sFpe(GRobject c)
     button = gtk_button_new_with_label("Load");
     gtk_widget_set_name(button, "Load");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fp_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fp_btn_proc), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
 
     button = gtk_button_new_with_label("Apply");
     gtk_widget_set_name(button, "Apply");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fp_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fp_btn_proc), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
 
     button = gtk_button_new_with_label("Help");
     gtk_widget_set_name(button, "Help");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fp_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fp_btn_proc), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
 
     button = gtk_toggle_button_new_with_label("Outline");
     gtk_widget_set_name(button, "Outline");
     gtk_widget_show(button);
     fp_outl = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fp_outline_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fp_outline_proc), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
 
     button = gtk_toggle_button_new_with_label("Fat");
     gtk_widget_set_name(button, "Fat");
     gtk_widget_show(button);
     fp_fat = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fp_outline_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fp_outline_proc), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
 
     button = gtk_toggle_button_new_with_label("Cut");
     gtk_widget_set_name(button, "Cut");
     gtk_widget_show(button);
     fp_cut = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fp_outline_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fp_outline_proc), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
 
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fp_cancel_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fp_cancel_proc), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
 
     gtk_table_attach(GTK_TABLE(form), row, 0, 1, rowcnt, rowcnt+1,
@@ -623,8 +624,8 @@ sFpe::~sFpe()
         delete fp_fp;
     }
     if (wb_shell)
-        gtk_signal_disconnect_by_func(GTK_OBJECT(wb_shell),
-            GTK_SIGNAL_FUNC(fp_cancel_proc), wb_shell);
+        g_signal_handlers_disconnect_by_func(G_OBJECT(wb_shell),
+            (gpointer)fp_cancel_proc, wb_shell);
 }
 
 
@@ -657,14 +658,15 @@ sFpe::redraw_edit()
     if (!fp_editing)
         return;
     int wid, hei;
-    gdk_window_get_size(fp_editor->window, &wid, &hei);
+    wid = gdk_window_get_width(gtk_widget_get_window(fp_editor));
+    hei = gdk_window_get_height(gtk_widget_get_window(fp_editor));
     fp_pm_widget = 0;
 
     if (!fp_pixmap || wid > fp_pm_w || hei > fp_pm_h) {
         if (fp_pixmap)
-            gdk_pixmap_unref(fp_pixmap);
-        fp_pixmap = gdk_pixmap_new(fp_editor->window, wid, hei,
-            GRX->Visual()->depth);
+            g_object_unref(fp_pixmap);
+        // fp_pixmap = gdk_pixmap_new(gtk_widget_get_window(fp_editor), wid, hei,
+            // gdk_visual_get_depth(GRX->Visual()));
         if (fp_pixmap) {
             fp_pm_w = wid;
             fp_pm_h = hei;
@@ -675,10 +677,10 @@ sFpe::redraw_edit()
     fp_spa = 2;
     fp_epsz = (mind - 2*fp_spa)/mmMax(fp_nx, fp_ny);
 
-    if (fp_pixmap)
-        gd_window = fp_pixmap;
-    else
-        gd_window = fp_editor->window;
+    // if (fp_pixmap)
+    //     gd_window = fp_pixmap;
+    // else
+    //     gd_window = gtk_widget_get_window(fp_editor);
 
     SetFillpattern(0);
     GtkStyle *style = gtk_widget_get_style(Shell());
@@ -688,7 +690,7 @@ sFpe::redraw_edit()
     Box(fp_spa - 1, fp_spa - 1,
         fp_spa + fp_nx*fp_epsz + 2, fp_spa + fp_ny*fp_epsz + 2);
 
-    gdk_gc_set_fill(GC(), GDK_SOLID);
+    // gdk_gc_set_fill(GC(), GDK_SOLID);
     int bpl = (fp_nx + 7)/8;
     unsigned char *a = fp_array;
     for (int i = 0; i < fp_ny; i++) {
@@ -705,8 +707,8 @@ sFpe::redraw_edit()
         }
     }
     if (fp_pixmap) {
-        gdk_window_copy_area(fp_editor->window, GC(), 0, 0,
-            gd_window, 0, 0, wid, hei);
+        // gdk_window_copy_area(gtk_widget_get_window(fp_editor), GC(), 0, 0,
+        //     gd_window, 0, 0, wid, hei);
         fp_pm_widget = fp_editor;
     }
 }
@@ -716,27 +718,28 @@ void
 sFpe::redraw_sample()
 {
     int wid, hei;
-    gdk_window_get_size(fp_sample->window, &wid, &hei);
+    wid = gdk_window_get_width(gtk_widget_get_window(fp_sample));
+    hei = gdk_window_get_height(gtk_widget_get_window(fp_sample));
     fp_pm_widget = 0;
 
     if (!fp_pixmap || wid > fp_pm_w || hei > fp_pm_h) {
         if (fp_pixmap)
-            gdk_pixmap_unref(fp_pixmap);
-        fp_pixmap = gdk_pixmap_new(fp_sample->window, wid, hei,
-            GRX->Visual()->depth);
+            g_object_unref(fp_pixmap);
+        // fp_pixmap = gdk_pixmap_new(gtk_widget_get_window(fp_sample), wid, hei,
+        //     GRX->Visual()->depth);
         if (fp_pixmap) {
             fp_pm_w = wid;
             fp_pm_h = hei;
         }
     }
     if (fp_pixmap) {
-        gd_window = fp_pixmap;
+        // gd_window = fp_pixmap;
         SetColor(fp_pixbg);
         SetFillpattern(0);
         Box(0, 0, wid, hei);
     }
     else {
-        gd_window = fp_sample->window;
+        gd_window = gtk_widget_get_window(fp_sample);
         SetWindowBackground(fp_pixbg);
         Clear();
     }
@@ -804,8 +807,8 @@ sFpe::redraw_sample()
         Line(x1, y2, x2, y1);
     }
     if (fp_pixmap) {
-        gdk_window_copy_area(fp_sample->window, GC(), 0, 0,
-            gd_window, 0, 0, wid, hei);
+        // gdk_window_copy_area(gtk_widget_get_window(fp_sample), GC(), 0, 0,
+        //     gd_window, 0, 0, wid, hei);
         fp_pm_widget = fp_sample;
     }
 }
@@ -818,30 +821,31 @@ sFpe::redraw_store(int i)
         return;
 
     int wid, hei;
-    gdk_window_get_size(fp_stores[i]->window, &wid, &hei);
+    wid = gdk_window_get_width(gtk_widget_get_window(fp_stores[i]));
+    hei = gdk_window_get_height(gtk_widget_get_window(fp_stores[i]));
     fp_pm_widget = 0;
 
     if (!fp_pixmap || wid > fp_pm_w || hei > fp_pm_h) {
         if (fp_pixmap)
-            gdk_pixmap_unref(fp_pixmap);
-        fp_pixmap = gdk_pixmap_new(fp_stores[i]->window, wid, hei,
-            GRX->Visual()->depth);
+            g_object_unref(fp_pixmap);
+        // fp_pixmap = gdk_pixmap_new(fp_stores[i]->window, wid, hei,
+            // GRX->Visual()->depth);
         if (fp_pixmap) {
             fp_pm_w = wid;
             fp_pm_h = hei;
         }
     }
-    if (fp_pixmap) {
-        gd_window = fp_pixmap;
-        SetColor(fp_pixbg);
-        SetFillpattern(0);
-        Box(0, 0, wid, hei);
-    }
-    else {
-        gd_window = fp_stores[i]->window;
-        SetWindowBackground(fp_pixbg);
-        Clear();
-    }
+    // if (fp_pixmap) {
+    //     gd_window = fp_pixmap;
+    //     SetColor(fp_pixbg);
+    //     SetFillpattern(0);
+    //     Box(0, 0, wid, hei);
+    // }
+    // else {
+    //     gd_window = fp_stores[i]->window;
+    //     SetWindowBackground(fp_pixbg);
+    //     Clear();
+    // }
 
     SetColor(fp_foreg);
     if (i == 1) {
@@ -857,11 +861,11 @@ sFpe::redraw_store(int i)
             SetFillpattern(0);
         }
     }
-    if (fp_pixmap) {
-        gdk_window_copy_area(fp_stores[i]->window, GC(), 0, 0,
-            gd_window, 0, 0, wid, hei);
-        fp_pm_widget = fp_stores[i];
-    }
+    // if (fp_pixmap) {
+    //     gdk_window_copy_area(fp_stores[i]->window, GC(), 0, 0,
+    //         gd_window, 0, 0, wid, hei);
+    //     fp_pm_widget = fp_stores[i];
+    // }
 }
 
 
@@ -1233,39 +1237,39 @@ void
 sFpe::fp_connect_sigs(GtkWidget *darea, bool dnd_src, bool dnd_rcvr)
 {
     gtk_widget_add_events(darea, GDK_BUTTON_PRESS_MASK);
-    gtk_signal_connect(GTK_OBJECT(darea), "button-press-event",
-        GTK_SIGNAL_FUNC(fp_button_press_hdlr), 0);
+    g_signal_connect(G_OBJECT(darea), "button-press-event",
+        G_CALLBACK(fp_button_press_hdlr), 0);
     gtk_widget_add_events(darea, GDK_BUTTON_RELEASE_MASK);
-    gtk_signal_connect(GTK_OBJECT(darea), "button-release-event",
-        GTK_SIGNAL_FUNC(fp_button_rel_hdlr), 0);
+    g_signal_connect(G_OBJECT(darea), "button-release-event",
+        G_CALLBACK(fp_button_rel_hdlr), 0);
     gtk_widget_add_events(darea, GDK_KEY_PRESS_MASK);
-    gtk_signal_connect_after(GTK_OBJECT(darea), "key-press-event",
-        GTK_SIGNAL_FUNC(fp_key_press_hdlr), 0);
+    g_signal_connect_after(G_OBJECT(darea), "key-press-event",
+        G_CALLBACK(fp_key_press_hdlr), 0);
     gtk_widget_add_events(darea, GDK_POINTER_MOTION_MASK);
-    gtk_signal_connect(GTK_OBJECT(darea), "motion-notify-event",
-        GTK_SIGNAL_FUNC(fp_motion_hdlr), 0);
+    g_signal_connect(G_OBJECT(darea), "motion-notify-event",
+        G_CALLBACK(fp_motion_hdlr), 0);
     if (dnd_src) {
         // source
-        gtk_signal_connect(GTK_OBJECT(darea), "drag-data-get",
-            GTK_SIGNAL_FUNC(fp_source_drag_data_get), 0);
-        gtk_signal_connect(GTK_OBJECT(darea), "drag-begin",
-            GTK_SIGNAL_FUNC(fp_source_drag_begin), 0);
-        gtk_signal_connect(GTK_OBJECT(darea), "drag-end",
-            GTK_SIGNAL_FUNC(fp_source_drag_end), 0);
+        g_signal_connect(G_OBJECT(darea), "drag-data-get",
+            G_CALLBACK(fp_source_drag_data_get), 0);
+        g_signal_connect(G_OBJECT(darea), "drag-begin",
+            G_CALLBACK(fp_source_drag_begin), 0);
+        g_signal_connect(G_OBJECT(darea), "drag-end",
+            G_CALLBACK(fp_source_drag_end), 0);
     }
     if (dnd_rcvr) {
         // destination
         GtkDestDefaults DD = (GtkDestDefaults)
             (GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_DROP);
-        gtk_drag_dest_set(darea->parent, DD, target_table, n_targets,
+        gtk_drag_dest_set(gtk_widget_get_parent(darea), DD, target_table, n_targets,
             GDK_ACTION_COPY);
-        gtk_signal_connect_after(GTK_OBJECT(darea->parent),
+        g_signal_connect_after(G_OBJECT(gtk_widget_get_parent(darea)),
             "drag-data-received",
-            GTK_SIGNAL_FUNC(fp_target_drag_data_received), 0);
-        gtk_signal_connect(GTK_OBJECT(darea->parent), "drag-leave",
-            GTK_SIGNAL_FUNC(fp_target_drag_leave), 0);
-        gtk_signal_connect(GTK_OBJECT(darea->parent), "drag-motion",
-            GTK_SIGNAL_FUNC(fp_target_drag_motion), 0);
+            G_CALLBACK(fp_target_drag_data_received), 0);
+        g_signal_connect(G_OBJECT(gtk_widget_get_parent(darea)), "drag-leave",
+            G_CALLBACK(fp_target_drag_leave), 0);
+        g_signal_connect(G_OBJECT(gtk_widget_get_parent(darea)), "drag-motion",
+            G_CALLBACK(fp_target_drag_motion), 0);
     }
 }
 
@@ -1322,7 +1326,7 @@ sFpe::fp_source_drag_data_get(GtkWidget *widget, GdkDragContext*,
         }
     }
     if (isset) {
-        gtk_selection_data_set(selection_data, selection_data->target,
+        gtk_selection_data_set(selection_data, gtk_selection_data_get_target(selection_data),
             8, (unsigned char*)&dd, sizeof(LayerFillData));
     }
 }
@@ -1355,14 +1359,14 @@ void
 sFpe::fp_target_drag_data_received(GtkWidget *widget, GdkDragContext *context,
     gint, gint, GtkSelectionData *data, guint, guint time)
 {
-    if (Fpe && data->length >= 0 && data->format == 8) {
-        LayerFillData *dd = (LayerFillData*)data->data;
-        if (widget == Fpe->fp_sample->parent ||
-                widget == Fpe->fp_editor->parent) {
+    if (Fpe && gtk_selection_data_get_length(data) >= 0 && gtk_selection_data_get_format(data) == 8) {
+        LayerFillData *dd = (LayerFillData*)gtk_selection_data_get_data(data);
+        if (widget == gtk_widget_get_parent(Fpe->fp_sample) ||
+                widget == gtk_widget_get_parent(Fpe->fp_editor)) {
             if (dd->d_from_layer)
                 Fpe->layer_to_def_or_sample(dd, -1);
             else if (dd->d_from_sample) {
-                if (context->source_window != context->dest_window)
+                if (gdk_drag_context_get_source_window(context) != gdk_drag_context_get_dest_window(context))
                     // from another process
                     Fpe->def_to_sample(dd);
             }
@@ -1371,7 +1375,7 @@ sFpe::fp_target_drag_data_received(GtkWidget *widget, GdkDragContext *context,
         }
         else {
             for (int i = 0; i < 18; i++) {
-                if (widget == Fpe->fp_stores[i]->parent) {
+                if (widget == gtk_widget_get_parent(Fpe->fp_stores[i])) {
                     if (dd->d_from_layer)
                         Fpe->layer_to_def_or_sample(dd, i);
                     else if (dd->d_from_sample)
@@ -1400,9 +1404,9 @@ gboolean
 sFpe::fp_target_drag_motion(GtkWidget *widget, GdkDragContext*, gint, gint,
     guint)
 {
-    if (!gtk_object_get_data(GTK_OBJECT(widget), "drag_hlite")) {
+    if (!g_object_get_data(G_OBJECT(widget), "drag_hlite")) {
         gtk_drag_highlight(widget);
-        gtk_object_set_data(GTK_OBJECT(widget), "drag_hlite", (void*)1);
+        g_object_set_data(G_OBJECT(widget), "drag_hlite", (void*)1);
     }
     return (true);
 }
@@ -1413,9 +1417,9 @@ void
 sFpe::fp_target_drag_leave(GtkWidget *widget, GdkDragContext*, guint)
 {
     // called on drop, too
-    if (gtk_object_get_data(GTK_OBJECT(widget), "drag_hlite")) {
+    if (g_object_get_data(G_OBJECT(widget), "drag_hlite")) {
         gtk_drag_unhighlight(widget);
-        gtk_object_remove_data(GTK_OBJECT(widget), "drag_hlite");
+        // gtk_object_remove_data(G_OBJECT(widget), "drag_hlite");
     }
 }
 
@@ -1440,9 +1444,9 @@ sFpe::fp_redraw_edit_hdlr(GtkWidget*, GdkEvent *event, void*)
 {
     if (Fpe->fp_pm_widget == Fpe->fp_editor) {
         GdkEventExpose *pev = (GdkEventExpose*)event;
-        gdk_window_copy_area(Fpe->fp_editor->window, Fpe->GC(),
-            pev->area.x, pev->area.y, Fpe->fp_pixmap,
-            pev->area.x, pev->area.y, pev->area.width, pev->area.height);
+        // gdk_window_copy_area(gtk_widget_get_window(Fpe->fp_editor), Fpe->GC(),
+        //     pev->area.x, pev->area.y, Fpe->fp_pixmap,
+        //     pev->area.x, pev->area.y, pev->area.width, pev->area.height);
     }
     else
         Fpe->redraw_edit();
@@ -1458,9 +1462,9 @@ sFpe::fp_redraw_sample_hdlr(GtkWidget*, GdkEvent *event, void*)
 {
     if (Fpe->fp_pm_widget == Fpe->fp_sample) {
         GdkEventExpose *pev = (GdkEventExpose*)event;
-        gdk_window_copy_area(Fpe->fp_sample->window, Fpe->GC(),
-            pev->area.x, pev->area.y, Fpe->fp_pixmap,
-            pev->area.x, pev->area.y, pev->area.width, pev->area.height);
+        // gdk_window_copy_area(Fpe->gtk_widget_get_window(fp_sample), Fpe->GC(),
+        //     pev->area.x, pev->area.y, Fpe->fp_pixmap,
+        //     pev->area.x, pev->area.y, pev->area.width, pev->area.height);
     }
     else
         Fpe->redraw_sample();
@@ -1477,9 +1481,9 @@ sFpe::fp_redraw_store_hdlr(GtkWidget*, GdkEvent *event, void *arg)
     long i = (long)arg;
     if (Fpe->fp_pm_widget == Fpe->fp_stores[i]) {
         GdkEventExpose *pev = (GdkEventExpose*)event;
-        gdk_window_copy_area(Fpe->fp_stores[i]->window, Fpe->GC(),
-            pev->area.x, pev->area.y, Fpe->fp_pixmap,
-            pev->area.x, pev->area.y, pev->area.width, pev->area.height);
+        // gdk_window_copy_area(Fpe->fp_stores[i]->window, Fpe->GC(),
+        //     pev->area.x, pev->area.y, Fpe->fp_pixmap,
+        //     pev->area.x, pev->area.y, pev->area.width, pev->area.height);
     }
     else
         Fpe->redraw_store(i);
@@ -1616,7 +1620,7 @@ sFpe::fp_key_press_hdlr(GtkWidget*, GdkEvent *event, void*)
     int i, j;
     FPSETtype tmp;
     switch (event->key.keyval) {
-    case GDK_Right:
+    case GDK_KEY_Right:
         for (i = 0; i < Fpe->fp_ny; i++) {
             tmp = Fpe->get_pixel(i, 0);
             for (j = 1; j < Fpe->fp_nx; j++)
@@ -1626,7 +1630,7 @@ sFpe::fp_key_press_hdlr(GtkWidget*, GdkEvent *event, void*)
         Fpe->redraw_edit();
         Fpe->redraw_sample();
         break;
-    case GDK_Left:
+    case GDK_KEY_Left:
         for (i = 0; i < Fpe->fp_ny; i++) {
             tmp = Fpe->get_pixel(i, Fpe->fp_nx - 1);
             for (j = Fpe->fp_nx - 1; j >= 1; j--)
@@ -1636,7 +1640,7 @@ sFpe::fp_key_press_hdlr(GtkWidget*, GdkEvent *event, void*)
         Fpe->redraw_edit();
         Fpe->redraw_sample();
         break;
-    case GDK_Up:
+    case GDK_KEY_Up:
         for (j = 0; j < Fpe->fp_nx; j++) {
             tmp = Fpe->get_pixel(Fpe->fp_ny - 1, j);
             for (i = Fpe->fp_ny - 1; i >= 1; i--)
@@ -1646,7 +1650,7 @@ sFpe::fp_key_press_hdlr(GtkWidget*, GdkEvent *event, void*)
         Fpe->redraw_edit();
         Fpe->redraw_sample();
         break;
-    case GDK_Down:
+    case GDK_KEY_Down:
         for (j = 0; j < Fpe->fp_nx; j++) {
             tmp = Fpe->get_pixel(0, j);
             for (i = 1; i < Fpe->fp_ny; i++)
@@ -1668,7 +1672,7 @@ int
 sFpe::fp_enter_hdlr(GtkWidget *caller, GdkEvent*, void*)
 {
     // pointer entered the fill editor
-    GTK_WIDGET_SET_FLAGS(caller, GTK_CAN_FOCUS);
+    gtk_widget_set_can_focus(caller, true);
     gtk_window_set_focus(GTK_WINDOW(Fpe->wb_shell), caller);
     return (true);
 }
@@ -1696,7 +1700,7 @@ sFpe::fp_motion_hdlr(GtkWidget *caller, GdkEvent *event, void*)
         x = Fpe->fp_spa + x*Fpe->fp_epsz + Fpe->fp_epsz/2;
         y = Fpe->fp_spa + y*Fpe->fp_epsz + Fpe->fp_epsz/2;
 
-        Fpe->gd_window = Fpe->fp_editor->window;
+        Fpe->gd_window = gtk_widget_get_window(Fpe->fp_editor);
         Fpe->UndrawGhost();
         Fpe->DrawGhost(x, y);
     }

@@ -110,7 +110,7 @@ namespace {
             GtkWidget *dim_umenu;       // user rules menu
             GtkWidget *dim_delblk;      // rule block delete
             GtkWidget *dim_undblk;      // rule block undelete
-            GtkItemFactory *dim_item_factory;
+            GtkUIManager *dim_item_factory;
             DRCtestDesc *dim_editing_rule;  // rule selected for editing
             int dim_start;
             int dim_end;
@@ -163,7 +163,7 @@ cDRC::PopUpRules(GRobject caller, ShowMode mode)
 #define IFINIT(i, a, b, c, d, e) { \
     menu_items[i].path = (char*)a; \
     menu_items[i].accelerator = (char*)b; \
-    menu_items[i].callback = (GtkItemFactoryCallback)c; \
+    menu_items[i].callback = (GtkUIManagerCallback)c; \
     menu_items[i].callback_action = d; \
     menu_items[i].item_type = (char*)e; \
     i++; }
@@ -199,173 +199,173 @@ sDim::sDim(GRobject c)
     //
     // menu bar
     //
-    GtkItemFactoryEntry menu_items[50];
-    int nitems = 0;
+    // GtkUIManagerEntry menu_items[50];
+    // int nitems = 0;
 
-    IFINIT(nitems, "/_Edit", 0, 0, 0, "<Branch>");
-    IFINIT(nitems, "/Edit/_Edit", "<control>E", dim_edit_proc,
-        0, 0);
-    IFINIT(nitems, "/Edit/_Inhibit", "<control>I", dim_inhibit_proc,
-        0, 0);
-    IFINIT(nitems, "/Edit/_Delete", "<control>D", dim_delete_proc,
-        0, 0);
-    IFINIT(nitems, "/Edit/_Undo", "<control>U", dim_undo_proc,
-        0, 0);
-    IFINIT(nitems, "/Edit/sep1", 0, 0, 0, "<Separator>");
-    IFINIT(nitems, "/Edit/_Quit", "<control>Q", dim_cancel_proc,
-        0, 0);
+    // IFINIT(nitems, "/_Edit", 0, 0, 0, "<Branch>");
+    // IFINIT(nitems, "/Edit/_Edit", "<control>E", dim_edit_proc,
+    //     0, 0);
+    // IFINIT(nitems, "/Edit/_Inhibit", "<control>I", dim_inhibit_proc,
+    //     0, 0);
+    // IFINIT(nitems, "/Edit/_Delete", "<control>D", dim_delete_proc,
+    //     0, 0);
+    // IFINIT(nitems, "/Edit/_Undo", "<control>U", dim_undo_proc,
+    //     0, 0);
+    // IFINIT(nitems, "/Edit/sep1", 0, 0, 0, "<Separator>");
+    // IFINIT(nitems, "/Edit/_Quit", "<control>Q", dim_cancel_proc,
+    //     0, 0);
 
-    IFINIT(nitems, "/_Rules", 0, 0, 0, "<Branch>");
-    IFINIT(nitems, "/Rules/User Defined Rule", 0, 0, 0, "<Branch>");
-    IFINIT(nitems, "/Rules/Connected", 0, dim_rule_proc,
-        drConnected, 0);
-    IFINIT(nitems, "/Rules/NoHoles", 0, dim_rule_proc,
-        drNoHoles, 0);
-    IFINIT(nitems, "/Rules/Exist", 0, dim_rule_proc,
-        drExist, 0);
-    IFINIT(nitems, "/Rules/Overlap", 0, dim_rule_proc,
-        drOverlap, 0);
-    IFINIT(nitems, "/Rules/IfOverlap", 0, dim_rule_proc,
-        drIfOverlap, 0);
-    IFINIT(nitems, "/Rules/NoOverlap", 0, dim_rule_proc,
-        drNoOverlap, 0);
-    IFINIT(nitems, "/Rules/AnyOverlap", 0, dim_rule_proc,
-        drAnyOverlap, 0);
-    IFINIT(nitems, "/Rules/PartOverlap", 0, dim_rule_proc,
-        drPartOverlap, 0);
-    IFINIT(nitems, "/Rules/AnyNoOverlap", 0, dim_rule_proc,
-        drAnyNoOverlap, 0);
-    IFINIT(nitems, "/Rules/MinArea", 0, dim_rule_proc,
-        drMinArea, 0);
-    IFINIT(nitems, "/Rules/MaxArea", 0, dim_rule_proc,
-        drMaxArea, 0);
-    IFINIT(nitems, "/Rules/MinEdgeLength", 0, dim_rule_proc,
-        drMinEdgeLength, 0);
-    IFINIT(nitems, "/Rules/MaxWidth", 0, dim_rule_proc,
-        drMaxWidth, 0);
-    IFINIT(nitems, "/Rules/MinWidth", 0, dim_rule_proc,
-        drMinWidth, 0);
-    IFINIT(nitems, "/Rules/MinSpace", 0, dim_rule_proc,
-        drMinSpace, 0);
-    IFINIT(nitems, "/Rules/MinSpaceTo", 0, dim_rule_proc,
-        drMinSpaceTo, 0);
-    IFINIT(nitems, "/Rules/MinSpaceFrom", 0, dim_rule_proc,
-        drMinSpaceFrom, 0);
-    IFINIT(nitems, "/Rules/MinOverlap", 0, dim_rule_proc,
-        drMinOverlap, 0);
-    IFINIT(nitems, "/Rules/MinNoOverlap", 0, dim_rule_proc,
-        drMinNoOverlap, 0);
+    // IFINIT(nitems, "/_Rules", 0, 0, 0, "<Branch>");
+    // IFINIT(nitems, "/Rules/User Defined Rule", 0, 0, 0, "<Branch>");
+    // IFINIT(nitems, "/Rules/Connected", 0, dim_rule_proc,
+    //     drConnected, 0);
+    // IFINIT(nitems, "/Rules/NoHoles", 0, dim_rule_proc,
+    //     drNoHoles, 0);
+    // IFINIT(nitems, "/Rules/Exist", 0, dim_rule_proc,
+    //     drExist, 0);
+    // IFINIT(nitems, "/Rules/Overlap", 0, dim_rule_proc,
+    //     drOverlap, 0);
+    // IFINIT(nitems, "/Rules/IfOverlap", 0, dim_rule_proc,
+    //     drIfOverlap, 0);
+    // IFINIT(nitems, "/Rules/NoOverlap", 0, dim_rule_proc,
+    //     drNoOverlap, 0);
+    // IFINIT(nitems, "/Rules/AnyOverlap", 0, dim_rule_proc,
+    //     drAnyOverlap, 0);
+    // IFINIT(nitems, "/Rules/PartOverlap", 0, dim_rule_proc,
+    //     drPartOverlap, 0);
+    // IFINIT(nitems, "/Rules/AnyNoOverlap", 0, dim_rule_proc,
+    //     drAnyNoOverlap, 0);
+    // IFINIT(nitems, "/Rules/MinArea", 0, dim_rule_proc,
+    //     drMinArea, 0);
+    // IFINIT(nitems, "/Rules/MaxArea", 0, dim_rule_proc,
+    //     drMaxArea, 0);
+    // IFINIT(nitems, "/Rules/MinEdgeLength", 0, dim_rule_proc,
+    //     drMinEdgeLength, 0);
+    // IFINIT(nitems, "/Rules/MaxWidth", 0, dim_rule_proc,
+    //     drMaxWidth, 0);
+    // IFINIT(nitems, "/Rules/MinWidth", 0, dim_rule_proc,
+    //     drMinWidth, 0);
+    // IFINIT(nitems, "/Rules/MinSpace", 0, dim_rule_proc,
+    //     drMinSpace, 0);
+    // IFINIT(nitems, "/Rules/MinSpaceTo", 0, dim_rule_proc,
+    //     drMinSpaceTo, 0);
+    // IFINIT(nitems, "/Rules/MinSpaceFrom", 0, dim_rule_proc,
+    //     drMinSpaceFrom, 0);
+    // IFINIT(nitems, "/Rules/MinOverlap", 0, dim_rule_proc,
+    //     drMinOverlap, 0);
+    // IFINIT(nitems, "/Rules/MinNoOverlap", 0, dim_rule_proc,
+    //     drMinNoOverlap, 0);
 
-    IFINIT(nitems, "/Rule _Block", 0, 0, 0, "<Branch>");
-    IFINIT(nitems, "/Rule Block/New", 0, dim_rule_menu_proc,
-        0, 0);
-    IFINIT(nitems, "/Rule Block/Delete", 0, dim_rule_menu_proc,
-        1, "<CheckItem>");
-    IFINIT(nitems, "/Rule Block/Undelete", 0, dim_rule_menu_proc,
-        2, 0);
-    IFINIT(nitems, "/Rule Block/sep1", 0, 0, 0, "<Separator>");
+    // IFINIT(nitems, "/Rule _Block", 0, 0, 0, "<Branch>");
+    // IFINIT(nitems, "/Rule Block/New", 0, dim_rule_menu_proc,
+    //     0, 0);
+    // IFINIT(nitems, "/Rule Block/Delete", 0, dim_rule_menu_proc,
+    //     1, "<CheckItem>");
+    // IFINIT(nitems, "/Rule Block/Undelete", 0, dim_rule_menu_proc,
+    //     2, 0);
+    // IFINIT(nitems, "/Rule Block/sep1", 0, 0, 0, "<Separator>");
 
-    IFINIT(nitems, "/_Help", 0, 0, 0, "<LastBranch>");
-    IFINIT(nitems, "/Help/_Help", "<control>H", dim_help_proc,
-        0, 0);
+    // IFINIT(nitems, "/_Help", 0, 0, 0, "<LastBranch>");
+    // IFINIT(nitems, "/Help/_Help", "<control>H", dim_help_proc,
+    //     0, 0);
 
-    GtkAccelGroup *accel_group = gtk_accel_group_new();
-    dim_item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<dimen>",
-        accel_group);
-    for (int i = 0; i < nitems; i++)
-        gtk_item_factory_create_item(dim_item_factory, menu_items + i, 0, 2);
-    gtk_window_add_accel_group(GTK_WINDOW(dim_popup), accel_group);
+    // GtkAccelGroup *accel_group = gtk_accel_group_new();
+    // dim_item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<dimen>",
+    //     accel_group);
+    // for (int i = 0; i < nitems; i++)
+    //     gtk_item_factory_create_item(dim_item_factory, menu_items + i, 0, 2);
+    // gtk_window_add_accel_group(GTK_WINDOW(dim_popup), accel_group);
 
-    GtkWidget *menubar = gtk_item_factory_get_widget(dim_item_factory,
-        "<dimen>");
-    gtk_widget_show(menubar);
+    // GtkWidget *menubar = gtk_item_factory_get_widget(dim_item_factory,
+    //     "<dimen>");
+    // gtk_widget_show(menubar);
 
-    dim_menu = gtk_item_factory_get_item(dim_item_factory, "/Rule Block");
-    if (dim_menu)
-        dim_menu = GTK_MENU_ITEM(dim_menu)->submenu;
-    if (dim_menu) {
-        for (DRCtest *tst = DRC()->userTests(); tst; tst = tst->next()) {
-            GtkWidget *mi = gtk_menu_item_new_with_label(tst->name());
-            gtk_widget_show(mi);
-            gtk_signal_connect(GTK_OBJECT(mi), "activate",
-                GTK_SIGNAL_FUNC(dim_rule_menu_proc), tst);
-            gtk_menu_append(GTK_MENU(dim_menu), mi);
-        }
-    }
+    // dim_menu = gtk_item_factory_get_item(dim_item_factory, "/Rule Block");
+    // if (dim_menu)
+    //     dim_menu = GTK_MENU_ITEM(dim_menu)->submenu;
+    // if (dim_menu) {
+    //     for (DRCtest *tst = DRC()->userTests(); tst; tst = tst->next()) {
+    //         GtkWidget *mi = gtk_menu_item_new_with_label(tst->name());
+    //         gtk_widget_show(mi);
+    //         g_signal_connect(G_OBJECT(mi), "activate",
+    //             G_CALLBACK(dim_rule_menu_proc), tst);
+    //         gtk_menu_shell_append(GTK_MENU_SHELL(dim_menu), mi);
+    //     }
+    // }
 
-    dim_umenu = gtk_item_factory_get_item(dim_item_factory,
-        "/Rules/User Defined Rule");
-    if (dim_umenu)
-        dim_umenu = GTK_MENU_ITEM(dim_umenu)->submenu;
-    if (dim_umenu) {
-        for (DRCtest *tst = DRC()->userTests(); tst; tst = tst->next()) {
-            GtkWidget *mi = gtk_menu_item_new_with_label(tst->name());
-            gtk_widget_show(mi);
-            gtk_signal_connect(GTK_OBJECT(mi), "activate",
-                GTK_SIGNAL_FUNC(dim_rule_proc), (void*)tst->name());
-            gtk_menu_append(GTK_MENU(dim_umenu), mi);
-        }
-    }
+    // dim_umenu = gtk_item_factory_get_item(dim_item_factory,
+    //     "/Rules/User Defined Rule");
+    // if (dim_umenu)
+    //     dim_umenu = GTK_MENU_ITEM(dim_umenu)->submenu;
+    // if (dim_umenu) {
+    //     for (DRCtest *tst = DRC()->userTests(); tst; tst = tst->next()) {
+    //         GtkWidget *mi = gtk_menu_item_new_with_label(tst->name());
+    //         gtk_widget_show(mi);
+    //         g_signal_connect(G_OBJECT(mi), "activate",
+    //             G_CALLBACK(dim_rule_proc), (void*)tst->name());
+    //         gtk_menu_shell_append(GTK_MENU_SHELL(dim_umenu), mi);
+    //     }
+    // }
 
-    dim_inhibit = gtk_item_factory_get_widget(dim_item_factory,
-        "/Edit/Inhibit");
-    dim_edit = gtk_item_factory_get_widget(dim_item_factory,
-        "/Edit/Edit");
-    dim_del = gtk_item_factory_get_widget(dim_item_factory,
-        "/Edit/Delete");
-    dim_undo = gtk_item_factory_get_widget(dim_item_factory,
-        "/Edit/Undo");
-    dim_delblk =
-        gtk_item_factory_get_widget(dim_item_factory, "/Rule Block/Delete");
-    dim_undblk =
-        gtk_item_factory_get_widget(dim_item_factory, "/Rule Block/Undelete");
-    gtk_widget_set_sensitive(dim_undblk, false);
+    // dim_inhibit = gtk_item_factory_get_widget(dim_item_factory,
+    //     "/Edit/Inhibit");
+    // dim_edit = gtk_item_factory_get_widget(dim_item_factory,
+    //     "/Edit/Edit");
+    // dim_del = gtk_item_factory_get_widget(dim_item_factory,
+    //     "/Edit/Delete");
+    // dim_undo = gtk_item_factory_get_widget(dim_item_factory,
+    //     "/Edit/Undo");
+    // dim_delblk =
+    //     gtk_item_factory_get_widget(dim_item_factory, "/Rule Block/Delete");
+    // dim_undblk =
+    //     gtk_item_factory_get_widget(dim_item_factory, "/Rule Block/Undelete");
+    // gtk_widget_set_sensitive(dim_undblk, false);
 
-    // name the menubar objects
-    GtkWidget *widget = gtk_item_factory_get_item(dim_item_factory, "/Edit");
-    if (widget)
-        gtk_widget_set_name(widget, "Edit");
-    widget = gtk_item_factory_get_item(dim_item_factory, "/Rules");
-    if (widget)
-        gtk_widget_set_name(widget, "Rules");
-    widget = gtk_item_factory_get_item(dim_item_factory, "/Rule Block");
-    if (widget)
-        gtk_widget_set_name(widget, "Rule Block");
-    widget = gtk_item_factory_get_item(dim_item_factory, "/Help");
-    if (widget)
-        gtk_widget_set_name(widget, "Help");
+    // // name the menubar objects
+    // GtkWidget *widget = gtk_item_factory_get_item(dim_item_factory, "/Edit");
+    // if (widget)
+    //     gtk_widget_set_name(widget, "Edit");
+    // widget = gtk_item_factory_get_item(dim_item_factory, "/Rules");
+    // if (widget)
+    //     gtk_widget_set_name(widget, "Rules");
+    // widget = gtk_item_factory_get_item(dim_item_factory, "/Rule Block");
+    // if (widget)
+    //     gtk_widget_set_name(widget, "Rule Block");
+    // widget = gtk_item_factory_get_item(dim_item_factory, "/Help");
+    // if (widget)
+    //     gtk_widget_set_name(widget, "Help");
 
-    gtk_table_attach(GTK_TABLE(form), menubar, 0, 1, 0, 1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
+    // gtk_table_attach(GTK_TABLE(form), menubar, 0, 1, 0, 1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
 
-    GtkWidget *contr;
-    text_scrollable_new(&contr, &dim_text, FNT_FIXED);
+    // GtkWidget *contr;
+    // text_scrollable_new(&contr, &dim_text, FNT_FIXED);
 
-    gtk_widget_add_events(dim_text, GDK_BUTTON_PRESS_MASK);
-    gtk_signal_connect(GTK_OBJECT(dim_text), "button-press-event",
-        GTK_SIGNAL_FUNC(dim_text_btn_hdlr), 0);
-    gtk_signal_connect_after(GTK_OBJECT(dim_text), "realize",
-        GTK_SIGNAL_FUNC(text_realize_proc), 0);
+    // gtk_widget_add_events(dim_text, GDK_BUTTON_PRESS_MASK);
+    // g_signal_connect(G_OBJECT(dim_text), "button-press-event",
+    //     G_CALLBACK(dim_text_btn_hdlr), 0);
+    // g_signal_connect_after(G_OBJECT(dim_text), "realize",
+    //     G_CALLBACK(text_realize_proc), 0);
 
-    GtkTextBuffer *textbuf =
-        gtk_text_view_get_buffer(GTK_TEXT_VIEW(dim_text));
-    const char *bclr = GRpkgIf()->GetAttrColor(GRattrColorLocSel);
-    gtk_text_buffer_create_tag(textbuf, "primary", "background", bclr, NULL);
+    // GtkTextBuffer *textbuf =
+    //     gtk_text_view_get_buffer(GTK_TEXT_VIEW(dim_text));
+    // const char *bclr = GRpkgIf()->GetAttrColor(GRattrColorLocSel);
+    // gtk_text_buffer_create_tag(textbuf, "primary", "background", bclr, NULL);
 
-    gtk_widget_set_usize(dim_text, DEF_WIDTH, DEF_HEIGHT);
+    // gtk_widget_set_size_request(dim_text, DEF_WIDTH, DEF_HEIGHT);
 
-    // The font change pop-up uses this to redraw the widget
-    gtk_object_set_data(GTK_OBJECT(dim_text), "font_changed",
-        (void*)dim_font_changed);
+    // // The font change pop-up uses this to redraw the widget
+    // g_object_set_data(G_OBJECT(dim_text), "font_changed",
+    //     (void*)dim_font_changed);
 
-    gtk_table_attach(GTK_TABLE(form), contr, 0, 1, 1, 2,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 2, 2);
+    // gtk_table_attach(GTK_TABLE(form), contr, 0, 1, 1, 2,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 2, 2);
 
-    if (dim_undo)
-        gtk_widget_set_sensitive(dim_undo, false);
-    update();
+    // if (dim_undo)
+    //     gtk_widget_set_sensitive(dim_undo, false);
+    // update();
 }
 
 
@@ -427,7 +427,7 @@ sDim::update()
 void
 sDim::rule_menu_upd()
 {
-    GList *gl = gtk_container_children(GTK_CONTAINER(dim_menu));
+    GList *gl = gtk_container_get_children(GTK_CONTAINER(dim_menu));
     int cnt = 0;
     for (GList *l = gl; l; l = l->next, cnt++) {
         if (cnt > 3)  // ** skip first four entries **
@@ -438,12 +438,12 @@ sDim::rule_menu_upd()
     for (DRCtest *tst = DRC()->userTests(); tst; tst = tst->next()) {
         GtkWidget *mi = gtk_menu_item_new_with_label(tst->name());
         gtk_widget_show(mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(sDim::dim_rule_menu_proc), tst);
-        gtk_menu_append(GTK_MENU(dim_menu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(sDim::dim_rule_menu_proc), tst);
+        gtk_menu_shell_append(GTK_MENU_SHELL(dim_menu), mi);
     }
 
-    gl = gtk_container_children(GTK_CONTAINER(dim_umenu));
+    gl = gtk_container_get_children(GTK_CONTAINER(dim_umenu));
     cnt = 0;
     for (GList *l = gl; l; l = l->next, cnt++)
         gtk_widget_destroy(GTK_WIDGET(l->data));
@@ -452,9 +452,9 @@ sDim::rule_menu_upd()
     for (DRCtest *tst = DRC()->userTests(); tst; tst = tst->next()) {
         GtkWidget *mi = gtk_menu_item_new_with_label(tst->name());
         gtk_widget_show(mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(sDim::dim_rule_proc), (void*)tst->name());
-        gtk_menu_append(GTK_MENU(dim_umenu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(sDim::dim_rule_proc), (void*)tst->name());
+        gtk_menu_shell_append(GTK_MENU_SHELL(dim_umenu), mi);
     }
 }
 

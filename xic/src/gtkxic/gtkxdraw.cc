@@ -81,7 +81,7 @@ namespace {
 
 // Swap the cached pixmap in layer descs for one consistent with the
 // present graphics package, and restore when finished.  For example,
-// the pixmap may be a GdkPixmap under GTK, but we need a native X
+// the pixmap may be a cairo_surface_t under GTK, but we need a native X
 // Pixmap within xdraw.  After setup, we can use our high-level
 // drawing functions with the xdraw drawable.
 //

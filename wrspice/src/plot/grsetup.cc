@@ -130,7 +130,8 @@ SpGrPkg::SetDefaultColors()
     if (Sp.GetVar("color0", VTYP_STRING, &vv))
         colorstring = vv.get_string();
 
-    unsigned b_pixel = GRpkgIf()->MainDev()->NameColor(colorstring);
+    // unsigned b_pixel = GRpkgIf()->MainDev()->NameColor(colorstring);
+    unsigned b_pixel = 0;
     // note that the pixel and color values are 0 - 255
     int r, g, b;
     GRpkgIf()->GRpkg::RGBofPixel(b_pixel, &r, &g, &b);
@@ -140,10 +141,10 @@ SpGrPkg::SetDefaultColors()
     DefColors[0].blue = b;
 
     unsigned f_pixel;
-    if (b_pixel == (unsigned)GRpkgIf()->MainDev()->NameColor("white"))
-        f_pixel = GRpkgIf()->MainDev()->NameColor("black");
-    else
-        f_pixel = GRpkgIf()->MainDev()->NameColor("white");
+    // if (b_pixel == (unsigned)GRpkgIf()->MainDev()->NameColor("white"))
+    //     f_pixel = GRpkgIf()->MainDev()->NameColor("black");
+    // else
+    //     f_pixel = GRpkgIf()->MainDev()->NameColor("white");
     if (GRpkgIf()->MainDev()->numcolors <= 2) {
         GRpkgIf()->GRpkg::RGBofPixel(f_pixel, &r, &g, &b);
         DefColors[1].pixel = b_pixel;
@@ -158,7 +159,7 @@ SpGrPkg::SetDefaultColors()
         colorstring = DefColorNames[i]; 
         if (Sp.GetVar(buf, VTYP_STRING, &vv)) 
             colorstring = vv.get_string();
-        DefColors[i].pixel = GRpkgIf()->MainDev()->NameColor(colorstring);
+        // DefColors[i].pixel = GRpkgIf()->MainDev()->NameColor(colorstring);
         if (DefColors[i].pixel == b_pixel)
             DefColors[i].pixel = f_pixel;
         GRpkgIf()->GRpkg::RGBofPixel(DefColors[i].pixel, &r, &g, &b);

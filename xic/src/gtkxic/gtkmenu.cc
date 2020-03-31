@@ -82,17 +82,17 @@ GTKmenu::InitMainMenu(GtkWidget *window)
     //  Param 3: A pointer to a gtk_accel_group.  The item factory sets up
     //           the accelerator table while generating menus.
 
-    GtkItemFactory *item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR,
-        "<main>", accel_group);
-    itemFactory = item_factory;
+    // GtkUIManager *item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR,
+    //     "<main>", accel_group);
+    // itemFactory = item_factory;
 
-    gtkCfg()->instantiateMainMenus();
+    // gtkCfg()->instantiateMainMenus();
 
-    // Attach the new accelerator group to the top level window.
-    gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
+    // // Attach the new accelerator group to the top level window.
+    // gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
 
-    mainMenu = gtk_item_factory_get_widget(item_factory, "<main>");
-    gtk_widget_show(mainMenu);
+    // mainMenu = gtk_item_factory_get_widget(item_factory, "<main>");
+    // gtk_widget_show(mainMenu);
 }
 
 
@@ -147,7 +147,7 @@ GTKmenu::InitSideButtonMenus(bool horiz_buttons)
             GtkWidgetClass *ks = GTK_WIDGET_GET_CLASS(pbox);
             if (ks)
                 ks->size_allocate = gtk_vbox_size_allocate;
-            gtk_widget_set_usize(pbox, 28, -1);
+            gtk_widget_set_size_request(pbox, 28, -1);
         }
 
         for (int i = 1; pbtn_menu->menu[i].entry; i++) {
@@ -168,7 +168,7 @@ GTKmenu::InitSideButtonMenus(bool horiz_buttons)
             ebox = gtk_hbox_new(true, 0);
         else {
             ebox = gtk_vbox_new(true, 0);
-            gtk_widget_set_usize(ebox, 28, -1);
+            gtk_widget_set_size_request(ebox, 28, -1);
         }
 
         for (int i = 1; ebtn_menu->menu[i].entry; i++) {
@@ -392,16 +392,16 @@ GTKmenu::NewSubwMenu(int wnum)
     mname[6] = 0;
 
     GtkAccelGroup *accel_group = gtk_accel_group_new();
-    GtkItemFactory *item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR,
-        mname, accel_group);
+    // GtkUIManager *item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR,
+    //     mname, accel_group);
 
-    gtkCfg()->instantiateSubwMenus(wnum, item_factory);
+    // gtkCfg()->instantiateSubwMenus(wnum, item_factory);
 
-    gtk_window_add_accel_group(GTK_WINDOW(w->Shell()), accel_group);
-    GtkWidget *menubar = gtk_item_factory_get_widget(item_factory, mname);
-    gtk_widget_show(menubar);
+    // gtk_window_add_accel_group(GTK_WINDOW(w->Shell()), accel_group);
+    // GtkWidget *menubar = gtk_item_factory_get_widget(item_factory, mname);
+    // gtk_widget_show(menubar);
 
-    return (menubar);
+    // return (menubar);
 }
 
 
@@ -412,20 +412,20 @@ GTKmenu::SetDDentry(GRobject button, int indx, const char *newlabel)
 {
     if (!button)
         return;
-    GtkWidget *menu = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(button),
+    GtkWidget *menu = (GtkWidget*)g_object_get_data(G_OBJECT(button),
         "menu");
     // The button can be either a button in the menu, or the button that
     // pops up the menu.
     if (!menu)
-        menu = GTK_WIDGET(button)->parent;
+        menu = gtk_widget_get_parent(GTK_WIDGET(button));
     if (menu && GTK_IS_MENU(menu)) {
         int count = 0;
-        GList *btns = gtk_container_children(GTK_CONTAINER(menu));
+        GList *btns = gtk_container_get_children(GTK_CONTAINER(menu));
         for (GList *a = btns; a; a = a->next) {
             GtkWidget *menu_item = (GtkWidget*)a->data;
             if (GTK_IS_MENU_ITEM(menu_item)) {
                 GList *contents =
-                    gtk_container_children(GTK_CONTAINER(menu_item));
+                    gtk_container_get_children(GTK_CONTAINER(menu_item));
                 if (contents) {
                     GtkWidget *label = (GtkWidget*)contents->data;
                     if (GTK_IS_LABEL(label)) {
@@ -454,12 +454,12 @@ GTKmenu::NewDDentry(GRobject button, const char *label)
 {
     if (!button || !label)
         return;
-    GtkWidget *menu = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(button),
+    GtkWidget *menu = (GtkWidget*)g_object_get_data(G_OBJECT(button),
         "menu");
     // The button can be either a button in the menu, or the button that
     // pops up the menu.
     if (!menu) {
-        menu = GTK_WIDGET(button)->parent;
+        menu = gtk_widget_get_parent(GTK_WIDGET(button));
         if (menu && GTK_IS_MENU(menu)) {
             button = gtk_menu_get_attach_widget(GTK_MENU(menu));
             if (!button)
@@ -468,15 +468,14 @@ GTKmenu::NewDDentry(GRobject button, const char *label)
         else
             return;
     }
-    GtkSignalFunc func = (GtkSignalFunc)gtk_object_get_data(GTK_OBJECT(button),
-        "callb");
-    void *data = gtk_object_get_data(GTK_OBJECT(button), "data");
+    gpointer func = g_object_get_data(G_OBJECT(button), "callb");
+    void *data = g_object_get_data(G_OBJECT(button), "data");
 
     GtkWidget *menu_item = gtk_menu_item_new_with_label(label);
     gtk_widget_set_name(menu_item, label);
-    gtk_menu_append(GTK_MENU(menu), menu_item);
-    gtk_signal_connect(GTK_OBJECT(menu_item), "activate",
-        GTK_SIGNAL_FUNC(func), data);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
+    g_signal_connect(G_OBJECT(menu_item), "activate",
+        G_CALLBACK(func), data);
     gtk_widget_show(menu_item);
 }
 
@@ -491,21 +490,21 @@ GTKmenu::NewDDmenu(GRobject button, const char *const *list)
 {
     if (!button || !list)
         return;
-    GtkWidget *menu = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(button),
+    GtkWidget *menu = (GtkWidget*)g_object_get_data(G_OBJECT(button),
         "menu");
 
     // The button can be either a button in the menu, or the button that
     // pops up the menu.
     if (!menu)
-        menu = GTK_WIDGET(button)->parent;
+        menu = gtk_widget_get_parent(GTK_WIDGET(button));
     if (menu && GTK_IS_MENU(menu)) {
         int count = 0;
-        GList *btns = gtk_container_children(GTK_CONTAINER(menu));
+        GList *btns = gtk_container_get_children(GTK_CONTAINER(menu));
         for (GList *a = btns; a; a = a->next) {
             GtkWidget *menu_item = (GtkWidget*)a->data;
             if (GTK_IS_MENU_ITEM(menu_item)) {
                 GList *contents =
-                    gtk_container_children(GTK_CONTAINER(menu_item));
+                    gtk_container_get_children(GTK_CONTAINER(menu_item));
                 if (contents) {
                     GtkWidget *label = (GtkWidget*)contents->data;
                     if (GTK_IS_LABEL(label)) {
@@ -547,22 +546,22 @@ GTKmenu::HideButtonMenu(bool hide)
 {
     if (hide) {
         if (btnPhysMenuWidget) {
-            gtk_widget_set_sensitive(btnPhysMenuWidget->parent, false);
-            gtk_widget_hide(btnPhysMenuWidget->parent);
+            gtk_widget_set_sensitive(gtk_widget_get_parent(btnPhysMenuWidget), false);
+            gtk_widget_hide(gtk_widget_get_parent(btnPhysMenuWidget));
         }
         else if (btnElecMenuWidget) {
-            gtk_widget_set_sensitive(btnElecMenuWidget->parent, false);
-            gtk_widget_hide(btnElecMenuWidget->parent);
+            gtk_widget_set_sensitive(gtk_widget_get_parent(btnElecMenuWidget), false);
+            gtk_widget_hide(gtk_widget_get_parent(btnElecMenuWidget));
         }
     }
     else {
         if (btnPhysMenuWidget) {
-            gtk_widget_set_sensitive(btnPhysMenuWidget->parent, true);
-            gtk_widget_show(btnPhysMenuWidget->parent);
+            gtk_widget_set_sensitive(gtk_widget_get_parent(btnPhysMenuWidget), true);
+            gtk_widget_show(gtk_widget_get_parent(btnPhysMenuWidget));
         }
         else if (btnElecMenuWidget) {
-            gtk_widget_set_sensitive(btnElecMenuWidget->parent, true);
-            gtk_widget_show(btnElecMenuWidget->parent);
+            gtk_widget_set_sensitive(gtk_widget_get_parent(btnElecMenuWidget), true);
+            gtk_widget_show(gtk_widget_get_parent(btnElecMenuWidget));
         }
     }
 }
@@ -579,19 +578,19 @@ GTKmenu::DisableMainMenuItem(const char *mname, const char *item, bool desens)
     if (mbox && mbox->menu) {
         if (!item) {
             char *tmp = strip_accel(mbox->menu[0].menutext);
-            GtkWidget *widget = gtk_item_factory_get_item(itemFactory, tmp);
-            delete [] tmp;
-            if (widget)
-                gtk_widget_set_sensitive(widget, !desens);
+            // GtkWidget *widget = gtk_item_factory_get_item(itemFactory, tmp);
+            // delete [] tmp;
+            // if (widget)
+            //     gtk_widget_set_sensitive(widget, !desens);
             return;
         }
         MenuEnt *ent = FindEntry(mname, item, 0);
         if (ent) {
             char *tmp = strip_accel(ent->menutext);
-            GtkWidget *widget = gtk_item_factory_get_item(itemFactory, tmp);
-            delete [] tmp;
-            if (widget)
-                gtk_widget_set_sensitive(widget, !desens);
+            // GtkWidget *widget = gtk_item_factory_get_item(itemFactory, tmp);
+            // delete [] tmp;
+            // if (widget)
+            //     gtk_widget_set_sensitive(widget, !desens);
         }
     }
 }
@@ -607,9 +606,9 @@ GTKmenu::name_to_widget(const char *name)
 {
     if (!name || !*name)
         return (0);
-    if (*name == '/')
+    // if (*name == '/')
         // widget is an iconfactory item whose path is in name
-        return (gtk_item_factory_get_item(itemFactory, name));
+        // return (gtk_item_factory_get_item(itemFactory, name));
     if (lstring::prefix("sub", name) && isdigit(name[3])) {
         // widget is in subwindow menu
         int wnum = name[3] - '0';
@@ -658,8 +657,7 @@ GTKmenu::strip_accel(const char *string)
 
 // Static function.
 GtkWidget *
-GTKmenu::new_popup_menu(GtkWidget *root, const char *const *list,
-    GtkSignalFunc handler, void *arg)
+GTKmenu::new_popup_menu(GtkWidget *root, const char *const *list, void *arg)
 {
     GtkWidget *menu = 0;
     if (list && *list) {
@@ -669,22 +667,22 @@ GTKmenu::new_popup_menu(GtkWidget *root, const char *const *list,
             if (!strcmp(*s, MENU_SEP_STRING)) {
                 // insert a separator
                 GtkWidget *msep = gtk_menu_item_new();  // separator
-                gtk_menu_append(GTK_MENU(menu), msep);
+                gtk_menu_shell_append(GTK_MENU_SHELL(menu), msep);
                 gtk_widget_show(msep);
                 continue;
             }
 
             GtkWidget *menu_item = gtk_menu_item_new_with_label(*s);
             gtk_widget_set_name(menu_item, *s);
-            gtk_menu_append(GTK_MENU(menu), menu_item);
-            gtk_signal_connect(GTK_OBJECT(menu_item), "activate",
-                handler, arg);
+            gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
+            // g_signal_connect(G_OBJECT(menu_item), "activate",
+            //     handler, arg);
             gtk_widget_show(menu_item);
         }
         if (root) {
             gtk_menu_item_set_submenu(GTK_MENU_ITEM(root), menu);
-            gtk_signal_connect_object(GTK_OBJECT(root), "event",
-                GTK_SIGNAL_FUNC(button_press), GTK_OBJECT(menu));
+            // g_signal_connect_object(G_OBJECT(root), "event",
+            //     G_CALLBACK(button_press), G_OBJECT(menu));
         }
     }
     return (menu);
@@ -727,37 +725,38 @@ GTKmenu::gtk_vbox_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
     g_return_if_fail (GTK_IS_VBOX (widget));
     g_return_if_fail (allocation != NULL);
 
-    GtkBox *box = GTK_BOX(widget);
-    widget->allocation = *allocation;
+    GtkContainer *box = GTK_CONTAINER(widget);
+    gtk_widget_set_allocation(widget, allocation);
 
     gint nvis_children = 0;
     gint nexpand_children = 0;
-    GList *children = box->children;
+    GList *children = gtk_container_get_children(box);
 
-    GtkBoxChild *child;
+    GtkBox *child;
     while (children) {
-        child = (GtkBoxChild*)children->data;
+        child = (GtkBox*)children->data;
         children = children->next;
 
-        if (GTK_WIDGET_VISIBLE (child->widget)) {
+        if (gtk_widget_get_visible(gtk_box_get_center_widget(child))) {
             nvis_children += 1;
-            if (child->expand)
-                nexpand_children += 1;
+            // if (child->expand)
+            //     nexpand_children += 1;
         }
     }
 
     if (nvis_children > 0) {
         gint height, extra, mod = 0;
-        if (box->homogeneous) {
+        if (gtk_box_get_homogeneous(child)) {
             height = (allocation->height -
-                GTK_CONTAINER(box)->border_width * 2 -
-                (nvis_children - 1) * box->spacing);
+                gtk_container_get_border_width(box) * 2 -
+                (nvis_children - 1) * gtk_box_get_spacing(child));
             extra = height / nvis_children;
             mod = height % nvis_children;
         }
         else if (nexpand_children > 0) {
-            height = (gint)allocation->height -
-                (gint)widget->requisition.height;
+            GtkRequisition requisition;
+            gtk_widget_get_requisition(GTK_WIDGET(widget), &requisition);
+            height = (gint)allocation->height - (gint)requisition.height;
             extra = height / nexpand_children;
         }
         else {
@@ -766,129 +765,128 @@ GTKmenu::gtk_vbox_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
         }
 
         GtkAllocation child_allocation;
-        gint y = allocation->y + GTK_CONTAINER(box)->border_width;
+        gint y = allocation->y + gtk_container_get_border_width(GTK_CONTAINER(box));
         child_allocation.x = allocation->x +
-            GTK_CONTAINER(box)->border_width;
+            gtk_container_get_border_width(GTK_CONTAINER(box));
         child_allocation.width = MAX(1, (gint)allocation->width -
-            (gint)GTK_CONTAINER(box)->border_width * 2);
+            (gint)gtk_container_get_border_width(GTK_CONTAINER(box)) * 2);
 
         gint child_height;
 
         gint count = 0;
-        children = box->children;
+        children = gtk_container_get_children(GTK_CONTAINER(box));
         while (children) {
-            child = (GtkBoxChild*)children->data;
+            child = (GtkBox*)children->data;
             children = children->next;
 
-            if ((child->pack == GTK_PACK_START) &&
-                    GTK_WIDGET_VISIBLE(child->widget)) {
-                if (box->homogeneous) {
-                    /*
-                    if (nvis_children == 1)
-                        child_height = height;
-                    else
-                    */
-                        child_height = extra + (count < mod);
+            // if ((child->pack == GTK_PACK_START) &&
+            //         GTK_WIDGET_VISIBLE(child->widget)) {
+            //     if (box->homogeneous) {
+            //         /*
+            //         if (nvis_children == 1)
+            //             child_height = height;
+            //         else
+            //         */
+            //             child_height = extra + (count < mod);
 
-                    nvis_children -= 1;
-                    height -= (extra + (count < mod));
-                    count++;
-                }
-                else {
-                    GtkRequisition child_requisition;
+            //         nvis_children -= 1;
+            //         height -= (extra + (count < mod));
+            //         count++;
+            //     }
+            //     else {
+            //         GtkRequisition child_requisition;
 
-                    gtk_widget_get_child_requisition(child->widget,
-                        &child_requisition);
-                    child_height = child_requisition.height +
-                        child->padding * 2;
+            //         gtk_widget_get_child_requisition(child->widget,
+            //             &child_requisition);
+            //         child_height = child_requisition.height +
+            //             child->padding * 2;
 
-                    if (child->expand) {
-                        if (nexpand_children == 1)
-                            child_height += height;
-                        else
-                            child_height += extra;
+            //         if (child->expand) {
+            //             if (nexpand_children == 1)
+            //                 child_height += height;
+            //             else
+            //                 child_height += extra;
 
-                        nexpand_children -= 1;
-                        height -= extra;
-                    }
-                }
+            //             nexpand_children -= 1;
+            //             height -= extra;
+            //         }
+            //     }
 
-                if (child->fill) {
-                    child_allocation.height = MAX(1, child_height -
-                        (gint)child->padding * 2);
-                    child_allocation.y = y + child->padding;
-                }
-                else {
-                    GtkRequisition child_requisition;
+            //     if (child->fill) {
+            //         child_allocation.height = MAX(1, child_height -
+            //             (gint)child->padding * 2);
+            //         child_allocation.y = y + child->padding;
+            //     }
+            //     else {
+            //         GtkRequisition child_requisition;
 
-                    gtk_widget_get_child_requisition(child->widget,
-                        &child_requisition);
-                    child_allocation.height = child_requisition.height;
-                    child_allocation.y = y + (child_height -
-                        child_allocation.height) / 2;
-                }
+            //         gtk_widget_get_child_requisition(child->widget,
+            //             &child_requisition);
+            //         child_allocation.height = child_requisition.height;
+            //         child_allocation.y = y + (child_height -
+            //             child_allocation.height) / 2;
+            //     }
 
-                gtk_widget_size_allocate(child->widget, &child_allocation);
+            //     gtk_widget_size_allocate(child->widget, &child_allocation);
 
-                y += child_height + box->spacing;
-            }
+            //     y += child_height + box->spacing;
+            // }
         }
 
-        y = allocation->y + allocation->height -
-            GTK_CONTAINER(box)->border_width;
+        y = allocation->y + allocation->height - gtk_container_get_border_width(GTK_CONTAINER(box));
 
-        children = box->children;
+        children = gtk_container_get_children(box);
         while (children) {
-            child = (GtkBoxChild*)children->data;
+            child = (GtkBox*)children->data;
             children = children->next;
 
-            if ((child->pack == GTK_PACK_END) &&
-                    GTK_WIDGET_VISIBLE(child->widget)) {
-                GtkRequisition child_requisition;
-                gtk_widget_get_child_requisition(child->widget,
-                    &child_requisition);
+            // if ((child->pack == GTK_PACK_END) &&
+            //         GTK_WIDGET_VISIBLE(child->widget)) {
+            //     GtkRequisition child_requisition;
+            //     gtk_widget_get_child_requisition(child->widget,
+            //         &child_requisition);
 
-                if (box->homogeneous) {
-                    /*
-                    if (nvis_children == 1)
-                        child_height = height;
-                    else
-                    */
-                        child_height = extra + (count < mod);
+            //     if (box->homogeneous) {
+            //         /*
+            //         if (nvis_children == 1)
+            //             child_height = height;
+            //         else
+            //         */
+            //             child_height = extra + (count < mod);
 
-                    nvis_children -= 1;
-                    height -= (extra + (count < mod));
-                }
-                else {
-                    child_height = child_requisition.height +
-                        child->padding * 2;
+            //         nvis_children -= 1;
+            //         height -= (extra + (count < mod));
+            //     }
+            //     else {
+            //         child_height = child_requisition.height +
+            //             child->padding * 2;
 
-                    if (child->expand) {
-                        if (nexpand_children == 1)
-                            child_height += height;
-                        else
-                            child_height += extra;
+            //         if (child->expand) {
+            //             if (nexpand_children == 1)
+            //                 child_height += height;
+            //             else
+            //                 child_height += extra;
 
-                        nexpand_children -= 1;
-                        height -= extra;
-                    }
-                }
+            //             nexpand_children -= 1;
+            //             height -= extra;
+            //         }
+            //     }
 
-                if (child->fill) {
-                    child_allocation.height = MAX(1, child_height -
-                        (gint)child->padding * 2);
-                    child_allocation.y = y + child->padding - child_height;
-                }
-                else {
-                    child_allocation.height = child_requisition.height;
-                    child_allocation.y = y + (child_height -
-                        child_allocation.height) / 2 - child_height;
-                }
+            //     if (child->fill) {
+            //         child_allocation.height = MAX(1, child_height -
+            //             (gint)child->padding * 2);
+            //         child_allocation.y = y + child->padding - child_height;
+            //     }
+            //     else {
+            //         child_allocation.height = child_requisition.height;
+            //         child_allocation.y = y + (child_height -
+            //             child_allocation.height) / 2 - child_height;
+            //     }
 
-                gtk_widget_size_allocate(child->widget, &child_allocation);
+            //     gtk_widget_size_allocate(child->widget, &child_allocation);
 
-                y -= (child_height + box->spacing);
-            }
+            //     y -= (child_height + box->spacing);
+            // }
         }
     }
 }

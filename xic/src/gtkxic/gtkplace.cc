@@ -229,16 +229,16 @@ sPlc::sPlc(bool noprompt)
     gtk_widget_set_name(button, "UseArray");
     gtk_widget_show(button);
     pl_arraybtn = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(pl_array_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(pl_array_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
 
     button = gtk_toggle_button_new_with_label("Replace");
     gtk_widget_set_name(button, "Replace");
     gtk_widget_show(button);
     pl_replbtn = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(pl_replace_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(pl_replace_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
 
     button = gtk_toggle_button_new_with_label("Smash");
@@ -247,7 +247,7 @@ sPlc::sPlc(bool noprompt)
     pl_smshbtn = button;
     gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
 
-    pl_refmenu = gtk_option_menu_new();
+    pl_refmenu = gtk_combo_box_text_new();
     gtk_widget_set_name(pl_refmenu, "Ref");
     gtk_widget_show(pl_refmenu);
     GtkWidget *menu = gtk_menu_new();
@@ -256,43 +256,43 @@ sPlc::sPlc(bool noprompt)
     GtkWidget *mi = gtk_menu_item_new_with_label("Origin");
     gtk_widget_set_name(mi, "Origin");
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(pl_refmenu_proc), (void*)(long)PL_ORIGIN);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(pl_refmenu_proc), (void*)(long)PL_ORIGIN);
     mi = gtk_menu_item_new_with_label("Lower Left");
     gtk_widget_set_name(mi, "LL");
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(pl_refmenu_proc), (void*)(long)PL_LL);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(pl_refmenu_proc), (void*)(long)PL_LL);
     mi = gtk_menu_item_new_with_label("Upper Left");
     gtk_widget_set_name(mi, "UL");
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(pl_refmenu_proc), (void*)(long)PL_UL);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(pl_refmenu_proc), (void*)(long)PL_UL);
     mi = gtk_menu_item_new_with_label("Upper Right");
     gtk_widget_set_name(mi, "UR");
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(pl_refmenu_proc), (void*)(long)PL_UR);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(pl_refmenu_proc), (void*)(long)PL_UR);
     mi = gtk_menu_item_new_with_label("Lower Right");
     gtk_widget_set_name(mi, "LR");
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(pl_refmenu_proc), (void*)(long)PL_LR);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(pl_refmenu_proc), (void*)(long)PL_LR);
 
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(pl_refmenu), menu);
+    // gtk_option_menu_set_menu(GTK_OPTION_MENU(pl_refmenu), menu);
     gtk_box_pack_start(GTK_BOX(hbox), pl_refmenu, false, false, 0);
 
     button = gtk_button_new_with_label("Help");
     gtk_widget_set_name(button, "Help");
     gtk_widget_show(button);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(pl_help_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(pl_help_proc), 0);
 
     int rowcnt = 0;
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, rowcnt, rowcnt+1,
@@ -316,8 +316,8 @@ sPlc::sPlc(bool noprompt)
     gtk_box_pack_start(GTK_BOX(vbox), label, true, true, 0);
 
     GtkWidget *sb = sb_nx.init(1.0, 1.0, MAX_ARRAY, 0);
-    sb_nx.connect_changed(GTK_SIGNAL_FUNC(pl_array_set_proc), (void*)PL_NX,
-        "Nx");
+    // (pl_array_set_proc, (void*)PL_NX,
+    //    "Nx");
     gtk_box_pack_start(GTK_BOX(vbox), sb, false, false, 0);
 
     label = gtk_label_new("Ny");
@@ -327,8 +327,8 @@ sPlc::sPlc(bool noprompt)
     gtk_box_pack_start(GTK_BOX(vbox), label, true, true, 0);
 
     sb = sb_ny.init(1.0, 1.0, MAX_ARRAY, 0);
-    sb_ny.connect_changed(GTK_SIGNAL_FUNC(pl_array_set_proc), (void*)PL_NY,
-        "Ny");
+    // (pl_array_set_proc, (void*)PL_NY,
+    //    "Ny");
     gtk_box_pack_start(GTK_BOX(vbox), sb, false, false, 0);
 
     gtk_box_pack_start(GTK_BOX(hbox), vbox, true, true, 0);
@@ -345,8 +345,8 @@ sPlc::sPlc(bool noprompt)
     gtk_box_pack_start(GTK_BOX(vbox), label, true, true, 0);
 
     sb = sb_dx.init(0.0, -1e6, 1e6, ndgt);
-    sb_dx.connect_changed(GTK_SIGNAL_FUNC(pl_array_set_proc), (void*)PL_DX,
-        "Dx");
+    // (pl_array_set_proc, (void*)PL_DX,
+    //    "Dx");
     gtk_box_pack_start(GTK_BOX(vbox), sb, true, true, 0);
 
     label = gtk_label_new("Dy");
@@ -356,8 +356,8 @@ sPlc::sPlc(bool noprompt)
     gtk_box_pack_start(GTK_BOX(vbox), label, true, true, 0);
 
     sb = sb_dy.init(0.0, -1e6, 1e6, ndgt);
-    sb_dy.connect_changed(GTK_SIGNAL_FUNC(pl_array_set_proc), (void*)PL_DY,
-        "Dy");
+    // (pl_array_set_proc, (void*)PL_DY,
+    //    "Dy");
     gtk_box_pack_start(GTK_BOX(vbox), sb, true, true, 0);
 
     gtk_box_pack_start(GTK_BOX(hbox), vbox, true, true, 0);
@@ -370,7 +370,7 @@ sPlc::sPlc(bool noprompt)
     //
     // Master selection option menu.
     //
-    GtkWidget *opmenu = gtk_option_menu_new();
+    GtkWidget *opmenu = gtk_combo_box_text_new();
     gtk_widget_set_name(opmenu, "Master");
     gtk_widget_show(opmenu);
     pl_masterbtn = opmenu;
@@ -399,8 +399,8 @@ sPlc::sPlc(bool noprompt)
     gtk_box_pack_start(GTK_BOX(hbox), label, true, true, 0);
 
     sb = sb_mmlen.init(ED()->plMenuLen(), 1.0, 75.0, 0);
-    sb_mmlen.connect_changed(GTK_SIGNAL_FUNC(pl_val_changed), 0, "mmlen");
-    gtk_widget_set_usize(sb, 80, -1);
+    // (pl_val_changed, 0, "mmlen");
+    gtk_widget_set_size_request(sb, 80, -1);
     gtk_box_pack_end(GTK_BOX(hbox), sb, false, false, 0);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, rowcnt, rowcnt+1,
@@ -427,18 +427,18 @@ sPlc::sPlc(bool noprompt)
         pl_placebtn = button;
         bool status = GRX->GetStatus(pl_menu_placebtn);
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), status);
-        gtk_signal_connect(GTK_OBJECT(button), "clicked",
-            GTK_SIGNAL_FUNC(pl_place_proc), 0);
+        g_signal_connect(G_OBJECT(button), "clicked",
+            G_CALLBACK(pl_place_proc), 0);
         gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
-        gtk_signal_connect(GTK_OBJECT(pl_menu_placebtn), "clicked",
-            GTK_SIGNAL_FUNC(pl_menu_place_proc), 0);
+        g_signal_connect(G_OBJECT(pl_menu_placebtn), "clicked",
+            G_CALLBACK(pl_menu_place_proc), 0);
     }
 
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(pl_cancel_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(pl_cancel_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, rowcnt, rowcnt+1,
@@ -448,8 +448,8 @@ sPlc::sPlc(bool noprompt)
     if (DSP()->CurMode() == Electrical)
         gtk_widget_set_sensitive(pl_arraybtn, false);
     set_sens(false);
-    gtk_option_menu_set_history(GTK_OPTION_MENU(pl_refmenu),
-        ED()->instanceRef());
+    // gtk_option_menu_set_history(GTK_OPTION_MENU(pl_refmenu),
+    //    ED()->instanceRef());
 
     // Give focus to menu, otherwise cancel button may get focus, and
     // Enter (intending to change reference corner) will pop down.
@@ -458,8 +458,8 @@ sPlc::sPlc(bool noprompt)
     // drop site
     gtk_drag_dest_set(pl_popup, GTK_DEST_DEFAULT_ALL, target_table,
         n_targets, GDK_ACTION_COPY);
-    gtk_signal_connect_after(GTK_OBJECT(pl_popup), "drag-data-received",
-        GTK_SIGNAL_FUNC(pl_drag_data_received), 0);
+    g_signal_connect_after(G_OBJECT(pl_popup), "drag-data-received",
+        G_CALLBACK(pl_drag_data_received), 0);
 
     if (!ED()->plMenu() && !noprompt)
         // Positioning is incorrect unless an idle proc is used here.
@@ -489,8 +489,8 @@ sPlc::~sPlc()
 void
 sPlc::update()
 {
-    gtk_option_menu_set_history(GTK_OPTION_MENU(pl_refmenu),
-        ED()->instanceRef());
+    // gtk_option_menu_set_history(GTK_OPTION_MENU(pl_refmenu),
+    //    ED()->instanceRef());
 
     ED()->plInitMenuLen();
     const char *s = sb_mmlen.get_string();
@@ -551,25 +551,25 @@ sPlc::rebuild_menu()
         GtkWidget *mi = gtk_menu_item_new_with_label("New");
         gtk_widget_set_name(mi, "Add New Entry");
         gtk_widget_show(mi);
-        gtk_object_set_user_data(GTK_OBJECT(mi), (char*)PL_NEW_CODE);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(pl_menu_proc), 0);
-        gtk_menu_append(GTK_MENU(menu), mi);
+        // gtk_object_set_user_data(G_OBJECT(mi), (char*)PL_NEW_CODE);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(pl_menu_proc), 0);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
     }
 
     for (stringlist *p = ED()->plMenu(); p; p = p->next) {
         GtkWidget *mi = gtk_menu_item_new_with_label(p->string);
         gtk_widget_set_name(mi, p->string);
         gtk_widget_show(mi);
-        gtk_object_set_user_data(GTK_OBJECT(mi), p->string);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(pl_menu_proc), 0);
-        gtk_menu_append(GTK_MENU(menu), mi);
+        // gtk_object_set_user_data(G_OBJECT(mi), p->string);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(pl_menu_proc), 0);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
     }
-    gtk_option_menu_remove_menu(GTK_OPTION_MENU(pl_masterbtn));
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(pl_masterbtn), menu);
-    if (ED()->plMenu())
-        gtk_option_menu_set_history(GTK_OPTION_MENU(pl_masterbtn), 1);
+    // gtk_option_menu_remove_menu(GTK_OPTION_MENU(pl_masterbtn));
+    // gtk_option_menu_set_menu(GTK_OPTION_MENU(pl_masterbtn), menu);
+    // if (ED()->plMenu())
+        // gtk_option_menu_set_history(GTK_OPTION_MENU(pl_masterbtn), 1);
 }
 
 
@@ -659,7 +659,7 @@ sPlc::pl_array_proc(GtkWidget *caller, void*)
 {
     if (!Plc)
         return;
-    int state = GTK_TOGGLE_BUTTON(caller)->active;
+    int state = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(caller));
     if (state) {
         Plc->sb_nx.set_value(Plc->pl_iap.nx());
         Plc->sb_ny.set_value(Plc->pl_iap.ny());
@@ -780,8 +780,8 @@ sPlc::pl_menu_proc(GtkWidget *caller, void*)
     if (!Plc)
         return;
     char *string = 0;
-    if (caller)
-        string = (char*)gtk_object_get_user_data(GTK_OBJECT(caller));
+    // if (caller)
+    //     string = (char*)g_object_get_data(G_OBJECT(caller), (const gchar)caller);
     if (!string || !strcmp(string, PL_NEW_CODE)) {
         if (GRX->GetStatus(Plc->pl_placebtn))
             GRX->CallCallback(Plc->pl_menu_placebtn);
@@ -832,13 +832,13 @@ void
 sPlc::pl_drag_data_received(GtkWidget*, GdkDragContext *context, gint, gint,
     GtkSelectionData *data, guint, guint time, void*)
 {
-    if (data->length >= 0 && data->format == 8 && data->data) {
-        char *src = (char*)data->data;
+    if (gtk_selection_data_get_length(data) >= 0 && gtk_selection_data_get_format(data) == 8 && gtk_selection_data_get_data(data)) {
+        char *src = (char*)gtk_selection_data_get_data(data);
 
         // The "filename" can actually be two space-separated tokens,
         // the first being an archive file of CHD name, the second being
         // a cell name.
-        if (data->target == gdk_atom_intern("TWOSTRING", true)) {
+        if (gtk_selection_data_get_target(data) == gdk_atom_intern("TWOSTRING", true)) {
             char *t = strchr(src, '\n');
             if (t)
                 *t = ' ';

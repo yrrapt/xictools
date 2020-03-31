@@ -118,9 +118,9 @@ struct plot_bag : public gtk_bag,  public gtk_draw
     ~plot_bag()
         {
             if (pb_pixmap)
-                gdk_pixmap_unref(pb_pixmap);
+                // g_object_unref(pb_pixmap);
             if (pb_id)
-                gtk_idle_remove(pb_id);
+                g_source_remove(pb_id);
         }
 
     bool init_gbuttons(sGraph*);
@@ -162,7 +162,7 @@ private:
 
     GtkWidget *pb_bbox;             // frame containing button box
     GtkWidget *pb_checkwins[pbtn_NUMBTNS];  // button widget pointers
-    GdkPixmap *pb_pixmap;           // backing store
+    cairo_surface_t *pb_pixmap;           // backing store
     int pb_pmwid, pb_pmhei;         // pixmap size
     int pb_id;                      // motion idle id
     int pb_x, pb_y;                 // motion coords
@@ -192,8 +192,8 @@ plot_bag::init(sGraph *gr)
 #endif
 #endif
 
-    gtk_signal_connect(GTK_OBJECT(Shell()), "destroy",
-        GTK_SIGNAL_FUNC(b_quit), gr);
+    g_signal_connect(G_OBJECT(Shell()), "destroy",
+        G_CALLBACK(b_quit), gr);
 
     GtkWidget *form = gtk_table_new(2, 1, false);
     gtk_widget_show(form);
@@ -250,45 +250,45 @@ plot_bag::init(sGraph *gr)
         dawid = 300;
         dahei = 300;
     }
-    gtk_drawing_area_size(GTK_DRAWING_AREA(Viewport()), dawid, dahei);
+    gtk_widget_set_size_request(Viewport(), dawid, dahei);
 
     gtk_widget_show(Viewport());
 
     GTKfont::setupFont(Viewport(), FNT_SCREEN, true);
 
     gtk_widget_add_events(Viewport(), GDK_STRUCTURE_MASK);
-    gtk_signal_connect(GTK_OBJECT(Viewport()), "configure_event",
-        GTK_SIGNAL_FUNC(resize), gr);
+    g_signal_connect(G_OBJECT(Viewport()), "configure_event",
+        G_CALLBACK(resize), gr);
     gtk_widget_add_events(Viewport(), GDK_EXPOSURE_MASK);
-    gtk_signal_connect(GTK_OBJECT(Viewport()), "expose_event",
-        GTK_SIGNAL_FUNC(redraw), gr);
+    g_signal_connect(G_OBJECT(Viewport()), "expose_event",
+        G_CALLBACK(redraw), gr);
     gtk_widget_add_events(Viewport(), GDK_KEY_PRESS_MASK);
-    gtk_signal_connect_after(GTK_OBJECT(Viewport()), "key_press_event",
-        GTK_SIGNAL_FUNC(keypress), gr);
+    g_signal_connect_after(G_OBJECT(Viewport()), "key_press_event",
+        G_CALLBACK(keypress), gr);
     gtk_widget_add_events(Viewport(), GDK_BUTTON_PRESS_MASK);
-    gtk_signal_connect_after(GTK_OBJECT(Viewport()), "button_press_event",
-        GTK_SIGNAL_FUNC(buttonpress), gr);
+    g_signal_connect_after(G_OBJECT(Viewport()), "button_press_event",
+        G_CALLBACK(buttonpress), gr);
     gtk_widget_add_events(Viewport(), GDK_BUTTON_RELEASE_MASK);
-    gtk_signal_connect_after(GTK_OBJECT(Viewport()), "button_release_event",
-        GTK_SIGNAL_FUNC(buttonup), gr);
+    g_signal_connect_after(G_OBJECT(Viewport()), "button_release_event",
+        G_CALLBACK(buttonup), gr);
     gtk_widget_add_events(Viewport(), GDK_POINTER_MOTION_MASK);
-    gtk_signal_connect(GTK_OBJECT(Viewport()), "motion_notify_event",
-        GTK_SIGNAL_FUNC(motion), gr);
+    g_signal_connect(G_OBJECT(Viewport()), "motion_notify_event",
+        G_CALLBACK(motion), gr);
     gtk_widget_add_events(Viewport(), GDK_ENTER_NOTIFY_MASK);
-    gtk_signal_connect(GTK_OBJECT(Viewport()), "enter_notify_event",
-        GTK_SIGNAL_FUNC(enter_hdlr), gr);
+    g_signal_connect(G_OBJECT(Viewport()), "enter_notify_event",
+        G_CALLBACK(enter_hdlr), gr);
     gtk_widget_add_events(Viewport(), GDK_LEAVE_NOTIFY_MASK);
-    gtk_signal_connect(GTK_OBJECT(Viewport()), "leave_notify_event",
-        GTK_SIGNAL_FUNC(leave_hdlr), gr);
-    gtk_signal_connect(GTK_OBJECT(Viewport()), "style_set",
-        GTK_SIGNAL_FUNC(font_change_hdlr), gr);
+    g_signal_connect(G_OBJECT(Viewport()), "leave_notify_event",
+        G_CALLBACK(leave_hdlr), gr);
+    g_signal_connect(G_OBJECT(Viewport()), "style_set",
+        G_CALLBACK(font_change_hdlr), gr);
 
     // gtk2 - this avoids issue of an expose event on focus change
     gtk_widget_add_events(Viewport(), GDK_FOCUS_CHANGE_MASK);
-    gtk_signal_connect(GTK_OBJECT(Viewport()), "focus_in_event",
-        GTK_SIGNAL_FUNC(focus), this);
-    gtk_signal_connect(GTK_OBJECT(Viewport()), "focus_out_event",
-        GTK_SIGNAL_FUNC(focus), this);
+    g_signal_connect(G_OBJECT(Viewport()), "focus_in_event",
+        G_CALLBACK(focus), this);
+    g_signal_connect(G_OBJECT(Viewport()), "focus_out_event",
+        G_CALLBACK(focus), this);
 
     GtkWidget *frame = gtk_frame_new(0);
     gtk_widget_show(frame);
@@ -322,16 +322,16 @@ plot_bag::init(sGraph *gr)
     int x, y;
     GP.PlotPosition(&x, &y);
     TB()->FixLoc(&x, &y);
-    gtk_widget_set_uposition(Shell(), x, y);
+    gtk_widget_set_size_request(Shell(), x, y);
     gtk_widget_add_events(Shell(), GDK_VISIBILITY_NOTIFY_MASK);
-    gtk_signal_connect(GTK_OBJECT(Shell()), "visibility_notify_event",
-        GTK_SIGNAL_FUNC(ToTop), 0);
+    g_signal_connect(G_OBJECT(Shell()), "visibility_notify_event",
+        G_CALLBACK(ToTop), 0);
 
     // MSW seems to need this before gtk_window_show.
     TB()->RevertFocus(Shell());
 
     gtk_widget_show(Shell());
-    SetWindow(Viewport()->window);
+    SetWindow(gtk_widget_get_window(Viewport()));
     {
         char buf1[128], buf2[64];
         const char *anam = "";
@@ -346,15 +346,15 @@ plot_bag::init(sGraph *gr)
 
     // create GC's
     //
-    if (!GC()) {
-        GdkGCValues gcvalues;
-        gcvalues.cap_style = GDK_CAP_NOT_LAST;
-        Gbag()->set_gc(gdk_gc_new_with_values(Window(), &gcvalues,
-            GDK_GC_CAP_STYLE));
-        gcvalues.function = GDK_XOR;
-        Gbag()->set_xorgc(gdk_gc_new_with_values(Window(), &gcvalues,
-            (GdkGCValuesMask)(GDK_GC_FUNCTION | GDK_GC_CAP_STYLE)));
-    }
+    // if (!GC()) {
+    //     cairo_surface_t *gcvalues;
+    //     gcvalues.cap_style = GDK_CAP_NOT_LAST;
+    //     Gbag()->set_gc(gdk_gc_new_with_values(Window(), &gcvalues,
+    //         GDK_GC_CAP_STYLE));
+    //     gcvalues.function = GDK_XOR;
+    //     Gbag()->set_xorgc(gdk_gc_new_with_values(Window(), &gcvalues,
+    //         (GdkGCValuesMask)(GDK_GC_FUNCTION | GDK_GC_CAP_STYLE)));
+    // }
     gr->gr_pkg_init_colors();
     gr->set_fontsize();
 
@@ -363,7 +363,8 @@ plot_bag::init(sGraph *gr)
     gdk_window_set_cursor(Window(), cursor);
 
     int w, h;
-    gdk_window_get_size(Window(), &w, &h);
+    w = gdk_window_get_width(Window());
+    h = gdk_window_get_width(Window());
     gr->area().set_width(w);
     gr->area().set_height(h);
 
@@ -392,44 +393,40 @@ plot_bag::init_gbuttons(sGraph *graph)
     if (!pb_checkwins[pbtn_dismiss]) {
         GtkWidget *button = gtk_button_new_with_label("Dismiss");
         gtk_widget_show(button);
-        gtk_signal_connect(GTK_OBJECT(button), "clicked",
-            (GtkSignalFunc)b_quit, graph);
+        g_signal_connect(G_OBJECT(button), "clicked",
+            G_CALLBACK(b_quit), graph);
         gtk_box_pack_start(GTK_BOX(vbox), button, true, true, 2);
-        gtk_tooltips_set_tip(gtk_tooltips_new(), button,
-            "Delete this window", "");
+        gtk_widget_set_tooltip_text(button, "Delete this window");
         pb_checkwins[pbtn_dismiss] = button;
     }
 
     if (!pb_checkwins[pbtn_help]) {
         GtkWidget *button = gtk_button_new_with_label("Help");
         gtk_widget_show(button);
-        gtk_signal_connect(GTK_OBJECT(button), "clicked",
-            (GtkSignalFunc)b_help, graph);
+        g_signal_connect(G_OBJECT(button), "clicked",
+            G_CALLBACK(b_help), graph);
         gtk_box_pack_start(GTK_BOX(vbox), button, true, true, 2);
-        gtk_tooltips_set_tip(gtk_tooltips_new(), button,
-            "Press for help", "");
+        gtk_widget_set_tooltip_text(button, "Press for help");
         pb_checkwins[pbtn_help] = button;
     }
 
     if (!pb_checkwins[pbtn_redraw]) {
         GtkWidget *button = gtk_button_new_with_label("Redraw");
         gtk_widget_show(button);
-        gtk_signal_connect(GTK_OBJECT(button), "clicked",
-            (GtkSignalFunc)b_recolor, graph);
+        g_signal_connect(G_OBJECT(button), "clicked",
+            G_CALLBACK(b_recolor), graph);
         gtk_box_pack_start(GTK_BOX(vbox), button, true, true, 2);
-        gtk_tooltips_set_tip(gtk_tooltips_new(), button,
-            "Redraw the plot", "");
+        gtk_widget_set_tooltip_text(button, "Redraw the plot");
         pb_checkwins[pbtn_redraw] = button;
     }
 
     if (!pb_checkwins[pbtn_print]) {
         GtkWidget *button = gtk_toggle_button_new_with_label("Print");
         gtk_widget_show(button);
-        gtk_signal_connect(GTK_OBJECT(button), "clicked",
-            (GtkSignalFunc)b_hardcopy, graph);
+        g_signal_connect(G_OBJECT(button), "clicked",
+            G_CALLBACK(b_hardcopy), graph);
         gtk_box_pack_start(GTK_BOX(vbox), button, true, true, 2);
-        gtk_tooltips_set_tip(gtk_tooltips_new(), button,
-            "Print control panel", "");
+        gtk_widget_set_tooltip_text(button, "Print control panel");
         pb_checkwins[pbtn_print] = button;
     }
 
@@ -437,52 +434,48 @@ plot_bag::init_gbuttons(sGraph *graph)
         if (!pb_checkwins[pbtn_saveplot]) {
             GtkWidget *button = gtk_button_new_with_label("Save Plot");
             gtk_widget_show(button);
-            gtk_object_set_data(GTK_OBJECT(wb_shell), "save_plot", button);
-            gtk_signal_connect(GTK_OBJECT(button), "clicked",
-                (GtkSignalFunc)b_save_plot, graph);
+            // g_object_set_data(G_OBJECT(wb_shell), "save_plot", button);
+            g_signal_connect(G_OBJECT(button), "clicked",
+                G_CALLBACK(b_save_plot), graph);
             gtk_box_pack_start(GTK_BOX(vbox), button, true, true, 2);
-            gtk_tooltips_set_tip(gtk_tooltips_new(), button,
-                "Save the plot in a plot file", "");
+            gtk_widget_set_tooltip_text(button, "Save the plot in a plot file");
             pb_checkwins[pbtn_saveplot] = button;
         }
 
         if (!pb_checkwins[pbtn_saveprint]) {
             GtkWidget *button = gtk_button_new_with_label("Save Print ");
             gtk_widget_show(button);
-            gtk_object_set_data(GTK_OBJECT(wb_shell), "save_print", button);
-            gtk_signal_connect(GTK_OBJECT(button), "clicked",
-                (GtkSignalFunc)b_save_print, graph);
+            // g_object_set_data(G_OBJECT(wb_shell), "save_print", button);
+            g_signal_connect(G_OBJECT(button), "clicked",
+                G_CALLBACK(b_save_print), graph);
             gtk_box_pack_start(GTK_BOX(vbox), button, true, true, 2);
-            gtk_tooltips_set_tip(gtk_tooltips_new(), button,
-                "Save the plot in a print file", "");
+            gtk_widget_set_tooltip_text(button, "Save the plot in a print file");
             pb_checkwins[pbtn_saveprint] = button;
         }
 
         if (!pb_checkwins[pbtn_points]) {
             GtkWidget *button = gtk_toggle_button_new_with_label("Points");
             gtk_widget_show(button);
-            gtk_object_set_data(GTK_OBJECT(wb_shell), "points", button);
+            // g_object_set_data(G_OBJECT(wb_shell), "points", button);
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button),
                 (graph->plottype() == PLOT_POINT)); 
-            gtk_signal_connect(GTK_OBJECT(button), "clicked",
-                (GtkSignalFunc)b_points, graph);
+            g_signal_connect(G_OBJECT(button), "clicked",
+                G_CALLBACK(b_points), graph);
             gtk_box_pack_start(GTK_BOX(vbox), button, true, true, 2);
-            gtk_tooltips_set_tip(gtk_tooltips_new(), button,
-                "Plot data as points", "");
+            gtk_widget_set_tooltip_text(button, "Plot data as points");
             pb_checkwins[pbtn_points] = button;
         }
 
         if (!pb_checkwins[pbtn_comb]) {
             GtkWidget *button = gtk_toggle_button_new_with_label("Comb");
             gtk_widget_show(button);
-            gtk_object_set_data(GTK_OBJECT(wb_shell), "combplot", button);
+            // g_object_set_data(G_OBJECT(wb_shell), "combplot", button);
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button),
                 (graph->plottype() == PLOT_COMB)); 
-            gtk_signal_connect(GTK_OBJECT(button), "clicked",
-                (GtkSignalFunc)b_points, graph);
+            g_signal_connect(G_OBJECT(button), "clicked",
+                G_CALLBACK(b_points), graph);
             gtk_box_pack_start(GTK_BOX(vbox), button, true, true, 2);
-            gtk_tooltips_set_tip(gtk_tooltips_new(), button,
-                "Plot data as histogram", "");
+            gtk_widget_set_tooltip_text(button, "Plot data as histogram");
             pb_checkwins[pbtn_comb] = button;
         }
 
@@ -493,11 +486,10 @@ plot_bag::init_gbuttons(sGraph *graph)
                 gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button),
                     (graph->gridtype() == GRID_XLOG ||
                         graph->gridtype() == GRID_LOGLOG));
-                gtk_signal_connect(GTK_OBJECT(button), "clicked",
-                    (GtkSignalFunc)b_logx, graph);
+                g_signal_connect(G_OBJECT(button), "clicked",
+                    G_CALLBACK(b_logx), graph);
                 gtk_box_pack_start(GTK_BOX(vbox), button, true, true, 2);
-                gtk_tooltips_set_tip(gtk_tooltips_new(), button,
-                    "Use logarithmic horizontal scale", "");
+                gtk_widget_set_tooltip_text(button, "Use logarithmic horizontal scale");
                 pb_checkwins[pbtn_logx] = button;
             }
         }
@@ -515,11 +507,10 @@ plot_bag::init_gbuttons(sGraph *graph)
                 gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button),
                     (graph->gridtype() == GRID_YLOG ||
                         graph->gridtype() == GRID_LOGLOG));
-                gtk_signal_connect(GTK_OBJECT(button), "clicked",
-                    (GtkSignalFunc)b_logy, graph);
+                g_signal_connect(G_OBJECT(button), "clicked",
+                    G_CALLBACK(b_logy), graph);
                 gtk_box_pack_start(GTK_BOX(vbox), button, true, true, 2);
-                gtk_tooltips_set_tip(gtk_tooltips_new(), button,
-                    "Use logarithmic vertical scale", "");
+                gtk_widget_set_tooltip_text(button, "Use logarithmic vertical scale");
                 pb_checkwins[pbtn_logy] = button;
             }
         }
@@ -535,11 +526,10 @@ plot_bag::init_gbuttons(sGraph *graph)
             gtk_widget_show(button);
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button),
                 graph->reference().mark);
-            gtk_signal_connect(GTK_OBJECT(button), "clicked",
-                (GtkSignalFunc)b_marker, graph);
+            g_signal_connect(G_OBJECT(button), "clicked",
+                G_CALLBACK(b_marker), graph);
             gtk_box_pack_start(GTK_BOX(vbox), button, true, true, 2);
-            gtk_tooltips_set_tip(gtk_tooltips_new(), button,
-                "Show marker", "");
+            gtk_widget_set_tooltip_text(button, "Show marker");
             pb_checkwins[pbtn_marker] = button;
         }
 
@@ -550,11 +540,10 @@ plot_bag::init_gbuttons(sGraph *graph)
                 gtk_widget_show(button);
                 gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button),
                     (graph->yseparate()));
-                gtk_signal_connect(GTK_OBJECT(button), "clicked",
-                    (GtkSignalFunc)b_separate, graph);
+                g_signal_connect(G_OBJECT(button), "clicked",
+                    G_CALLBACK(b_separate), graph);
                 gtk_box_pack_start(GTK_BOX(vbox), button, true, true, 2);
-                gtk_tooltips_set_tip(gtk_tooltips_new(), button,
-                    "Show traces separately", "");
+                gtk_widget_set_tooltip_text(button, "Show traces separately");
                 pb_checkwins[pbtn_separate] = button;
             }
 
@@ -573,15 +562,14 @@ plot_bag::init_gbuttons(sGraph *graph)
                     GtkWidget *button =
                         gtk_toggle_button_new_with_label("Single");
                     gtk_widget_show(button);
-                    gtk_object_set_data(GTK_OBJECT(wb_shell), "onescale",
+                    g_object_set_data(G_OBJECT(wb_shell), "onescale",
                         button);
                     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button),
                         (graph->format() == FT_SINGLE));
-                    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-                        (GtkSignalFunc)b_onescale, graph);
+                    g_signal_connect(G_OBJECT(button), "clicked",
+                        G_CALLBACK(b_onescale), graph);
                     gtk_box_pack_start(GTK_BOX(vbox), button, true, true, 2);
-                    gtk_tooltips_set_tip(gtk_tooltips_new(), button,
-                        "Use single vertical scale", "");
+                    gtk_widget_set_tooltip_text(button, "Use single vertical scale");
                     pb_checkwins[pbtn_single] = button;
                 }
             }
@@ -591,15 +579,14 @@ plot_bag::init_gbuttons(sGraph *graph)
                     GtkWidget *button =
                         gtk_toggle_button_new_with_label("Single");
                     gtk_widget_show(button);
-                    gtk_object_set_data(GTK_OBJECT(wb_shell), "onescale",
+                    g_object_set_data(G_OBJECT(wb_shell), "onescale",
                         button);
                     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button),
                         (graph->format() == FT_SINGLE));
-                    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-                        (GtkSignalFunc)b_multiscale, graph);
+                    g_signal_connect(G_OBJECT(button), "clicked",
+                        G_CALLBACK(b_multiscale), graph);
                     gtk_box_pack_start(GTK_BOX(vbox), button, true, true, 2);
-                    gtk_tooltips_set_tip(gtk_tooltips_new(), button,
-                        "Use single vertical scale", "");
+                    gtk_widget_set_tooltip_text(button, "Use single vertical scale");
                     pb_checkwins[pbtn_single] = button;
                 }
 
@@ -607,15 +594,14 @@ plot_bag::init_gbuttons(sGraph *graph)
                     GtkWidget *button =
                         gtk_toggle_button_new_with_label("Group");
                     gtk_widget_show(button);
-                    gtk_object_set_data(GTK_OBJECT(wb_shell), "grpscale",
+                    g_object_set_data(G_OBJECT(wb_shell), "grpscale",
                         button);
                     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button),
                         (graph->format() == FT_GROUP));
-                    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-                        (GtkSignalFunc)b_multiscale, graph);
+                    g_signal_connect(G_OBJECT(button), "clicked",
+                        G_CALLBACK(b_multiscale), graph);
                     gtk_box_pack_start(GTK_BOX(vbox), button, true, true, 2);
-                    gtk_tooltips_set_tip(gtk_tooltips_new(), button,
-                        "Same scale for groups: V, I, other", "");
+                    gtk_widget_set_tooltip_text(button, "Same scale for groups: V, I, other");
                     pb_checkwins[pbtn_group] = button;
                 }
             }
@@ -624,11 +610,11 @@ plot_bag::init_gbuttons(sGraph *graph)
 
     bool ret = true;
     if (pb_bbox) {
-        int nlen = g_list_length(GTK_BOX(vbox)->children);
-        int olen = g_list_length(GTK_BOX(GTK_BIN(pb_bbox)->child)->children);
+        int nlen = g_list_length(gtk_container_get_children(GTK_CONTAINER(vbox)));
+        int olen = g_list_length(gtk_container_get_children(GTK_CONTAINER(gtk_bin_get_child(GTK_BIN(pb_bbox)))));
         if (nlen == olen)
             ret = false;
-        gtk_container_remove(GTK_CONTAINER(pb_bbox), GTK_BIN(pb_bbox)->child);
+        gtk_container_remove(GTK_CONTAINER(pb_bbox), gtk_bin_get_child(GTK_BIN(pb_bbox)));
     }
     else {
         pb_bbox = gtk_frame_new(0);
@@ -674,7 +660,7 @@ sGraph::gr_pkg_init_colors()
         return;
 
     plot_bag *w = dynamic_cast<plot_bag*>(gr_dev);
-    if (w && w->Viewport() && w->Viewport()->window) {
+    if (w && w->Viewport() && gtk_widget_get_window(w->Viewport())) {
         w->SetWindowBackground(SpGrPkg::DefColors[0].pixel);
         w->SetBackground(SpGrPkg::DefColors[0].pixel);
         w->Clear();
@@ -729,25 +715,26 @@ sGraph::gr_redraw()
     if (!wb->Window())
         return;
     int width, height;
-    gdk_window_get_size(wb->Window(), &width, &height);
+    width = gdk_window_get_width(wb->Window());
+    height = gdk_window_get_height(wb->Window());
     area().set_width(width);
     area().set_height(height);
     if (!wb->pb_pixmap || wb->pb_pmwid != width || wb->pb_pmhei != height) {
         if (wb->pb_pixmap)
-            gdk_pixmap_unref(wb->pb_pixmap);
-        wb->pb_pixmap = gdk_pixmap_new(wb->Window(), width, height,
-            GRX->Visual()->depth);
+            g_object_unref(wb->pb_pixmap);
+        // wb->pb_pixmap = gdk_pixmap_new(wb->Window(), width, height,
+        //     GRX->Visual()->depth);
         wb->pb_pmwid = width;
         wb->pb_pmhei = height;
     }
     GdkWindow *wtmp = wb->Window();
-    wb->SetWindow(wb->pb_pixmap);
+    // wb->SetWindow(wb->pb_pixmap);
     wb->SetColor(gr_colors[0].pixel);
     wb->Box(0, 0, width, height);
     gr_redraw_direct();  // This might change area().width/area().height.
     wb->SetWindow(wtmp);
-    gdk_window_copy_area(wb->Window(), wb->GC(), 0, 0, wb->pb_pixmap, 0, 0,
-        width, height);
+    // gdk_window_copy_area(wb->Window(), wb->GC(), 0, 0, wb->pb_pixmap, 0, 0,
+    //     width, height);
     gr_redraw_keyed();
     gr_dirty = false;
 }
@@ -758,7 +745,8 @@ sGraph::gr_refresh(int left, int bottom, int right, int top, bool notxt)
 {
     plot_bag *wb = dynamic_cast<plot_bag*>(gr_dev);
     int w, h;
-    gdk_window_get_size(wb->Window(), &w, &h);
+    w = gdk_window_get_width(wb->Window());
+    h = gdk_window_get_height(wb->Window());
     area().set_width(w);
     area().set_height(h);
     if (gr_dirty || !wb->pb_pixmap || wb->pb_pmwid != area().width() ||
@@ -766,19 +754,19 @@ sGraph::gr_refresh(int left, int bottom, int right, int top, bool notxt)
         gr_redraw();
         return;
     }
-    gdk_window_copy_area(wb->Window(), wb->GC(), left,
-        top, wb->pb_pixmap, left, top, right - left, bottom - top);
+    // gdk_window_copy_area(wb->Window(), wb->GC(), left,
+    //     top, wb->pb_pixmap, left, top, right - left, bottom - top);
     GdkRectangle r;
     r.x = left;
     r.y = top;
     r.width = right - left;
     r.height = bottom - top;
-    gdk_gc_set_clip_rectangle(wb->GC(), &r);
-    gdk_gc_set_clip_rectangle(wb->XorGC(), &r);
-    if (!notxt)
-        gr_redraw_keyed();
-    gdk_gc_set_clip_rectangle(wb->GC(), 0);
-    gdk_gc_set_clip_rectangle(wb->XorGC(), 0);
+    // gdk_gc_set_clip_rectangle(wb->GC(), &r);
+    // gdk_gc_set_clip_rectangle(wb->XorGC(), &r);
+    // if (!notxt)
+    //     gr_redraw_keyed();
+    // gdk_gc_set_clip_rectangle(wb->GC(), 0);
+    // gdk_gc_set_clip_rectangle(wb->XorGC(), 0);
 }
 
 
@@ -788,8 +776,8 @@ void
 sGraph::gr_popdown()
 {
     plot_bag *w = dynamic_cast<plot_bag*>(dev());
-    gtk_signal_disconnect_by_func(GTK_OBJECT(w->Shell()),
-        GTK_SIGNAL_FUNC(plot_bag::b_quit), this);
+    g_signal_handlers_disconnect_by_func(G_OBJECT(w->Shell()),
+        (gpointer)plot_bag::b_quit, this);
     delete w;
     set_dev(0);
     GP.DestroyGraph(id());
@@ -809,7 +797,7 @@ plot_bag::check_event(GdkEvent *ev, sGraph *graph)
     if (!w)
         return (false);
     if (ev->type == GDK_EXPOSE) {
-        if (ev->expose.window == w->Shell()->window)
+        if (ev->expose.window == gtk_widget_get_window(w->Shell()))
             return (true);
     }
     else if (ev->type == GDK_BUTTON_PRESS) {
@@ -846,9 +834,9 @@ void
 plot_bag::sens_set(gtk_bag *w, bool set, int)
 {
     GtkWidget *save_plot =
-        (GtkWidget*)gtk_object_get_data(GTK_OBJECT(w->Shell()), "save_plot");
+        (GtkWidget*)g_object_get_data(G_OBJECT(w->Shell()), "save_plot");
     GtkWidget *save_print =
-        (GtkWidget*)gtk_object_get_data(GTK_OBJECT(w->Shell()), "save_print");
+        (GtkWidget*)g_object_get_data(G_OBJECT(w->Shell()), "save_print");
     if (set) {
         if (save_plot)
             gtk_widget_set_sensitive(save_plot, true);
@@ -876,9 +864,10 @@ plot_bag::resize(GtkWidget *caller, GdkEvent*, void *client_data)
     plot_bag *wb = dynamic_cast<plot_bag*>(graph->dev());
 
     if (!wb->Window())
-        wb->SetWindow(wb->Viewport()->window);
+        wb->SetWindow(gtk_widget_get_window(wb->Viewport()));
     int w, h;
-    gdk_window_get_size(caller->window, &w, &h);
+    w = gdk_window_get_width(gtk_widget_get_window(caller));
+    h = gdk_window_get_height(gtk_widget_get_window(caller));
     graph->area().set_width(w);
     graph->area().set_height(h);
     graph->gr_abort();
@@ -897,15 +886,15 @@ plot_bag::redraw_timeout(void *arg)
 
     wb->pb_rdid = 0;
     GdkWindow *wtmp = wb->Window();
-    wb->SetWindow(wb->pb_pixmap);
-    wb->SetColor(graph->color(0).pixel);
-    wb->Box(0, 0, graph->area().width(), graph->area().height());
-    graph->gr_redraw_direct();
-    wb->SetWindow(wtmp);
-    gdk_window_copy_area(wb->Window(), wb->GC(), 0, 0, wb->pb_pixmap, 0, 0,
-        graph->area().width(), graph->area().height());
-    graph->gr_redraw_keyed();
-    graph->set_dirty(false);
+    // wb->SetWindow(wb->pb_pixmap);
+    // wb->SetColor(graph->color(0).pixel);
+    // wb->Box(0, 0, graph->area().width(), graph->area().height());
+    // graph->gr_redraw_direct();
+    // wb->SetWindow(wtmp);
+    // gdk_window_copy_area(wb->Window(), wb->GC(), 0, 0, wb->pb_pixmap, 0, 0,
+    //     graph->area().width(), graph->area().height());
+    // graph->gr_redraw_keyed();
+    // graph->set_dirty(false);
 
     return (0);
 }
@@ -919,39 +908,39 @@ plot_bag::redraw(GtkWidget*, GdkEvent *event, void *client_data)
     plot_bag *wb = dynamic_cast<plot_bag*>(graph->dev());
     GdkEventExpose *pev = &event->expose;
     // hack for Motif
-    if (pev->window != wb->Window())
+    if (gtk_widget_get_window(GTK_WIDGET(pev)) != wb->Window())
         return (false);
 
     int w, h;
-    gdk_window_get_size(wb->Window(), &w, &h);
-    if (!wb->pb_pixmap || wb->pb_pmwid != w || wb->pb_pmhei != h) {
-        graph->area().set_width(w);
-        graph->area().set_height(h);
+    // gdk_window_get_size(wb->Window(), &w, &h);
+    // if (!wb->pb_pixmap || wb->pb_pmwid != w || wb->pb_pmhei != h) {
+    //     graph->area().set_width(w);
+    //     graph->area().set_height(h);
 
-        if (wb->pb_pixmap)
-            gdk_pixmap_unref(wb->pb_pixmap);
-        wb->pb_pixmap = gdk_pixmap_new(wb->Window(), graph->area().width(),
-            graph->area().height(), GRX->Visual()->depth);
-        wb->pb_pmwid = graph->area().width();
-        wb->pb_pmhei = graph->area().height();
-        graph->set_dirty(true);
-    }
-    if (graph->dirty()) {
-        if (wb->pb_rdid)
-            gtk_timeout_remove(wb->pb_rdid);
-        wb->pb_rdid = gtk_timeout_add(250, redraw_timeout, client_data);
-    }
-    else {
-        gdk_window_copy_area(wb->Window(), wb->GC(), pev->area.x,
-            pev->area.y, wb->pb_pixmap, pev->area.x, pev->area.y,
-            pev->area.width, pev->area.height);
+    //     if (wb->pb_pixmap)
+    //         g_object_unref(wb->pb_pixmap);
+    //     wb->pb_pixmap = gdk_pixmap_new(wb->Window(), graph->area().width(),
+    //         graph->area().height(), GRX->Visual()->depth);
+    //     wb->pb_pmwid = graph->area().width();
+    //     wb->pb_pmhei = graph->area().height();
+    //     graph->set_dirty(true);
+    // }
+    // if (graph->dirty()) {
+    //     if (wb->pb_rdid)
+    //         g_source_remove(wb->pb_rdid);
+    //     wb->pb_rdid = g_timeout_add(250, redraw_timeout, client_data);
+    // }
+    // else {
+    //     gdk_window_copy_area(wb->Window(), wb->GC(), pev->area.x,
+    //         pev->area.y, wb->pb_pixmap, pev->area.x, pev->area.y,
+    //         pev->area.width, pev->area.height);
 
-        gdk_gc_set_clip_rectangle(wb->GC(), &pev->area);
-        gdk_gc_set_clip_rectangle(wb->XorGC(), &pev->area);
-        graph->gr_redraw_keyed();
-        gdk_gc_set_clip_rectangle(wb->GC(), 0);
-        gdk_gc_set_clip_rectangle(wb->XorGC(), 0);
-    }
+    //     gdk_gc_set_clip_rectangle(wb->GC(), &pev->area);
+    //     gdk_gc_set_clip_rectangle(wb->XorGC(), &pev->area);
+    //     graph->gr_redraw_keyed();
+    //     gdk_gc_set_clip_rectangle(wb->GC(), 0);
+    //     gdk_gc_set_clip_rectangle(wb->XorGC(), 0);
+    // }
     return (true);
 }
 
@@ -964,12 +953,12 @@ plot_bag::motion(GtkWidget*, GdkEvent *event, void *client_data)
     plot_bag *w = dynamic_cast<plot_bag*>(graph->dev());
     if (w && w->Gbag()->showing_ghost()) {
         if (w->pb_id) {
-            gtk_idle_remove(w->pb_id);
+            g_source_remove(w->pb_id);
             w->pb_id = 0;
         }
         w->pb_x = (int)event->motion.x;
         w->pb_y = (int)event->motion.y;
-        w->pb_id = gtk_idle_add(motion_idle, client_data);
+        w->pb_id = g_idle_add(motion_idle, client_data);
         // GTK-2 sets a grab, prevents dragging between windows.
         gdk_pointer_ungrab(GDK_CURRENT_TIME);
     }
@@ -1016,35 +1005,35 @@ plot_bag::keypress(GtkWidget*, GdkEvent *event, void *client_data)
     int keyval = kev->keyval;
 
     // Make sure we catch backspace.
-    if (keyval == GDK_h && kev->string && *kev->string == '\b')
-        keyval = GDK_BackSpace;
+    if (keyval == GDK_KEY_h && kev->string && *kev->string == '\b')
+        keyval = GDK_KEY_BackSpace;
 
     int code = 0;
     switch (keyval) {
-    case GDK_Escape:
-    case GDK_Tab:
+    case GDK_KEY_Escape:
+    case GDK_KEY_Tab:
         // Tab will switch focus.
         return (false);
 
-    case GDK_Up:
+    case GDK_KEY_Up:
         code = UP_KEY;
         break;
-    case GDK_Down:
+    case GDK_KEY_Down:
         code = DOWN_KEY;
         break;
-    case GDK_Left:
+    case GDK_KEY_Left:
         code = LEFT_KEY;
         break;
-    case GDK_Right:
+    case GDK_KEY_Right:
         code = RIGHT_KEY;
         break;
-    case GDK_Return:
+    case GDK_KEY_Return:
         code = ENTER_KEY;
         break;
-    case GDK_BackSpace:
+    case GDK_KEY_BackSpace:
         code = BSP_KEY;
         break;
-    case GDK_Delete:
+    case GDK_KEY_Delete:
         code = DELETE_KEY;
         break;
     }
@@ -1057,7 +1046,7 @@ plot_bag::keypress(GtkWidget*, GdkEvent *event, void *client_data)
 
     // Throw out when cursor is not in viewport.
     int x, y;
-    gdk_window_get_pointer(kev->window, &x, &y, 0);
+    gdk_window_get_pointer(gtk_widget_get_window(GTK_WIDGET(kev)), &x, &y, 0);
     if (x < 0 || y < 0 ||
             x >= graph->area().width() || y >= graph->area().height())
         return (false);
@@ -1145,7 +1134,7 @@ plot_bag::enter_hdlr(GtkWidget *caller, GdkEvent*, void *client_data)
     // pointer entered a drawing window
     sGraph *graph = static_cast<sGraph*>(client_data);
     plot_bag *w = dynamic_cast<plot_bag*>(graph->dev());
-    GTK_WIDGET_SET_FLAGS(caller, GTK_CAN_FOCUS);
+    // gtk_widget_set_can_focus(caller, true);
     gtk_window_set_focus(GTK_WINDOW(w->Shell()), caller);
     if (GP.SourceGraph() && graph != GP.SourceGraph()) {
         // hack a ghost for move/copy
@@ -1324,9 +1313,9 @@ plot_bag::b_points(GtkWidget *caller, void *client_data)
     sGraph *graph = static_cast<sGraph*>(client_data);
     plot_bag *w = dynamic_cast<plot_bag*>(graph->dev());
 
-    GtkWidget *pts = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(w->Shell()),
+    GtkWidget *pts = (GtkWidget*)g_object_get_data(G_OBJECT(w->Shell()),
         "points");
-    GtkWidget *cmb = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(w->Shell()),
+    GtkWidget *cmb = (GtkWidget*)g_object_get_data(G_OBJECT(w->Shell()),
         "combplot");
     if (pts && cmb) {
         bool ptson = GRX->GetStatus(pts);
@@ -1485,9 +1474,9 @@ plot_bag::b_multiscale(GtkWidget *caller, void *client_data)
     sGraph *graph = static_cast<sGraph*>(client_data);
     plot_bag *w = dynamic_cast<plot_bag*>(graph->dev());
 
-    GtkWidget *one = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(w->Shell()),
+    GtkWidget *one = (GtkWidget*)g_object_get_data(G_OBJECT(w->Shell()),
         "onescale");
-    GtkWidget *grp =  (GtkWidget*)gtk_object_get_data(GTK_OBJECT(w->Shell()),
+    GtkWidget *grp =  (GtkWidget*)g_object_get_data(G_OBJECT(w->Shell()),
         "grpscale");
     if (one && grp) {
         bool oneon = GRX->GetStatus(one);

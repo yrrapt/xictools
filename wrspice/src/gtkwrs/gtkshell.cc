@@ -73,7 +73,7 @@ GTKtoolbar::PopUpShellDefs(int x, int y)
     sh_shell = gtk_NewPopup(0, "Shell Options", sh_cancel_proc, 0);
     if (x || y) {
         FixLoc(&x, &y);
-        gtk_widget_set_uposition(sh_shell, x, y);
+        gtk_widget_set_size_request(sh_shell, x, y);
     }
 
     GtkWidget *form = gtk_table_new(4, 1, false);
@@ -94,14 +94,14 @@ GTKtoolbar::PopUpShellDefs(int x, int y)
 
     GtkWidget *button = gtk_button_new_with_label("Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        (GtkSignalFunc)sh_cancel_proc, sh_shell);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(sh_cancel_proc), sh_shell);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 2);
 
     button = gtk_toggle_button_new_with_label("Help");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "toggled",
-        (GtkSignalFunc)sh_help_proc, sh_shell);
+    g_signal_connect(G_OBJECT(button), "toggled",
+        G_CALLBACK(sh_help_proc), sh_shell);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 2);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 4, 0, 1,
@@ -330,8 +330,8 @@ GTKtoolbar::PopDownShellDefs()
     SetLoc(ntb_shell, sh_shell);
 
     GRX->Deselect(tb_shell);
-    gtk_signal_disconnect_by_func(GTK_OBJECT(sh_shell),
-        GTK_SIGNAL_FUNC(sh_cancel_proc), sh_shell);
+    g_signal_handlers_disconnect_by_func(G_OBJECT(sh_shell),
+        (gpointer)sh_cancel_proc, sh_shell);
 
     for (int i = 0; KW.shell(i)->word; i++) {
         xKWent *ent = static_cast<xKWent*>(KW.shell(i));
@@ -401,12 +401,12 @@ namespace {
             if (isset) {
                 s = get_sourcepath();
                 gtk_entry_set_text(GTK_ENTRY(ent->entry), s ? s : "");
-                gtk_entry_set_editable(GTK_ENTRY(ent->entry), false);
+                // gtk_editable_set_editable(GTK_EDITABLE(ent->entry), false);
                 gtk_widget_set_sensitive(ent->entry, false);
                 delete [] s;
             }
             else {
-                gtk_entry_set_editable(GTK_ENTRY(ent->entry), true);
+                // gtk_editable_set_editable(GTK_EDITABLE(ent->entry), true);
                 gtk_widget_set_sensitive(ent->entry, true);
             }
         }

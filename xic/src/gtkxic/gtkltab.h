@@ -103,7 +103,7 @@ private:
     GtkWidget *ltab_lsearch;
     GtkWidget *ltab_lsearchn;
 
-    GdkPixmap *ltab_pixmap;
+    cairo_surface_t *ltab_pixmap;
     int ltab_pmap_width;
     int ltab_pmap_height;
     bool ltab_pmap_dirty;

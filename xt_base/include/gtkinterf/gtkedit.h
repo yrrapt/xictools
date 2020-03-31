@@ -171,7 +171,7 @@ namespace gtkinterf {
         GtkWidget *ed_title;
         GtkWidget *ed_msg;
         GRfilePopup *ed_fsels[4];  // can have 4 up at once
-        GtkItemFactory *ed_item_factory;
+        GtkUIManager *ed_item_factory;
         const char *ed_string;
         char *ed_saved_as;
         char *ed_dropfile;

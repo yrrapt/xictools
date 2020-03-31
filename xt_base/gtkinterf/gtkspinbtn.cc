@@ -168,12 +168,12 @@ GTKspinBtn::init(double val, double minv, double maxv, int numd)
         sb_entry = gtk_entry_new();
         gtk_widget_show(sb_entry);
         gtk_widget_add_events(sb_entry, GDK_KEY_RELEASE_MASK);
-        gtk_signal_connect(GTK_OBJECT(sb_entry), "focus-out-event",
-            GTK_SIGNAL_FUNC(sb_focus_out_proc), this);
-        gtk_signal_connect(GTK_OBJECT(sb_entry), "key-press-event",
-            GTK_SIGNAL_FUNC(sb_key_press_proc), this);
-        gtk_signal_connect(GTK_OBJECT(sb_entry), "key-release-event",
-            GTK_SIGNAL_FUNC(sb_key_release_proc), this);
+        g_signal_connect(G_OBJECT(sb_entry), "focus-out-event",
+            G_CALLBACK(sb_focus_out_proc), this);
+        g_signal_connect(G_OBJECT(sb_entry), "key-press-event",
+            G_CALLBACK(sb_key_press_proc), this);
+        g_signal_connect(G_OBJECT(sb_entry), "key-release-event",
+            G_CALLBACK(sb_key_release_proc), this);
         gtk_box_pack_start(GTK_BOX(sb_cont), sb_entry, true, true, 0);
 
         char buf[64];
@@ -185,26 +185,26 @@ GTKspinBtn::init(double val, double minv, double maxv, int numd)
         sb_up = new_pixmap_button(uparr_xpm, 0, false);  
         gtk_widget_set_name(sb_up, "up");
         gtk_widget_show(sb_up);
-        gtk_signal_connect(GTK_OBJECT(sb_up), "button-press-event",
-            GTK_SIGNAL_FUNC(sb_btndn_proc), this);
-        gtk_signal_connect(GTK_OBJECT(sb_up), "button-release-event",
-            GTK_SIGNAL_FUNC(sb_btnup_proc), this);
+        g_signal_connect(G_OBJECT(sb_up), "button-press-event",
+            G_CALLBACK(sb_btndn_proc), this);
+        g_signal_connect(G_OBJECT(sb_up), "button-release-event",
+            G_CALLBACK(sb_btnup_proc), this);
         gtk_box_pack_start(GTK_BOX(vbox), sb_up, true, true, 0);
 
         sb_dn = new_pixmap_button(dnarr_xpm, 0, false);
         gtk_widget_set_name(sb_dn, "dn");
         gtk_widget_show(sb_dn);
-        gtk_signal_connect(GTK_OBJECT(sb_dn), "button-press-event",
-            GTK_SIGNAL_FUNC(sb_btndn_proc), this);
-        gtk_signal_connect(GTK_OBJECT(sb_dn), "button-release-event",
-            GTK_SIGNAL_FUNC(sb_btnup_proc), this);
+        g_signal_connect(G_OBJECT(sb_dn), "button-press-event",
+            G_CALLBACK(sb_btndn_proc), this);
+        g_signal_connect(G_OBJECT(sb_dn), "button-release-event",
+            G_CALLBACK(sb_btnup_proc), this);
         gtk_box_pack_start(GTK_BOX(vbox), sb_dn, true, true, 0);
 
         gtk_box_pack_start(GTK_BOX(sb_cont), vbox, false, false, 0);
         set_value(sb_value);
         return (sb_cont);
     }
-    GtkObject *adj = gtk_adjustment_new(val, minv, maxv, del, pgsz, 0);
+    GtkAdjustment *adj = gtk_adjustment_new(val, minv, maxv, del, pgsz, 0);
     sb_widget = gtk_spin_button_new(GTK_ADJUSTMENT(adj), climb_rate, numd);
     gtk_widget_show(sb_widget);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(sb_widget), true);
@@ -226,23 +226,24 @@ GTKspinBtn::width_for_string(const char *str)
 // Set up a text-changed handler.
 //
 void
-GTKspinBtn::connect_changed(GtkSignalFunc func, void *arg, const char *id)
+// GTKspinBtn::connect_changed( func, void *arg, const char *id)
+GTKspinBtn::connect_changed(void *arg, const char *id)
 {
     if (sb_mode != sbModePass) {
         if (id)
             gtk_widget_set_name(sb_entry, id);
         sb_arg = arg;
-        sb_func = (SbSignalFunc)func;
+        // sb_func = (SbSignalFunc)func;
     }
     else {
         if (id)
             gtk_widget_set_name(sb_widget, id);
         sb_arg = arg;
-        sb_func = (SbSignalFunc)func;
+        // sb_func = (SbSignalFunc)func;
         GtkAdjustment *adj = gtk_spin_button_get_adjustment(
             GTK_SPIN_BUTTON(sb_widget));
-        gtk_signal_connect(GTK_OBJECT(adj), "value-changed",
-            GTK_SIGNAL_FUNC(sb_val_changed), this);
+        g_signal_connect(G_OBJECT(adj), "value-changed",
+            G_CALLBACK(sb_val_changed), this);
     }
 }
 
@@ -259,8 +260,8 @@ GTKspinBtn::set_min(double min)
     else {
         GtkAdjustment *adj =
             gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(sb_widget));
-        if (adj->lower != min && min < adj->upper) {
-            adj->lower = min;
+        if (gtk_adjustment_get_lower(adj) != min && min < gtk_adjustment_get_upper(adj)) {
+            gtk_adjustment_set_lower(adj, min);
             set_value(atof(gtk_entry_get_text(GTK_ENTRY(sb_widget))));
         }
     }
@@ -279,8 +280,8 @@ GTKspinBtn::set_max(double max)
     else {
         GtkAdjustment *adj =
             gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(sb_widget));
-        if (adj->upper != max && max > adj->lower) {
-            adj->upper = max;
+        if (gtk_adjustment_get_upper(adj) != max && max > gtk_adjustment_get_lower(adj)) {
+            gtk_adjustment_set_upper(adj, max);
             set_value(atof(gtk_entry_get_text(GTK_ENTRY(sb_widget))));
         }
     }
@@ -349,10 +350,10 @@ GTKspinBtn::set_wrap(bool wrap)
 void
 GTKspinBtn::set_editable(bool ed)
 {
-    if (sb_mode != sbModePass)
-        gtk_entry_set_editable(GTK_ENTRY(sb_entry), ed);
-    else
-        gtk_entry_set_editable(GTK_ENTRY(sb_widget), ed);
+    // if (sb_mode != sbModePass)
+    //     gtk_editable_set_editable(sb_entry) = ed;
+    // else
+    //     gtk_editable_set_editable(sb_widget) = ed;
 }
 
 
@@ -363,11 +364,11 @@ GTKspinBtn::set_sensitive(bool sens, bool clear)
         if (!sens) {
             // May not get up event, so stop timers.
             if (sb_dly_timer) {
-                gtk_timeout_remove(sb_dly_timer);
+                g_source_remove(sb_dly_timer);
                 sb_dly_timer = 0;
             }
             if (sb_timer) {
-                gtk_timeout_remove(sb_timer);
+                g_source_remove(sb_timer);
                 sb_timer = 0;
             }
         }
@@ -464,11 +465,11 @@ GTKspinBtn::set_value(double val)
     else {
         const char *t = gtk_entry_get_text(GTK_ENTRY(sb_widget));
         char buf[64];
-        printnum(buf, GTK_SPIN_BUTTON(sb_widget)->digits, val);
+        printnum(buf, gtk_spin_button_get_digits(GTK_SPIN_BUTTON(sb_widget)), val);
         if (strcmp(t, buf)) {
             GtkAdjustment *adj =
                 gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(sb_widget));
-            if (adj->value != val)
+            if (gtk_adjustment_get_value(adj) != val)
                 gtk_spin_button_set_value(GTK_SPIN_BUTTON(sb_widget), val);
             else {
                 gtk_entry_set_text(GTK_ENTRY(sb_widget), buf);
@@ -499,12 +500,12 @@ GTKspinBtn::is_valid(const char *str, double *pval)
         return (false);
     }
     else {
-        GtkAdjustment *adj = GTK_SPIN_BUTTON(sb_widget)->adjustment;
+        GtkAdjustment *adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(sb_widget));
         if (!adj)
             return (false);
         double val;
         if (sscanf(str, "%lf", &val) == 1 &&
-                val >= adj->lower && val <= adj->upper) {
+                val >= gtk_adjustment_get_lower(adj) && val <= gtk_adjustment_get_upper(adj)) {
             if (pval)
                 *pval = val;
             return (true);
@@ -567,7 +568,7 @@ GTKspinBtn::sb_timeout_proc(void *arg)
     GTKspinBtn *sb = (GTKspinBtn*)arg;
     if (sb->sb_dly_timer) {
         sb->sb_dly_timer = 0;
-        sb->sb_timer = gtk_timeout_add(SB_TIME_TICK, sb_timeout_proc, arg);
+        sb->sb_timer = g_timeout_add(SB_TIME_TICK, sb_timeout_proc, arg);
         sb->sb_timer_calls = 0;
         return (0);
     }
@@ -597,7 +598,7 @@ GTKspinBtn::sb_btndn_proc(GtkWidget *widget, GdkEventButton *event, void *arg)
     if (!strcmp(name, "up")) {
         if (!sb->sb_dly_timer)
             sb->sb_dly_timer =
-                gtk_timeout_add(SB_TIME_DLY, sb_timeout_proc, arg);
+                g_timeout_add(SB_TIME_DLY, sb_timeout_proc, arg);
         if (event->button == 1)
             sb->sb_incr = sb->sb_del;
         else if (event->button == 2)
@@ -610,7 +611,7 @@ GTKspinBtn::sb_btndn_proc(GtkWidget *widget, GdkEventButton *event, void *arg)
     else {
         if (!sb->sb_dly_timer)
             sb->sb_dly_timer =
-                gtk_timeout_add(SB_TIME_DLY, sb_timeout_proc, arg);
+                g_timeout_add(SB_TIME_DLY, sb_timeout_proc, arg);
         if (event->button == 1)
             sb->sb_incr = -sb->sb_del;
         else if (event->button == 2)
@@ -629,11 +630,11 @@ GTKspinBtn::sb_btnup_proc(GtkWidget*, GdkEventButton*, void *arg)
 {
     GTKspinBtn *sb = (GTKspinBtn*)arg;
     if (sb->sb_dly_timer) {
-        gtk_timeout_remove(sb->sb_dly_timer);
+        g_source_remove(sb->sb_dly_timer);
         sb->sb_dly_timer = 0;
     }
     if (sb->sb_timer) {
-        gtk_timeout_remove(sb->sb_timer);
+        g_source_remove(sb->sb_timer);
         sb->sb_timer = 0;
     }
     return (1);
@@ -648,90 +649,90 @@ GTKspinBtn::sb_key_press_proc(GtkWidget *widget, GdkEventKey *event, void *arg)
 
     bool key_repeat = (event->time == sb->sb_ev_time);
 
-    if (key == GDK_Up || key == GDK_Down ||
-            key == GDK_Page_Up || key == GDK_Page_Down)
-        sb->set_value(atof(gtk_entry_get_text(GTK_ENTRY(sb->sb_entry))));
+    // if (key == GDK_KEY_Up || key == GDK_KEY_Down ||
+    //         key == GDK_Page_Up || key == GDK_Page_Down)
+    //     sb->set_value(atof(gtk_entry_get_text(GTK_ENTRY(sb->sb_entry))));
 
-    switch (key) {
-    case GDK_Up:
-        if (GTK_WIDGET_HAS_FOCUS(widget)) {
-            gtk_signal_emit_stop_by_name(GTK_OBJECT(widget),
-                "key_press_event");
-            if (!key_repeat)
-                sb->sb_incr = sb->sb_del;
-            if (sb->sb_wrap && sb->sb_value == sb->sb_maxv)
-                sb->set_value(sb->sb_minv);
-            else
-                sb->set_value(sb->sb_value + sb->sb_incr);
-            if (key_repeat) {
-                if (sb->sb_rate > 0.0 && sb->sb_incr < sb->sb_pgsize) {
-                    if (sb->sb_timer_calls < 5)
-                        sb->sb_timer_calls++;
-                    else {
-                        sb->sb_timer_calls = 0;
-                        sb->sb_incr += sb->sb_rate;
-                    }
-                }
-            }
-            return (1);
-        }
-        return (0);
+    // switch (key) {
+    // case GDK_KEY_Up:
+    //     if (gtk_widget_has_focus(widget)) {
+    //         g_signal_stop_emission_by_name(G_OBJECT(widget),
+    //             "key_press_event");
+    //         if (!key_repeat)
+    //             sb->sb_incr = sb->sb_del;
+    //         if (sb->sb_wrap && sb->sb_value == sb->sb_maxv)
+    //             sb->set_value(sb->sb_minv);
+    //         else
+    //             sb->set_value(sb->sb_value + sb->sb_incr);
+    //         if (key_repeat) {
+    //             if (sb->sb_rate > 0.0 && sb->sb_incr < sb->sb_pgsize) {
+    //                 if (sb->sb_timer_calls < 5)
+    //                     sb->sb_timer_calls++;
+    //                 else {
+    //                     sb->sb_timer_calls = 0;
+    //                     sb->sb_incr += sb->sb_rate;
+    //                 }
+    //             }
+    //         }
+    //         return (1);
+    //     }
+    //     return (0);
 
-    case GDK_Down:
-        if (GTK_WIDGET_HAS_FOCUS (widget)) {
-            gtk_signal_emit_stop_by_name(GTK_OBJECT(widget),
-                "key_press_event");
-            if (!key_repeat)
-                sb->sb_incr = sb->sb_del;
-            if (sb->sb_wrap && sb->sb_value == sb->sb_minv)
-                sb->set_value(sb->sb_maxv);
-            else
-                sb->set_value(sb->sb_value - sb->sb_incr);
-            if (key_repeat) {
-                if (sb->sb_rate > 0.0 && sb->sb_incr < sb->sb_pgsize) {
-                    if (sb->sb_timer_calls < 5)
-                        sb->sb_timer_calls++;
-                    else {
-                        sb->sb_timer_calls = 0;
-                        sb->sb_incr += sb->sb_rate;
-                    }
-                }
-            }
-            return (1);
-        }
-        return (0);
+    // case GDK_KEY_Down:
+    //     if (gtk_widget_has_focus(widget)) {
+    //         g_signal_stop_emission_by_name(G_OBJECT(widget),
+    //             "key_press_event");
+    //         if (!key_repeat)
+    //             sb->sb_incr = sb->sb_del;
+    //         if (sb->sb_wrap && sb->sb_value == sb->sb_minv)
+    //             sb->set_value(sb->sb_maxv);
+    //         else
+    //             sb->set_value(sb->sb_value - sb->sb_incr);
+    //         if (key_repeat) {
+    //             if (sb->sb_rate > 0.0 && sb->sb_incr < sb->sb_pgsize) {
+    //                 if (sb->sb_timer_calls < 5)
+    //                     sb->sb_timer_calls++;
+    //                 else {
+    //                     sb->sb_timer_calls = 0;
+    //                     sb->sb_incr += sb->sb_rate;
+    //                 }
+    //             }
+    //         }
+    //         return (1);
+    //     }
+    //     return (0);
 
-    case GDK_Page_Up:
-        if (event->state & GDK_CONTROL_MASK) {
-            double diff = sb->sb_maxv - sb->sb_value;
-            if (diff > 1e-5)
-                sb->set_value(sb->sb_value + diff);
-        }
-        else {
-            if (sb->sb_wrap && sb->sb_value == sb->sb_maxv)
-                sb->set_value(sb->sb_minv);
-            else
-                sb->set_value(sb->sb_value + sb->sb_pgsize);
-        }
-        return (1);
+    // case GDK_Page_Up:
+    //     if (event->state & GDK_CONTROL_MASK) {
+    //         double diff = sb->sb_maxv - sb->sb_value;
+    //         if (diff > 1e-5)
+    //             sb->set_value(sb->sb_value + diff);
+    //     }
+    //     else {
+    //         if (sb->sb_wrap && sb->sb_value == sb->sb_maxv)
+    //             sb->set_value(sb->sb_minv);
+    //         else
+    //             sb->set_value(sb->sb_value + sb->sb_pgsize);
+    //     }
+    //     return (1);
 
-    case GDK_Page_Down:
-        if (event->state & GDK_CONTROL_MASK) {
-            double diff = sb->sb_value - sb->sb_minv;
-            if (diff > 1e-5)
-                sb->set_value(sb->sb_value - diff);
-        }
-        else {
-            if (sb->sb_wrap && sb->sb_value == sb->sb_minv)
-                sb->set_value(sb->sb_maxv);
-            else
-                sb->set_value(sb->sb_value - sb->sb_pgsize);
-        }
-        return (1);
+    // case GDK_Page_Down:
+    //     if (event->state & GDK_CONTROL_MASK) {
+    //         double diff = sb->sb_value - sb->sb_minv;
+    //         if (diff > 1e-5)
+    //             sb->set_value(sb->sb_value - diff);
+    //     }
+    //     else {
+    //         if (sb->sb_wrap && sb->sb_value == sb->sb_minv)
+    //             sb->set_value(sb->sb_maxv);
+    //         else
+    //             sb->set_value(sb->sb_value - sb->sb_pgsize);
+    //     }
+    //     return (1);
 
-    default:
-        break;
-    }
+    // default:
+    //     break;
+    // }
     return (0);
 }
 

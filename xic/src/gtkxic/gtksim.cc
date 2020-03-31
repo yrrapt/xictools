@@ -126,11 +126,11 @@ sSim::control(SpType status)
         break;
     }
     if (sp_shell) {
-        GtkWidget *label = (GtkWidget*)gtk_object_get_data(
-            GTK_OBJECT(sp_shell), "label");
+        GtkWidget *label = (GtkWidget*)g_object_get_data(
+            G_OBJECT(sp_shell), "label");
         if (label) {
             gtk_label_set_text(GTK_LABEL(label), msg);
-            if (!GTK_WIDGET_MAPPED(sp_shell)) {
+            if (!gtk_widget_get_mapped(sp_shell)) {
                 GRX->SetPopupLocation(GRloc(LW_LL), sp_shell,
                     mainBag()->Viewport());
                 gtk_widget_show(sp_shell);
@@ -141,7 +141,7 @@ sSim::control(SpType status)
     main_bag *w = mainBag();
     GtkWidget *popup = gtk_NewPopup(w, "SPICE Run", sp_destroy_proc, 0);
     gtk_window_set_resizable(GTK_WINDOW(popup), false);
-    gtk_widget_set_usize(popup, 200, -1);
+    gtk_widget_set_size_request(popup, 200, -1);
 
     // Prevent the pop-up from taking focus.  Otherwise, when it pops
     // down it will give focus back to the main window, causing iplots
@@ -158,7 +158,7 @@ sSim::control(SpType status)
     GtkWidget *frame = gtk_frame_new(0);
     gtk_widget_show(frame);
     gtk_container_add(GTK_CONTAINER(frame), label);
-    gtk_object_set_data(GTK_OBJECT(popup), "label", label);
+    g_object_set_data(G_OBJECT(popup), "label", label);
 
     gtk_table_attach(GTK_TABLE(form), frame, 0, 1, 0, 1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -176,15 +176,15 @@ sSim::control(SpType status)
     GtkWidget *button = gtk_button_new_with_label("Pause");
     gtk_widget_set_name(button, "Pause");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(sp_pause_proc), w);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(sp_pause_proc), w);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(sp_cancel_proc), w);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(sp_cancel_proc), w);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 2, 3,

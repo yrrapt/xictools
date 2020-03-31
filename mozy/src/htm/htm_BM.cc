@@ -194,7 +194,7 @@ htmImageManager::readBitmap(ImageBuffer *ib)
 
     // read bitmap data
     int cnt = 0;
-    unsigned char *ptr = img_data->data;
+    unsigned char *ptr = img_gtk_selection_data_get_data(data);
     int lim = bytes_per_line * 8;
     for (int bytes = 0; bytes < raster_length; bytes++) {
         if (!(bgets(line, MAX_LINE, ib)))

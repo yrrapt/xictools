@@ -558,7 +558,7 @@ GTKtoolbar::PopUpTBhelp(GRobject parent, GRobject call_btn, TBH_type type)
         return;
     sTBhelp *th = new sTBhelp(parent, call_btn);
     tb_kw_help[type] = th->show(type);;
-    gtk_object_set_data(GTK_OBJECT(tb_kw_help[type]), "tbtype",
+    g_object_set_data(G_OBJECT(tb_kw_help[type]), "tbtype",
         (void*)(long)type);
 }
 
@@ -568,9 +568,9 @@ GTKtoolbar::PopDownTBhelp(TBH_type type)
 {
     if (!tb_kw_help[type])
         return;
-    gtk_signal_disconnect_by_func(GTK_OBJECT(tb_kw_help[type]),
-        GTK_SIGNAL_FUNC(sTBhelp::th_cancel_proc), tb_kw_help[type]);
-    gdk_window_get_root_origin(tb_kw_help[type]->window,
+    g_signal_handlers_disconnect_by_func(G_OBJECT(tb_kw_help[type]),
+        (gpointer)sTBhelp::th_cancel_proc, tb_kw_help[type]);
+    gdk_window_get_root_origin(gtk_widget_get_window(tb_kw_help[type]),
         &tb_kw_help_pos[type].x, &tb_kw_help_pos[type].y);
     gtk_widget_destroy(GTK_WIDGET(tb_kw_help[type]));
     tb_kw_help[type] = 0;
@@ -584,8 +584,8 @@ sTBhelp::sTBhelp(GRobject parent, GRobject call_btn)
     th_lx = 0;
     th_ly = 0;
 
-    gtk_object_set_data_full(GTK_OBJECT(th_popup), "tbhelp", this, th_destroy);
-    gtk_object_set_data(GTK_OBJECT(th_popup), "caller", call_btn);
+    g_object_set_data_full(G_OBJECT(th_popup), "tbhelp", this, th_destroy);
+    g_object_set_data(G_OBJECT(th_popup), "caller", call_btn);
 
     GtkWidget *form = gtk_table_new(1, 4, false);
     gtk_widget_show(form);
@@ -641,14 +641,14 @@ sTBhelp::sTBhelp(GRobject parent, GRobject call_btn)
     gtk_widget_add_events(th_text,
         GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
 
-    gtk_signal_connect(GTK_OBJECT(th_text), "button_press_event",
-        GTK_SIGNAL_FUNC(th_btn_hdlr), this);
-    gtk_signal_connect(GTK_OBJECT(th_text), "button_release_event",
-        GTK_SIGNAL_FUNC(th_btn_hdlr), this);
+    g_signal_connect(G_OBJECT(th_text), "button_press_event",
+        G_CALLBACK(th_btn_hdlr), this);
+    g_signal_connect(G_OBJECT(th_text), "button_release_event",
+        G_CALLBACK(th_btn_hdlr), this);
 
     // This will provide an arrow cursor.
-    gtk_signal_connect_after(GTK_OBJECT(th_text), "realize",
-        GTK_SIGNAL_FUNC(text_realize_proc), 0);
+    g_signal_connect_after(G_OBJECT(th_text), "realize",
+        G_CALLBACK(text_realize_proc), 0);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 1, 2,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -669,8 +669,8 @@ sTBhelp::sTBhelp(GRobject parent, GRobject call_btn)
     //
     GtkWidget *button = gtk_button_new_with_label("Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(th_cancel_proc), th_popup);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(th_cancel_proc), th_popup);
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, 3, 4,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -685,7 +685,7 @@ sTBhelp::show(TBH_type type)
     gtk_window_set_transient_for(GTK_WINDOW(th_popup),
         GTK_WINDOW(TB()->context->Shell()));
     if (TB()->tb_kw_help_pos[type].x != 0 && TB()->tb_kw_help_pos[type].y != 0)
-        gtk_widget_set_uposition(th_popup, TB()->tb_kw_help_pos[type].x,
+        gtk_widget_set_size_request(th_popup, TB()->tb_kw_help_pos[type].x,
             TB()->tb_kw_help_pos[type].y);
     gtk_widget_show(th_popup);
     return (th_popup);
@@ -734,11 +734,11 @@ void
 sTBhelp::th_cancel_proc(GtkWidget*, void *client_data)
 {
     GtkWidget *popup = (GtkWidget*)client_data;
-    GtkWidget *caller = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(popup),
+    GtkWidget *caller = (GtkWidget*)g_object_get_data(G_OBJECT(popup),
         "caller");
     if (caller)
         GRX->Deselect(caller);
-    int type = (long)gtk_object_get_data(GTK_OBJECT(popup), "tbtype");
+    int type = (long)g_object_get_data(G_OBJECT(popup), "tbtype");
     TB()->PopDownTBhelp((TBH_type)type);
 }
 
@@ -832,11 +832,11 @@ ErrMsgBox::PopUpErr(const char *string)
     //
     GtkWidget *hbox;
     text_scrollable_new(&hbox, &er_text, FNT_PROP);
-    gtk_object_set_data(GTK_OBJECT(er_popup), "text", er_text);
+    g_object_set_data(G_OBJECT(er_popup), "text", er_text);
     text_set_chars(er_text, string);
     gtk_widget_add_events(er_text, GDK_BUTTON_PRESS_MASK);
-    gtk_signal_connect(GTK_OBJECT(er_text), "button_press_event",
-        GTK_SIGNAL_FUNC(er_btn_hdlr), 0);
+    g_signal_connect(G_OBJECT(er_text), "button_press_event",
+        G_CALLBACK(er_btn_hdlr), 0);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 0, 1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -849,16 +849,16 @@ ErrMsgBox::PopUpErr(const char *string)
     gtk_widget_show(hbox);
     GtkWidget *wrap = gtk_toggle_button_new_with_label("Wrap Lines");
     gtk_widget_show(wrap);
-    gtk_signal_connect(GTK_OBJECT(wrap), "clicked",
-        GTK_SIGNAL_FUNC(er_wrap_proc), 0);
+    g_signal_connect(G_OBJECT(wrap), "clicked",
+        G_CALLBACK(er_wrap_proc), 0);
     GRX->SetStatus(wrap, er_wrap);
     gtk_box_pack_start(GTK_BOX(hbox), wrap, false, false, 0);
 
     GtkWidget *cancel = gtk_button_new_with_label("Dismiss");
     gtk_widget_show(cancel);
-    gtk_signal_connect(GTK_OBJECT(cancel), "clicked",
-        GTK_SIGNAL_FUNC(er_cancel_proc), er_popup);
-    gtk_object_set_data(GTK_OBJECT(cancel), "shell", er_popup);
+    g_signal_connect(G_OBJECT(cancel), "clicked",
+        G_CALLBACK(er_cancel_proc), er_popup);
+    g_object_set_data(G_OBJECT(cancel), "shell", er_popup);
 #if GTK_CHECK_VERSION(2,4,0)
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(er_text),
         er_wrap ? GTK_WRAP_WORD_CHAR : GTK_WRAP_NONE);
@@ -872,7 +872,7 @@ ErrMsgBox::PopUpErr(const char *string)
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
     GRX->SetDoubleClickExit(er_popup, cancel);
-    GTK_WIDGET_SET_FLAGS(cancel, GTK_CAN_DEFAULT);
+    // GTK_WIDGET_SET_FLAGS(cancel, GTK_CAN_DEFAULT);
     gtk_window_set_default(GTK_WINDOW(er_popup), cancel);
 
     int mwid, mhei;
@@ -880,7 +880,7 @@ ErrMsgBox::PopUpErr(const char *string)
 
     int wid = 400;
     int hei = 120;
-    gtk_widget_set_usize(er_popup, wid, hei);
+    gtk_widget_set_size_request(er_popup, wid, hei);
     if (er_x == 0 && er_y == 0) {
         er_x = (mwid - wid)/2;
         er_y = 0;
@@ -912,7 +912,7 @@ ErrMsgBox::PopUpErr(const char *string)
     // MSW seems to need this before gtk_window_show.
     TB()->RevertFocus(er_popup);
 
-    gtk_widget_set_uposition(er_popup, er_x, er_y);
+    gtk_widget_set_size_request(er_popup, er_x, er_y);
     gtk_widget_show(er_popup);
     if (TB()->context && TB()->context->Window()) {
         gtk_window_set_transient_for(GTK_WINDOW(er_popup),
@@ -954,11 +954,11 @@ ErrMsgBox::stuff_msg(const char *string)
 
     text_insert_chars_at_point(er_text, 0, string, -1, -1);
     text_set_editable(er_text, false);
-    GtkAdjustment *adj = GTK_TEXT_VIEW(er_text)->vadjustment;
-    if (adj && adj->value < adj->upper - adj->page_size) {
-        adj->value = adj->upper - adj->page_size;
-        gtk_signal_emit_by_name(GTK_OBJECT(adj), "value_changed");
-    }
+    GtkAdjustment *adj = gtk_text_view_get_vadjustment(GTK_TEXT_VIEW(er_text));
+    // if (adj && gtk_adjustment_get_value(adj) < gtk_adjustment_get_upper(adj) - gtk_adjustment_set_page_size(adj)) {
+    //     gtk_adjustment_get_value(adj) = gtk_adjustment_get_upper(adj) - gtk_adjustment_set_page_size(adj);
+    //     gtk_signal_emit_by_name(G_OBJECT(adj), "value_changed");
+    // }
 }
 
 
@@ -967,10 +967,10 @@ void
 ErrMsgBox::er_cancel_proc(GtkWidget*, void*)
 {
     if (MB.er_popup) {
-        if (GTK_WIDGET_DRAWABLE(MB.er_popup))
-            gdk_window_get_root_origin(MB.er_popup->window,
-                &MB.er_x, &MB.er_y);
-        gtk_widget_destroy(MB.er_popup);
+        // if (gtk_widget_is_drawable(MB.er_popup))
+        //     gdk_window_get_root_origin(MB.gtk_widget_get_window(er_popup),
+        //         &MB.er_x, &MB.er_y);
+        // gtk_widget_destroy(MB.er_popup);
         MB.er_popup = 0;
     }
 }
@@ -1082,9 +1082,9 @@ GTKtoolbar::PopUpSpiceMessage(const char *string, int x, int y)
     //
     GtkWidget *cancel = gtk_button_new_with_label("Dismiss");
     gtk_widget_show(cancel);
-    gtk_signal_connect(GTK_OBJECT(cancel), "clicked",
-        GTK_SIGNAL_FUNC(ms_cancel_proc), popup);
-    gtk_object_set_data(GTK_OBJECT(cancel), "shell", popup);
+    g_signal_connect(G_OBJECT(cancel), "clicked",
+        G_CALLBACK(ms_cancel_proc), popup);
+    g_object_set_data(G_OBJECT(cancel), "shell", popup);
     gtk_table_attach(GTK_TABLE(form), cancel, 0, 1, 1, 2,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -1095,8 +1095,10 @@ GTKtoolbar::PopUpSpiceMessage(const char *string, int x, int y)
     int mwid, mhei;
     MonitorGeom(0, 0, 0, &mwid, &mhei);
     // make sure the label is fully on-screen
-    int wd = popup->requisition.width;
-    int ht = popup->requisition.height;
+    GtkRequisition requisition;
+    gtk_widget_get_requisition(GTK_WIDGET(popup), &requisition);
+    int wd = requisition.width;
+    int ht = requisition.height;
     if (x + wd > mwid)
         x = mwid - wd;
     if (y + ht > mhei)
@@ -1105,7 +1107,7 @@ GTKtoolbar::PopUpSpiceMessage(const char *string, int x, int y)
     // MSW seems to need this before gtk_window_show.
     RevertFocus(popup);
 
-    gtk_widget_set_uposition(popup, x, y);
+    gtk_widget_set_size_request(popup, x, y);
     gtk_widget_show(popup);
     if (TB()->context && TB()->context->Window()) {
         gtk_window_set_transient_for(GTK_WINDOW(popup),
@@ -1157,7 +1159,8 @@ GTKtoolbar::UpdateMain(ResUpdType update)
         int vx = ux + 14*fwid;
 
         int wid, hei;
-        gdk_window_get_size(context->Window(), &wid, &hei);
+        wid = gdk_window_get_width(context->Window());
+        hei = gdk_window_get_height(context->Window());
         context->SetColor(SpGrPkg::DefColors[0].pixel);
         context->Box(0, 0, wid, hei);
 
@@ -1277,7 +1280,7 @@ int
 GTKtoolbar::RegisterIdleProc(int(*proc)(void*), void *arg)
 {
     if (GRX)
-        return (gtk_idle_add(proc, arg));
+        return (g_idle_add(proc, arg));
     return (0);
 }
 
@@ -1286,7 +1289,7 @@ bool
 GTKtoolbar::RemoveIdleProc(int id)
 {
     if (GRX)
-        gtk_idle_remove(id);
+        g_source_remove(id);
     return (true);
 }
 
@@ -1365,10 +1368,10 @@ namespace {
         }
 #ifdef WITH_X11
         // This is probably crap.
-        if (GRX->ConsoleXid() && Sp.GetVar("wmfocusfix", VTYP_BOOL, 0)) {
-            XSetInputFocus(gdk_display, GRX->ConsoleXid(), RevertToPointerRoot,
-                CurrentTime);
-        }
+        // if (GRX->ConsoleXid() && Sp.GetVar("wmfocusfix", VTYP_BOOL, 0)) {
+        //     XSetInputFocus(gdk_display, GRX->ConsoleXid(), RevertToPointerRoot,
+        //         CurrentTime);
+        // }
 #endif
         return (false);
     }
@@ -1377,11 +1380,11 @@ namespace {
     //
     int revert_proc(GtkWidget *widget, GdkEvent*, void*)
     {
-        gtk_signal_disconnect_by_func(GTK_OBJECT(widget),
-            GTK_SIGNAL_FUNC(revert_proc), widget);
+        g_signal_handlers_disconnect_by_func(G_OBJECT(widget),
+            (gpointer)revert_proc, widget);
         // Use a timeout rather than an idle, KDE seems to need the delay.
-        gtk_timeout_add(800, set_accept_focus, widget);
-        // gtk_idle_add(set_accept_focus, widget);
+        g_timeout_add(800, set_accept_focus, widget);
+        // g_idle_add(set_accept_focus, widget);
         return (0);
     }
 }
@@ -1426,8 +1429,8 @@ GTKtoolbar::RevertFocus(GtkWidget *widget)
 
         // Start with sensitivity off, and use a timer to turn it back
         // on, presumably well after mapping.
-        gtk_signal_connect(GTK_OBJECT(widget), "expose_event",
-            GTK_SIGNAL_FUNC(revert_proc), widget);
+        g_signal_connect(G_OBJECT(widget), "expose_event",
+            G_CALLBACK(revert_proc), widget);
     }
     else if (RevertMode == RVTrhel6) {
         // RHEL 6 or older, uses Gnome.  The set_keep_above ends up
@@ -1446,8 +1449,8 @@ GTKtoolbar::RevertFocus(GtkWidget *widget)
             gtk_window_set_keep_above(GTK_WINDOW(widget), true);
         }
         gtk_window_set_focus_on_map(GTK_WINDOW(widget), false);
-        gtk_signal_connect(GTK_OBJECT(widget), "expose_event",
-            GTK_SIGNAL_FUNC(revert_proc), widget);
+        g_signal_connect(G_OBJECT(widget), "expose_event",
+            G_CALLBACK(revert_proc), widget);
     }
     else if (RevertMode == RVTmsw) {
         if (!Sp.GetVar("nototop", VTYP_BOOL, 0)) {
@@ -1456,8 +1459,8 @@ GTKtoolbar::RevertFocus(GtkWidget *widget)
         }
         gtk_window_set_focus_on_map(GTK_WINDOW(widget), false);
         gtk_window_set_accept_focus(GTK_WINDOW(widget), false);
-        gtk_signal_connect(GTK_OBJECT(widget), "expose_event",
-            GTK_SIGNAL_FUNC(revert_proc), widget);
+        g_signal_connect(G_OBJECT(widget), "expose_event",
+            G_CALLBACK(revert_proc), widget);
     }
 }
 
@@ -1534,10 +1537,10 @@ GTKtoolbar::SetActive(const char *str, bool state)
 void
 GTKtoolbar::SetLoc(const char *str, GtkWidget *shell)
 {
-    if (GTK_WIDGET_DRAWABLE(shell)) {
+    if (gtk_widget_is_drawable(shell)) {
         for (tbent *tb = entries; tb && tb->name; tb++) {
             if (tb->name == str) {
-                gdk_window_get_root_origin(shell->window, &tb->x, &tb->y);
+                gdk_window_get_root_origin(gtk_widget_get_window(shell), &tb->x, &tb->y);
                 int x, y;
                 MonitorGeom(shell, &x, &y);
                 tb->x -= x;
@@ -1577,9 +1580,9 @@ GTKtoolbar::ConfigString()
         lstr.add("tbsetup toolbar off");
     else {
         lstr.add("tbsetup");
-        if (toolbar->window) {
+        if (gtk_widget_get_window(toolbar)) {
             int x, y;
-            gdk_window_get_root_origin(toolbar->window, &x, &y);
+            gdk_window_get_root_origin(gtk_widget_get_window(toolbar), &x, &y);
             sprintf(buf, fmt, "toolbar", "on", x, y);
             lstr.add(buf);
         }
@@ -1728,7 +1731,7 @@ namespace {
 #define IFINIT(i, a, b, c, d, e) { \
     menu_items[i].path = (char*)a; \
     menu_items[i].accelerator = (char*)b; \
-    menu_items[i].callback = (GtkItemFactoryCallback)c; \
+    menu_items[i].callback = (GtkUIManagerCallback)c; \
     menu_items[i].callback_action = d; \
     menu_items[i].item_type = (char*)e; \
     i++; }
@@ -1736,7 +1739,7 @@ namespace {
 #define IFGET(zz) \
     gtk_item_factory_get_widget(GTK_ITEM_FACTORY(tb_item_factory), zz)
 
-#define GIFC(x) (GtkItemFactoryCallback)x
+#define GIFC(x) (GtkUIManagerCallback)x
 
 
 namespace {
@@ -1779,8 +1782,8 @@ namespace {
         if (w) {
             int fw, fh;
             w->TextExtent(0, &fw, &fh);
-            gtk_drawing_area_size(GTK_DRAWING_AREA(w->Viewport()),
-                40*fw + 6, 6*fh + 6);
+            // gtk_widget_set_size_request(w->Viewport(),
+            //     40*fw + 6, 6*fh + 6);
         }
     }
 
@@ -1840,469 +1843,442 @@ GTKtoolbar::tbpop(bool up)
 
     // This is needed to get the window to change size if the font size
     // is increased.
-    gtk_window_set_policy(GTK_WINDOW(w->Shell()), false, true, false);
+    // gtk_window_set_policy(GTK_WINDOW(w->Shell()), false, true, false);
 
-    gtk_signal_connect(GTK_OBJECT(toolbar), "destroy",
-        GTK_SIGNAL_FUNC(quit_proc), 0);
-    gtk_signal_connect(GTK_OBJECT(toolbar), "delete_event",
-        GTK_SIGNAL_FUNC(quit_proc), 0);
+    g_signal_connect(G_OBJECT(toolbar), "destroy",
+        G_CALLBACK(quit_proc), 0);
+    g_signal_connect(G_OBJECT(toolbar), "delete_event",
+        G_CALLBACK(quit_proc), 0);
 
     GtkWidget *form = gtk_table_new(1, 2, false);
     gtk_widget_show(form);
     gtk_container_add(GTK_CONTAINER(toolbar), form);
 
     int nitems = 0;
-    GtkItemFactoryEntry menu_items[30];
+    // GtkUIManagerEntry menu_items[30];
 
-    IFINIT(nitems, "/_File",                  0, 0, 0, "<Branch>")
-    IFINIT(nitems, "/File/_File Select", "<control>O", GIFC(open_proc), 0, 0);
-    IFINIT(nitems, "/File/_Source","<control>S", GIFC(source_proc), 0, 0);
-    IFINIT(nitems, "/File/_Load",  "<control>L", GIFC(load_proc), 0, 0);
-    IFINIT(nitems, "/File/Update _Tools",     0, GIFC(update_proc), 0, 0);
-    IFINIT(nitems, "/File/Update _WRspice",   0, GIFC(wrupdate_proc), 0, 0);
-    IFINIT(nitems, "/File/sep1",              0, 0, 0, "<Separator>");
-    if (CP.GetFlag(CP_NOTTYIO)) {
-        IFINIT(nitems, "/File/_Close",  "<control>Q", GIFC(quit_proc), 0, 0);
-    }
-    else {
-        IFINIT(nitems, "/File/_Quit",  "<control>Q", GIFC(quit_proc), 0, 0);
-    }
+    // IFINIT(nitems, "/_File",                  0, 0, 0, "<Branch>")
+    // IFINIT(nitems, "/File/_File Select", "<control>O", GIFC(open_proc), 0, 0);
+    // IFINIT(nitems, "/File/_Source","<control>S", GIFC(source_proc), 0, 0);
+    // IFINIT(nitems, "/File/_Load",  "<control>L", GIFC(load_proc), 0, 0);
+    // IFINIT(nitems, "/File/Update _Tools",     0, GIFC(update_proc), 0, 0);
+    // IFINIT(nitems, "/File/Update _WRspice",   0, GIFC(wrupdate_proc), 0, 0);
+    // IFINIT(nitems, "/File/sep1",              0, 0, 0, "<Separator>");
+    // if (CP.GetFlag(CP_NOTTYIO)) {
+    //     IFINIT(nitems, "/File/_Close",  "<control>Q", GIFC(quit_proc), 0, 0);
+    // }
+    // else {
+    //     IFINIT(nitems, "/File/_Quit",  "<control>Q", GIFC(quit_proc), 0, 0);
+    // }
 
-    IFINIT(nitems, "/_Edit",                  0, 0, 0, "<Branch>");
-    IFINIT(nitems, "/Edit/_Text Editor", "<control>T", GIFC(edit_proc), 0, 0);
-    if (!CP.GetFlag(CP_NOTTYIO)) {
-        IFINIT(nitems, "/Edit/_Xic",   "<control>X", GIFC(xic_proc), 0, 0);
-    }
+    // IFINIT(nitems, "/_Edit",                  0, 0, 0, "<Branch>");
+    // IFINIT(nitems, "/Edit/_Text Editor", "<control>T", GIFC(edit_proc), 0, 0);
+    // if (!CP.GetFlag(CP_NOTTYIO)) {
+    //     IFINIT(nitems, "/Edit/_Xic",   "<control>X", GIFC(xic_proc), 0, 0);
+    // }
 
-    // note that the tools order is alterable from tbsetup
-    IFINIT(nitems, "/_Tools", 0, 0, 0, "<Branch>");
-    int ix = 0;
-    for (tbent *tb = entries; tb && tb->name; tb++, ix++) {
-        if (tb->name == ntb_toolbar)
-            continue;
-        if (tb->name == ntb_bug)
-            continue;  // in WR button
-        else if (tb->name == ntb_circuits) {
-            IFINIT(nitems, "/Tools/_Circuits",  "<alt>C", GIFC(menu_proc), ix,
-                "<CheckItem>");
-        }
-        else if (tb->name == ntb_colors) {
-            IFINIT(nitems, "/Tools/C_olors",    "<alt>O", GIFC(menu_proc), ix,
-                "<CheckItem>");
-        }
-        else if (tb->name == ntb_commands) {
-            IFINIT(nitems, "/Tools/Co_mmands",  "<alt>M", GIFC(menu_proc), ix,
-                "<CheckItem>");
-        }
-        else if (tb->name == ntb_debug) {
-            IFINIT(nitems, "/Tools/_Debug",     "<alt>D", GIFC(menu_proc), ix,
-                "<CheckItem>");
-        }
-        else if (tb->name == ntb_files) {
-            IFINIT(nitems, "/Tools/_Files",     "<alt>Z", GIFC(menu_proc), ix,
-                "<CheckItem>");
-        }
-        else if (tb->name == ntb_font) {
-            IFINIT(nitems, "/Tools/Fo_nts",     "<alt>N", GIFC(menu_proc), ix,
-                "<CheckItem>");
-        }
-        else if (tb->name == ntb_plotdefs) {
-            IFINIT(nitems, "/Tools/P_lot Opts", "<alt>L", GIFC(menu_proc), ix,
-                "<CheckItem>");
-        }
-        else if (tb->name == ntb_plots) {
-            IFINIT(nitems, "/Tools/_Plots",     "<alt>P", GIFC(menu_proc), ix,
-                "<CheckItem>");
-        }
-        else if (tb->name == ntb_shell) {
-            IFINIT(nitems, "/Tools/_Shell",     "<alt>S", GIFC(menu_proc), ix,
-                "<CheckItem>");
-        }
-        else if (tb->name == ntb_simdefs) {
-            IFINIT(nitems, "/Tools/S_im Opts",  "<alt>I", GIFC(menu_proc), ix,
-                "<CheckItem>");
-        }
-        else if (tb->name == ntb_trace) {
-            IFINIT(nitems, "/Tools/_Trace",     "<alt>A", GIFC(menu_proc), ix,
-                "<CheckItem>");
-        }
-        else if (tb->name == ntb_variables) {
-            IFINIT(nitems, "/Tools/Va_riables", "<alt>R", GIFC(menu_proc), ix,
-                "<CheckItem>");
-        }
-        else if (tb->name == ntb_vectors) {
-            IFINIT(nitems, "/Tools/_Vectors",   "<alt>V", GIFC(menu_proc), ix,
-                "<CheckItem>");
-        }
-    }
+    // // note that the tools order is alterable from tbsetup
+    // IFINIT(nitems, "/_Tools", 0, 0, 0, "<Branch>");
+    // int ix = 0;
+    // for (tbent *tb = entries; tb && tb->name; tb++, ix++) {
+    //     if (tb->name == ntb_toolbar)
+    //         continue;
+    //     if (tb->name == ntb_bug)
+    //         continue;  // in WR button
+    //     else if (tb->name == ntb_circuits) {
+    //         IFINIT(nitems, "/Tools/_Circuits",  "<alt>C", GIFC(menu_proc), ix,
+    //             "<CheckItem>");
+    //     }
+    //     else if (tb->name == ntb_colors) {
+    //         IFINIT(nitems, "/Tools/C_olors",    "<alt>O", GIFC(menu_proc), ix,
+    //             "<CheckItem>");
+    //     }
+    //     else if (tb->name == ntb_commands) {
+    //         IFINIT(nitems, "/Tools/Co_mmands",  "<alt>M", GIFC(menu_proc), ix,
+    //             "<CheckItem>");
+    //     }
+    //     else if (tb->name == ntb_debug) {
+    //         IFINIT(nitems, "/Tools/_Debug",     "<alt>D", GIFC(menu_proc), ix,
+    //             "<CheckItem>");
+    //     }
+    //     else if (tb->name == ntb_files) {
+    //         IFINIT(nitems, "/Tools/_Files",     "<alt>Z", GIFC(menu_proc), ix,
+    //             "<CheckItem>");
+    //     }
+    //     else if (tb->name == ntb_font) {
+    //         IFINIT(nitems, "/Tools/Fo_nts",     "<alt>N", GIFC(menu_proc), ix,
+    //             "<CheckItem>");
+    //     }
+    //     else if (tb->name == ntb_plotdefs) {
+    //         IFINIT(nitems, "/Tools/P_lot Opts", "<alt>L", GIFC(menu_proc), ix,
+    //             "<CheckItem>");
+    //     }
+    //     else if (tb->name == ntb_plots) {
+    //         IFINIT(nitems, "/Tools/_Plots",     "<alt>P", GIFC(menu_proc), ix,
+    //             "<CheckItem>");
+    //     }
+    //     else if (tb->name == ntb_shell) {
+    //         IFINIT(nitems, "/Tools/_Shell",     "<alt>S", GIFC(menu_proc), ix,
+    //             "<CheckItem>");
+    //     }
+    //     else if (tb->name == ntb_simdefs) {
+    //         IFINIT(nitems, "/Tools/S_im Opts",  "<alt>I", GIFC(menu_proc), ix,
+    //             "<CheckItem>");
+    //     }
+    //     else if (tb->name == ntb_trace) {
+    //         IFINIT(nitems, "/Tools/_Trace",     "<alt>A", GIFC(menu_proc), ix,
+    //             "<CheckItem>");
+    //     }
+    //     else if (tb->name == ntb_variables) {
+    //         IFINIT(nitems, "/Tools/Va_riables", "<alt>R", GIFC(menu_proc), ix,
+    //             "<CheckItem>");
+    //     }
+    //     else if (tb->name == ntb_vectors) {
+    //         IFINIT(nitems, "/Tools/_Vectors",   "<alt>V", GIFC(menu_proc), ix,
+    //             "<CheckItem>");
+    //     }
+    // }
 
-    IFINIT(nitems, "/_Help",                  0, 0, 0, "<LastBranch>");
-    IFINIT(nitems, "/Help/_Help",  "<control>H", GIFC(help_proc), 0, 0);
-    IFINIT(nitems, "/Help/_About", "<control>A", GIFC(about_proc), 0, 0);
-    IFINIT(nitems, "/Help/_Notes", "<control>N", GIFC(notes_proc), 0, 0);
+    // IFINIT(nitems, "/_Help",                  0, 0, 0, "<LastBranch>");
+    // IFINIT(nitems, "/Help/_Help",  "<control>H", GIFC(help_proc), 0, 0);
+    // IFINIT(nitems, "/Help/_About", "<control>A", GIFC(about_proc), 0, 0);
+    // IFINIT(nitems, "/Help/_Notes", "<control>N", GIFC(notes_proc), 0, 0);
 
     GtkAccelGroup *accel_group = gtk_accel_group_new();
-    tb_item_factory =
-        gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<wrs>", accel_group);
-    for (int i = 0; i < nitems; i++)
-        gtk_item_factory_create_item(tb_item_factory, menu_items + i, 0, 2);
-    gtk_window_add_accel_group(GTK_WINDOW(toolbar), accel_group);
+    // tb_item_factory =
+    //     gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<wrs>", accel_group);
+    // for (int i = 0; i < nitems; i++)
+    //     gtk_item_factory_create_item(tb_item_factory, menu_items + i, 0, 2);
+    // gtk_window_add_accel_group(GTK_WINDOW(toolbar), accel_group);
 
-    GtkWidget *menubar = gtk_item_factory_get_widget(tb_item_factory, "<wrs>");
-    gtk_widget_show(menubar);
+    // GtkWidget *menubar = gtk_item_factory_get_widget(tb_item_factory, "<wrs>");
+    // gtk_widget_show(menubar);
 
-    for (tbent *tb = entries; tb && tb->name; tb++) {
-        if (tb->name == ntb_toolbar)
-            continue;
-        if (tb->name == ntb_bug)
-            continue;  // in WR button
-        else if (tb->name == ntb_circuits) {
-            GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
-                "/Tools/Circuits");
-            if (btn) {
-                gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-                    "List circuits", "");
-                GRX->SetStatus(btn, tb->active);
-            }
-        }
-        else if (tb->name == ntb_colors) {
-            GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
-                "/Tools/Colors");
-            if (btn) {
-                gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-                    "Set plot colors", "");
-                GRX->SetStatus(btn, tb->active);
-            }
-        }
-        else if (tb->name == ntb_commands) {
-            GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
-                "/Tools/Commands");
-            if (btn) {
-                gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-                    "Set command options", "");
-                GRX->SetStatus(btn, tb->active);
-            }
-        }
-        else if (tb->name == ntb_debug) {
-            GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
-                "/Tools/Debug");
-            if (btn) {
-                gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-                    "Set debugging options", "");
-                GRX->SetStatus(btn, tb->active);
-            }
-        }
-        else if (tb->name == ntb_files) {
-            GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
-                "/Tools/Files");
-            if (btn) {
-                gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-                    "List search path files", "");
-                GRX->SetStatus(btn, tb->active);
-            }
-        }
-        else if (tb->name == ntb_font) {
-            GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
-                "/Tools/Fonts");
-            if (btn) {
-                gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-                    "Set window fonts", "");
-                GRX->SetStatus(btn, tb->active);
-            }
-        }
-        else if (tb->name == ntb_plotdefs) {
-            GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
-                "/Tools/Plot Opts");
-            if (btn) {
-                gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-                    "Set plot options", "");
-                GRX->SetStatus(btn, tb->active);
-            }
-        }
-        else if (tb->name == ntb_plots) {
-            GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
-                "/Tools/Plots");
-            if (btn) {
-                gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-                    "List result plot data", "");
-                GRX->SetStatus(btn, tb->active);
-            }
-        }
-        else if (tb->name == ntb_shell) {
-            GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
-                "/Tools/Shell");
-            if (btn) {
-                gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-                    "Set shell options", "");
-                GRX->SetStatus(btn, tb->active);
-            }
-        }
-        else if (tb->name == ntb_simdefs) {
-            GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
-                "/Tools/Sim Opts");
-            if (btn) {
-                gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-                    "Set simulation options", "");
-                GRX->SetStatus(btn, tb->active);
-            }
-        }
-        else if (tb->name == ntb_trace) {
-            GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
-                "/Tools/Trace");
-            if (btn) {
-                gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-                    "List traces in effect", "");
-                GRX->SetStatus(btn, tb->active);
-            }
-        }
-        else if (tb->name == ntb_variables) {
-            GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
-                "/Tools/Variables");
-            if (btn) {
-                gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-                    "List set shell variables", "");
-                GRX->SetStatus(btn, tb->active);
-            }
-        }
-        else if (tb->name == ntb_vectors) {
-            GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
-                "/Tools/Vectors");
-            if (btn) {
-                gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-                    "List vectors in current plot", "");
-                GRX->SetStatus(btn, tb->active);
-            }
-        }
-    }
+    // for (tbent *tb = entries; tb && tb->name; tb++) {
+    //     if (tb->name == ntb_toolbar)
+    //         continue;
+    //     if (tb->name == ntb_bug)
+    //         continue;  // in WR button
+    //     else if (tb->name == ntb_circuits) {
+    //         GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
+    //             "/Tools/Circuits");
+    //         if (btn) {
+    //             gtk_widget_set_tooltip_text(btn, "List circuits");
+    //             GRX->SetStatus(btn, tb->active);
+    //         }
+    //     }
+    //     else if (tb->name == ntb_colors) {
+    //         GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
+    //             "/Tools/Colors");
+    //         if (btn) {
+    //             gtk_widget_set_tooltip_text(btn, "Set plot colors");
+    //             GRX->SetStatus(btn, tb->active);
+    //         }
+    //     }
+    //     else if (tb->name == ntb_commands) {
+    //         GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
+    //             "/Tools/Commands");
+    //         if (btn) {
+    //             gtk_widget_set_tooltip_text(btn, "Set command options");
+    //             GRX->SetStatus(btn, tb->active);
+    //         }
+    //     }
+    //     else if (tb->name == ntb_debug) {
+    //         GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
+    //             "/Tools/Debug");
+    //         if (btn) {
+    //             gtk_widget_set_tooltip_text(btn, "Set debugging options");
+    //             GRX->SetStatus(btn, tb->active);
+    //         }
+    //     }
+    //     else if (tb->name == ntb_files) {
+    //         GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
+    //             "/Tools/Files");
+    //         if (btn) {
+    //             gtk_widget_set_tooltip_text(btn, "List search path files");
+    //             GRX->SetStatus(btn, tb->active);
+    //         }
+    //     }
+    //     else if (tb->name == ntb_font) {
+    //         GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
+    //             "/Tools/Fonts");
+    //         if (btn) {
+    //             gtk_widget_set_tooltip_text(btn, "Set window fonts");
+    //             GRX->SetStatus(btn, tb->active);
+    //         }
+    //     }
+    //     else if (tb->name == ntb_plotdefs) {
+    //         GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
+    //             "/Tools/Plot Opts");
+    //         if (btn) {
+    //             gtk_widget_set_tooltip_text(btn, "Set plot options");
+    //             GRX->SetStatus(btn, tb->active);
+    //         }
+    //     }
+    //     else if (tb->name == ntb_plots) {
+    //         GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
+    //             "/Tools/Plots");
+    //         if (btn) {
+    //             gtk_widget_set_tooltip_text(btn, "List result plot data");
+    //             GRX->SetStatus(btn, tb->active);
+    //         }
+    //     }
+    //     else if (tb->name == ntb_shell) {
+    //         GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
+    //             "/Tools/Shell");
+    //         if (btn) {
+    //             gtk_widget_set_tooltip_text(btn, "Set shell options");
+    //             GRX->SetStatus(btn, tb->active);
+    //         }
+    //     }
+    //     else if (tb->name == ntb_simdefs) {
+    //         GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
+    //             "/Tools/Sim Opts");
+    //         if (btn) {
+    //             gtk_widget_set_tooltip_text(btn, "Set simulation options");
+    //             GRX->SetStatus(btn, tb->active);
+    //         }
+    //     }
+    //     else if (tb->name == ntb_trace) {
+    //         GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
+    //             "/Tools/Trace");
+    //         if (btn) {
+    //             gtk_widget_set_tooltip_text(btn, "List traces in effect");
+    //             GRX->SetStatus(btn, tb->active);
+    //         }
+    //     }
+    //     else if (tb->name == ntb_variables) {
+    //         GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
+    //             "/Tools/Variables");
+    //         if (btn) {
+    //             gtk_widget_set_tooltip_text(btn, "List set shell variables");
+    //             GRX->SetStatus(btn, tb->active);
+    //         }
+    //     }
+    //     else if (tb->name == ntb_vectors) {
+    //         GtkWidget *btn = gtk_item_factory_get_widget(tb_item_factory,
+    //             "/Tools/Vectors");
+    //         if (btn) {
+    //             gtk_widget_set_tooltip_text(btn, "List vectors in current plot");
+    //             GRX->SetStatus(btn, tb->active);
+    //         }
+    //     }
+    // }
 
-    {
-        // Add the rest of the tooltips.
-        GtkWidget *btn;
-        GtkItemFactory *tbif = tb_item_factory;
+    // {
+    //     // Add the rest of the tooltips.
+    //     GtkWidget *btn;
+    //     GtkUIManager *tbif = tb_item_factory;
 
-        btn = gtk_item_factory_get_widget(tbif, "/File/File Select");
-        if (btn) gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-            "Show File Selection panel", "");
-        btn = gtk_item_factory_get_widget(tbif, "/File/Source");
-        if (btn) gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-            "Source input file", "");
-        btn = gtk_item_factory_get_widget(tbif, "/File/Load");
-        if (btn) gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-            "Load plot data file", "");
-        btn = gtk_item_factory_get_widget(tbif, "/File/Update Tools");
-        if (btn) gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-            "Update tool window locations", "");
-        btn = gtk_item_factory_get_widget(tbif, "/File/Update WRspice");
-        if (btn) gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-            "Update WRspice", "");
-        if (CP.GetFlag(CP_NOTTYIO)) {
-            btn = gtk_item_factory_get_widget(tbif, "/File/Close");
-            if (btn) gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-                "Close WRspice", "");
-        }
-        else {
-            btn = gtk_item_factory_get_widget(tbif, "/File/Quit");
-            if (btn) gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-                "Quit WRspice", "");
-        }
-        btn = gtk_item_factory_get_widget(tbif, "/Edit/Text Editor");
-        if (btn) gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-            "Pop up text editor", "");
-        if (!CP.GetFlag(CP_NOTTYIO)) {
-            btn = gtk_item_factory_get_widget(tbif, "/Edit/Xic");
-            if (btn) gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-                "Start Xic", "");
-        }
-        btn = gtk_item_factory_get_widget(tbif, "/Help/Help");
-        if (btn) gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-            "Pop up Help window", "");
-        btn = gtk_item_factory_get_widget(tbif, "/Help/About");
-        if (btn) gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-            "Pop up About window", "");
-        btn = gtk_item_factory_get_widget(tbif, "/Help/Notes");
-        if (btn) gtk_tooltips_set_tip(gtk_tooltips_new(), btn,
-            "Show release notes", "");
-    }
+    //     btn = gtk_item_factory_get_widget(tbif, "/File/File Select");
+    //     if (btn) gtk_widget_set_tooltip_text(btn, "Show File Selection panel");
+    //     btn = gtk_item_factory_get_widget(tbif, "/File/Source");
+    //     if (btn) gtk_widget_set_tooltip_text(btn, "Source input file");
+    //     btn = gtk_item_factory_get_widget(tbif, "/File/Load");
+    //     if (btn) gtk_widget_set_tooltip_text(btn, "Load plot data file");
+    //     btn = gtk_item_factory_get_widget(tbif, "/File/Update Tools");
+    //     if (btn) gtk_widget_set_tooltip_text(btn, "Update tool window locations");
+    //     btn = gtk_item_factory_get_widget(tbif, "/File/Update WRspice");
+    //     if (btn) gtk_widget_set_tooltip_text(btn, "Update WRspice");
+    //     if (CP.GetFlag(CP_NOTTYIO)) {
+    //         btn = gtk_item_factory_get_widget(tbif, "/File/Close");
+    //         if (btn) gtk_widget_set_tooltip_text(btn, "Close WRspice");
+    //     }
+    //     else {
+    //         btn = gtk_item_factory_get_widget(tbif, "/File/Quit");
+    //         if (btn) gtk_widget_set_tooltip_text(btn, "Quit WRspice");
+    //     }
+    //     btn = gtk_item_factory_get_widget(tbif, "/Edit/Text Editor");
+    //     if (btn) gtk_widget_set_tooltip_text(btn, "Pop up text editor");
+    //     if (!CP.GetFlag(CP_NOTTYIO)) {
+    //         btn = gtk_item_factory_get_widget(tbif, "/Edit/Xic");
+    //         if (btn) gtk_widget_set_tooltip_text(btn, "Start Xic");
+    //     }
+    //     btn = gtk_item_factory_get_widget(tbif, "/Help/Help");
+    //     if (btn) gtk_widget_set_tooltip_text(btn, "Pop up Help window");
+    //     btn = gtk_item_factory_get_widget(tbif, "/Help/About");
+    //     if (btn) gtk_widget_set_tooltip_text(btn, "Pop up About window");
+    //     btn = gtk_item_factory_get_widget(tbif, "/Help/Notes");
+    //     if (btn) gtk_widget_set_tooltip_text(btn, "Show release notes");
+    // }
 
-    GtkWidget *hbox = gtk_hbox_new(false, 2);
-    gtk_widget_show(hbox);
+    // GtkWidget *hbox = gtk_hbox_new(false, 2);
+    // gtk_widget_show(hbox);
 
-    // the WR logo button
-    GtkWidget *pixbtn = gtk_button_new();
-    gtk_widget_show(pixbtn);
-    tb_bug = pixbtn;
-    gtk_signal_connect(GTK_OBJECT(pixbtn), "clicked",
-        GTK_SIGNAL_FUNC(wr_btn_hdlr), 0);
-    GtkStyle *style = gtk_widget_get_style(pixbtn);
-    GdkPixmap *pmask;
-    GdkPixmap *pixmap =
-        gdk_pixmap_colormap_create_from_xpm_d(0, GRX->Colormap(),
-            &pmask, &style->bg[GTK_STATE_NORMAL], (gchar **)tm30);
-    GtkWidget *pixwidg = gtk_pixmap_new(pixmap, pmask);
-    gtk_widget_show(pixwidg);
-    gtk_container_add(GTK_CONTAINER(pixbtn), pixwidg);
-    gtk_box_pack_start(GTK_BOX(hbox), pixbtn, false, false, 0);
-    gtk_tooltips_set_tip(gtk_tooltips_new(), pixbtn,
-        "Pop up email client", "");
+    // // the WR logo button
+    // GtkWidget *pixbtn = gtk_button_new();
+    // gtk_widget_show(pixbtn);
+    // tb_bug = pixbtn;
+    // g_signal_connect(G_OBJECT(pixbtn), "clicked",
+    //     G_CALLBACK(wr_btn_hdlr), 0);
+    // GtkStyle *style = gtk_widget_get_style(pixbtn);
+    // cairo_surface_t *pmask;
+    // cairo_surface_t *pixmap =
+    //     gdk_pixmap_colormap_create_from_xpm_d(0, GRX->Colormap(),
+    //         &pmask, &style->bg[GTK_STATE_NORMAL], (gchar **)tm30);
+    // GtkWidget *pixwidg = gtk_pixmap_new(pixmap, pmask);
+    // gtk_widget_show(pixwidg);
+    // gtk_container_add(GTK_CONTAINER(pixbtn), pixwidg);
+    // gtk_box_pack_start(GTK_BOX(hbox), pixbtn, false, false, 0);
+    // gtk_widget_set_tooltip_text(pixbtn, "Pop up email client");
 
-    // the Run button
-    pixbtn = gtk_button_new();
-    gtk_widget_show(pixbtn);
-    gtk_signal_connect(GTK_OBJECT(pixbtn), "clicked",
-        GTK_SIGNAL_FUNC(rs_btn_hdlr), 0);
-    style = gtk_widget_get_style(pixbtn);
-    pixmap = gdk_pixmap_colormap_create_from_xpm_d(0, GRX->Colormap(),
-            &pmask, &style->bg[GTK_STATE_NORMAL], (gchar **)run_xpm);
-    pixwidg = gtk_pixmap_new(pixmap, pmask);
-    gtk_widget_show(pixwidg);
-    gtk_container_add(GTK_CONTAINER(pixbtn), pixwidg);
-    gtk_box_pack_start(GTK_BOX(hbox), pixbtn, false, false, 0);
-    gtk_tooltips_set_tip(gtk_tooltips_new(), pixbtn,
-        "Run current circuit", "");
+    // // the Run button
+    // pixbtn = gtk_button_new();
+    // gtk_widget_show(pixbtn);
+    // g_signal_connect(G_OBJECT(pixbtn), "clicked",
+    //     G_CALLBACK(rs_btn_hdlr), 0);
+    // style = gtk_widget_get_style(pixbtn);
+    // pixmap = gdk_pixmap_colormap_create_from_xpm_d(0, GRX->Colormap(),
+    //         &pmask, &style->bg[GTK_STATE_NORMAL], (gchar **)run_xpm);
+    // pixwidg = gtk_pixmap_new(pixmap, pmask);
+    // gtk_widget_show(pixwidg);
+    // gtk_container_add(GTK_CONTAINER(pixbtn), pixwidg);
+    // gtk_box_pack_start(GTK_BOX(hbox), pixbtn, false, false, 0);
+    // gtk_widget_set_tooltip_text(pixbtn, "Run current circuit");
 
-    // the Stop button
-    pixbtn = gtk_button_new();
-    gtk_widget_show(pixbtn);
-    gtk_signal_connect(GTK_OBJECT(pixbtn), "clicked",
-        GTK_SIGNAL_FUNC(rs_btn_hdlr), (void*)1);
-    style = gtk_widget_get_style(pixbtn);
-    pixmap = gdk_pixmap_colormap_create_from_xpm_d(0, GRX->Colormap(),
-            &pmask, &style->bg[GTK_STATE_NORMAL], (gchar **)stop_xpm);
-    pixwidg = gtk_pixmap_new(pixmap, pmask);
-    gtk_widget_show(pixwidg);
-    gtk_container_add(GTK_CONTAINER(pixbtn), pixwidg);
-    gtk_box_pack_start(GTK_BOX(hbox), pixbtn, false, false, 0);
-    gtk_tooltips_set_tip(gtk_tooltips_new(), pixbtn,
-        "Pause current analysis", "");
+    // // the Stop button
+    // pixbtn = gtk_button_new();
+    // gtk_widget_show(pixbtn);
+    // g_signal_connect(G_OBJECT(pixbtn), "clicked",
+    //     G_CALLBACK(rs_btn_hdlr), (void*)1);
+    // style = gtk_widget_get_style(pixbtn);
+    // pixmap = gdk_pixmap_colormap_create_from_xpm_d(0, GRX->Colormap(),
+    //         &pmask, &style->bg[GTK_STATE_NORMAL], (gchar **)stop_xpm);
+    // pixwidg = gtk_pixmap_new(pixmap, pmask);
+    // gtk_widget_show(pixwidg);
+    // gtk_container_add(GTK_CONTAINER(pixbtn), pixwidg);
+    // gtk_box_pack_start(GTK_BOX(hbox), pixbtn, false, false, 0);
+    // gtk_tooltips_set_tip(gtk_tooltips_new(), pixbtn,
+    //     "Pause current analysis", "");
 
-    gtk_box_pack_start(GTK_BOX(hbox), menubar, true, true, 0);
+    // gtk_box_pack_start(GTK_BOX(hbox), menubar, true, true, 0);
 
-    gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 0, 1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
+    // gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 0, 1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
 
-    w->SetViewport(gtk_drawing_area_new());
-    gtk_widget_show(w->Viewport());
+    // w->SetViewport(gtk_drawing_area_new());
+    // gtk_widget_show(w->Viewport());
 
-    GTKfont::setupFont(w->Viewport(), FNT_SCREEN, true);
+    // GTKfont::setupFont(w->Viewport(), FNT_SCREEN, true);
 
-    int wid, hei;
-    w->TextExtent(0, &wid, &hei);
-    gtk_drawing_area_size(GTK_DRAWING_AREA(w->Viewport()),
-        40*wid + 6, 6*hei + 6);
+    // int wid, hei;
+    // w->TextExtent(0, &wid, &hei);
+    // gtk_widget_set_size_request(w->Viewport(),
+    //     40*wid + 6, 6*hei + 6);
 
-    GtkWidget *frame = gtk_frame_new(0);
-    gtk_widget_show(frame);
-    gtk_container_add(GTK_CONTAINER(frame), w->Viewport());
+    // GtkWidget *frame = gtk_frame_new(0);
+    // gtk_widget_show(frame);
+    // gtk_container_add(GTK_CONTAINER(frame), w->Viewport());
 
-    // drop handler setup
-    gtk_drag_dest_set(frame,
-        (GtkDestDefaults)(GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_DROP),
-        target_table, n_targets, GDK_ACTION_COPY);
-    gtk_signal_connect(GTK_OBJECT(frame), "drag_data_received",
-        GTK_SIGNAL_FUNC(drag_data_received), 0);
-    gtk_signal_connect(GTK_OBJECT(frame), "drag_leave",
-        GTK_SIGNAL_FUNC(target_drag_leave), 0);
-    gtk_signal_connect(GTK_OBJECT(frame), "drag-motion",
-        GTK_SIGNAL_FUNC(target_drag_motion), 0);
+    // // drop handler setup
+    // gtk_drag_dest_set(frame,
+    //     (GtkDestDefaults)(GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_DROP),
+    //     target_table, n_targets, GDK_ACTION_COPY);
+    // g_signal_connect(G_OBJECT(frame), "drag_data_received",
+    //     G_CALLBACK(drag_data_received), 0);
+    // g_signal_connect(G_OBJECT(frame), "drag_leave",
+    //     G_CALLBACK(target_drag_leave), 0);
+    // g_signal_connect(G_OBJECT(frame), "drag-motion",
+    //     G_CALLBACK(target_drag_motion), 0);
 
-    gtk_signal_connect(GTK_OBJECT(w->Viewport()), "expose_event",
-        GTK_SIGNAL_FUNC(expose_hdlr), w);
-    gtk_signal_connect(GTK_OBJECT(w->Viewport()), "style_set",
-        GTK_SIGNAL_FUNC(font_change_hdlr), 0);
+    // g_signal_connect(G_OBJECT(w->Viewport()), "expose_event",
+    //     G_CALLBACK(expose_hdlr), w);
+    // g_signal_connect(G_OBJECT(w->Viewport()), "style_set",
+    //     G_CALLBACK(font_change_hdlr), 0);
 
-    gtk_table_attach(GTK_TABLE(form), frame, 0, 1, 1, 2,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL),
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL), 2, 2);
+    // gtk_table_attach(GTK_TABLE(form), frame, 0, 1, 1, 2,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL),
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL), 2, 2);
 
-    for (tbent *tb = entries; tb && tb->name; tb++) {
-        if (tb->name == ntb_toolbar) {
-            int x = tb->x;
-            int y = tb->y;
-            FixLoc(&x, &y);
-            gtk_widget_set_uposition(toolbar, x, y);
-            continue;
-        }
-        if (tb->name == ntb_bug)
-            continue;  // in "WR" button
-        else if (tb->name == ntb_circuits)
-            tb_circuits = IFGET("/Tools/Circuits");
-        else if (tb->name == ntb_colors)
-            tb_colors = IFGET("/Tools/Colors");
-        else if (tb->name == ntb_commands)
-            tb_commands = IFGET("/Tools/Commands");
-        else if (tb->name == ntb_debug)
-            tb_debug = IFGET("/Tools/Debug");
-        else if (tb->name == ntb_files)
-            tb_files = IFGET("/Tools/Files");
-        else if (tb->name == ntb_font)
-            tb_font = IFGET("/Tools/Fonts");
-        else if (tb->name == ntb_plotdefs)
-            tb_plotdefs = IFGET("/Tools/Plot Opts");
-        else if (tb->name == ntb_plots)
-            tb_plots = IFGET("/Tools/Plots");
-        else if (tb->name == ntb_shell)
-            tb_shell = IFGET("/Tools/Shell");
-        else if (tb->name == ntb_simdefs)
-            tb_simdefs = IFGET("/Tools/Sim Opts");
-        else if (tb->name == ntb_trace)
-            tb_trace = IFGET("/Tools/Trace");
-        else if (tb->name == ntb_variables)
-            tb_variables = IFGET("/Tools/Variables");
-        else if (tb->name == ntb_vectors)
-            tb_vectors = IFGET("/Tools/Vectors");
-    }
+    // for (tbent *tb = entries; tb && tb->name; tb++) {
+    //     if (tb->name == ntb_toolbar) {
+    //         int x = tb->x;
+    //         int y = tb->y;
+    //         FixLoc(&x, &y);
+    //         gtk_widget_set_size_request(toolbar, x, y);
+    //         continue;
+    //     }
+    //     if (tb->name == ntb_bug)
+    //         continue;  // in "WR" button
+    //     else if (tb->name == ntb_circuits)
+    //         tb_circuits = IFGET("/Tools/Circuits");
+    //     else if (tb->name == ntb_colors)
+    //         tb_colors = IFGET("/Tools/Colors");
+    //     else if (tb->name == ntb_commands)
+    //         tb_commands = IFGET("/Tools/Commands");
+    //     else if (tb->name == ntb_debug)
+    //         tb_debug = IFGET("/Tools/Debug");
+    //     else if (tb->name == ntb_files)
+    //         tb_files = IFGET("/Tools/Files");
+    //     else if (tb->name == ntb_font)
+    //         tb_font = IFGET("/Tools/Fonts");
+    //     else if (tb->name == ntb_plotdefs)
+    //         tb_plotdefs = IFGET("/Tools/Plot Opts");
+    //     else if (tb->name == ntb_plots)
+    //         tb_plots = IFGET("/Tools/Plots");
+    //     else if (tb->name == ntb_shell)
+    //         tb_shell = IFGET("/Tools/Shell");
+    //     else if (tb->name == ntb_simdefs)
+    //         tb_simdefs = IFGET("/Tools/Sim Opts");
+    //     else if (tb->name == ntb_trace)
+    //         tb_trace = IFGET("/Tools/Trace");
+    //     else if (tb->name == ntb_variables)
+    //         tb_variables = IFGET("/Tools/Variables");
+    //     else if (tb->name == ntb_vectors)
+    //         tb_vectors = IFGET("/Tools/Vectors");
+    // }
 
-    // MSW seems to need this before gtk_window_show.
-    RevertFocus(toolbar);
+    // // MSW seems to need this before gtk_window_show.
+    // RevertFocus(toolbar);
 
-    gtk_widget_show(toolbar);
-    w->SetWindow(w->Viewport()->window);
-    char tbuf[28];
-    sprintf(tbuf, "WRspice-%s", Global.Version());
-    w->Title(tbuf, "WRspice");
+    // gtk_widget_show(toolbar);
+    // w->SetWindow(w->Viewport()->window);
+    // char tbuf[28];
+    // sprintf(tbuf, "WRspice-%s", Global.Version());
+    // w->Title(tbuf, "WRspice");
 
-    // create GC's, these will also be used in the plots
-    //
-    if (!w->GC()) {
-        GdkGCValues gcvalues;
-        gcvalues.cap_style = GDK_CAP_NOT_LAST;
-        w->Gbag()->set_gc(gdk_gc_new_with_values(w->Window(), &gcvalues,
-            GDK_GC_CAP_STYLE));
-        gcvalues.function = GDK_XOR;
-        w->Gbag()->set_xorgc(gdk_gc_new_with_values(w->Window(), &gcvalues,
-            (GdkGCValuesMask)(GDK_GC_FUNCTION | GDK_GC_CAP_STYLE)));
+    // // create GC's, these will also be used in the plots
+    // //
+    // if (!w->GC()) {
+    //     GdkGCValues gcvalues;
+    //     gcvalues.cap_style = GDK_CAP_NOT_LAST;
+    //     w->Gbag()->set_gc(gdk_gc_new_with_values(w->Window(), &gcvalues,
+    //         GDK_GC_CAP_STYLE));
+    //     gcvalues.function = GDK_XOR;
+    //     w->Gbag()->set_xorgc(gdk_gc_new_with_values(w->Window(), &gcvalues,
+    //         (GdkGCValuesMask)(GDK_GC_FUNCTION | GDK_GC_CAP_STYLE)));
 
-        // set up initial xor color
-        // offset 1 is assumed to be the highlighting color
-        GdkColor clr;
-        clr.pixel = SpGrPkg::DefColors[0].pixel ^ SpGrPkg::DefColors[1].pixel;
-        gtk_QueryColor(&clr);
-        gdk_gc_set_foreground(w->XorGC(), &clr);
-    }
+    //     // set up initial xor color
+    //     // offset 1 is assumed to be the highlighting color
+    //     GdkColor clr;
+    //     clr.pixel = SpGrPkg::DefColors[0].pixel ^ SpGrPkg::DefColors[1].pixel;
+    //     gtk_QueryColor(&clr);
+    //     gdk_gc_set_foreground(w->XorGC(), &clr);
+    // }
 
-    // drawing colors
-    const char *s = XRMgetFromDb("fgcolor1");
-    if (!s)
-        s = "sienna";
-    tb_clr_1 = GRX->NameColor(s);
-    s = XRMgetFromDb("fgcolor2");
-    if (!s)
-        s = "black";
-    tb_clr_2 = GRX->NameColor(s);
-    s = XRMgetFromDb("fgcolor3");
-    if (!s)
-        s = "red";
-    tb_clr_3 = GRX->NameColor(s);
-    s = XRMgetFromDb("fgcolor4");
-    if (!s)
-        s = "blue";
-    tb_clr_4 = GRX->NameColor(s);
+    // // drawing colors
+    // const char *s = XRMgetFromDb("fgcolor1");
+    // if (!s)
+    //     s = "sienna";
+    // tb_clr_1 = GRX->NameColor(s);
+    // s = XRMgetFromDb("fgcolor2");
+    // if (!s)
+    //     s = "black";
+    // tb_clr_2 = GRX->NameColor(s);
+    // s = XRMgetFromDb("fgcolor3");
+    // if (!s)
+    //     s = "red";
+    // tb_clr_3 = GRX->NameColor(s);
+    // s = XRMgetFromDb("fgcolor4");
+    // if (!s)
+    //     s = "blue";
+    // tb_clr_4 = GRX->NameColor(s);
 
-    w->SetWindowBackground(SpGrPkg::DefColors[0].pixel);
-    w->SetBackground(SpGrPkg::DefColors[0].pixel);
-    w->Clear();
-    gtk_timeout_add(2000, res_timeout, 0);
+    // w->SetWindowBackground(SpGrPkg::DefColors[0].pixel);
+    // w->SetBackground(SpGrPkg::DefColors[0].pixel);
+    // w->Clear();
+    // g_timeout_add(2000, res_timeout, 0);
 }
 
 
@@ -2315,13 +2291,13 @@ void
 GTKtoolbar::drag_data_received(GtkWidget*, GdkDragContext *context, gint, gint,
     GtkSelectionData *data, guint, guint time)
 {
-    if (data->length >= 0 && data->format == 8) {
-        char *src = (char*)data->data;
+    if (gtk_selection_data_get_length(data) >= 0 && gtk_selection_data_get_format(data) == 8) {
+        char *src = (char*)gtk_selection_data_get_data(data);
         delete [] TB()->tb_dropfile;
         TB()->tb_dropfile = 0;
         if (TB()->context->ActiveInput()) {
-            GtkWidget *entry = (GtkWidget*)gtk_object_get_data
-                (GTK_OBJECT(TB()->context->ActiveInput()), "text");
+            GtkWidget *entry = (GtkWidget*)g_object_get_data
+                (G_OBJECT(TB()->context->ActiveInput()), "text");
             if (entry) {
                 gtk_entry_set_text(GTK_ENTRY(entry), src);
                 gtk_drag_finish(context, true, false, time);
@@ -2331,17 +2307,17 @@ GTKtoolbar::drag_data_received(GtkWidget*, GdkDragContext *context, gint, gint,
             if (TB()->context->ActiveInput())
                 TB()->context->ActiveInput()->popdown();
         }
-        GtkWidget *item = gtk_item_factory_get_widget(TB()->tb_item_factory,
-            "/File/Source");
-        if (!item)
-            item = gtk_item_factory_get_widget(TB()->tb_item_factory,
-                "/File/Load");
-        if (item) {
-            TB()->tb_dropfile = lstring::copy(src);
-            gtk_menu_item_activate(GTK_MENU_ITEM(item));
-            gtk_drag_finish(context, true, false, time);
-            return;
-        }
+        // GtkWidget *item = gtk_item_factory_get_widget(TB()->tb_item_factory,
+        //     "/File/Source");
+        // if (!item)
+        //     item = gtk_item_factory_get_widget(TB()->tb_item_factory,
+        //         "/File/Load");
+        // if (item) {
+        //     TB()->tb_dropfile = lstring::copy(src);
+        //     gtk_menu_item_activate(GTK_MENU_ITEM(item));
+        //     gtk_drag_finish(context, true, false, time);
+        //     return;
+        // }
     }
     gtk_drag_finish(context, false, false, time);
 }
@@ -2809,25 +2785,26 @@ void
 tb_bag::switch_to_pixmap()
 {
     int w, h;
-    gdk_window_get_size(gd_window, &w, &h);
+    w = gdk_window_get_width(gd_window);
+    h = gdk_window_get_height(gd_window);
     if (!b_pixmap || w != b_wid || h != b_hei) {
-        GdkPixmap *pm = b_pixmap;
-        if (pm)
-            gdk_pixmap_unref(pm);
-        b_wid = w;
-        b_hei = h;
-        pm = gdk_pixmap_new(gd_window, w, h, GRX->Visual()->depth);
-        if (pm)
-            b_pixmap = pm;
-        else {
-            b_pixmap = 0;
-            b_wid = 0;
-            b_hei = 0;
-        }
+        // cairo_surface_t *pm = b_pixmap;
+        // if (pm)
+        //     g_object_unref(pm);
+        // b_wid = w;
+        // b_hei = h;
+        // pm = gdk_pixmap_new(gd_window, w, h, GRX->Visual()->depth);
+        // if (pm)
+        //     b_pixmap = pm;
+        // else {
+        //     b_pixmap = 0;
+        //     b_wid = 0;
+        //     b_hei = 0;
+        // }
     }
     b_winbak = gd_window;
-    gd_window = b_pixmap;
-    gd_viewport->window = gd_window;
+    // gd_window = b_pixmap;
+    // gtk_widget_get_window(gd_viewport) = gd_window;
 }
 
 
@@ -2837,11 +2814,11 @@ void
 tb_bag::switch_from_pixmap()
 {
     if (b_winbak) {
-        gdk_window_copy_area(b_winbak, CpyGC(), 0, 0, gd_window,
-            0, 0, b_wid, b_hei);
-        gd_window = b_winbak;
-        b_winbak = 0;
-        gd_viewport->window = gd_window;
+        // gdk_window_copy_area(b_winbak, CpyGC(), 0, 0, gd_window,
+        //     0, 0, b_wid, b_hei);
+        // gd_window = b_winbak;
+        // b_winbak = 0;
+        // gtk_widget_get_window(gd_viewport) = gd_window;
     }
 }
 // End of tb_bag functions.
@@ -2867,7 +2844,7 @@ namespace {
     void def_proc(GtkWidget*, void *client_data)
     {
         xEnt *ent = (xEnt*)client_data;
-        if (GTK_TOGGLE_BUTTON(ent->active)->active)
+        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ent->active)))
             gtk_toggle_button_toggled(GTK_TOGGLE_BUTTON(ent->active));
         if (ent->defstr)
             gtk_entry_set_text(GTK_ENTRY(ent->entry), ent->defstr);
@@ -2931,9 +2908,9 @@ xEnt::create_widgets(xKWent *kwstruct, const char *defstring,
         // second term is for "debug" button in debug panel
         deflt = gtk_button_new_with_label("Def");
         gtk_widget_show(deflt);
-        gtk_signal_connect(GTK_OBJECT(deflt), "clicked",
-            GTK_SIGNAL_FUNC(def_proc), this);
-        gtk_misc_set_padding(GTK_MISC(GTK_BIN(deflt)->child), 4, 0);
+        g_signal_connect(G_OBJECT(deflt), "clicked",
+            G_CALLBACK(def_proc), this);
+        gtk_misc_set_padding(GTK_MISC(gtk_bin_get_child(GTK_BIN(deflt))), 4, 0);
         gtk_box_pack_start(GTK_BOX(hbox), deflt, false, false, 2);
     }
 
@@ -2945,19 +2922,19 @@ xEnt::create_widgets(xKWent *kwstruct, const char *defstring,
             // no spin - may want to add options with and without spin
             entry = gtk_entry_new();
             gtk_widget_show(entry);
-            gtk_widget_set_usize(entry, 80, -1);
+            gtk_widget_set_size_request(entry, 80, -1);
             gtk_box_pack_start(GTK_BOX(hbox), entry, true, true, 2);
             entry2 = gtk_entry_new();
             gtk_widget_show(entry2);
-            gtk_widget_set_usize(entry2, 80, -1);
+            gtk_widget_set_size_request(entry2, 80, -1);
             gtk_box_pack_start(GTK_BOX(hbox), entry2, true, true, 2);
         }
         else {
-            GtkObject *adj = gtk_adjustment_new(val, kwstruct->min,
+            GtkAdjustment *adj = gtk_adjustment_new(val, kwstruct->min,
                 kwstruct->max, del, pgsize, 0);
             entry = gtk_spin_button_new(GTK_ADJUSTMENT(adj), rate, numd);
             gtk_widget_show(entry);
-            gtk_widget_set_usize(entry, 80, -1);
+            gtk_widget_set_size_request(entry, 80, -1);
             gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(entry), true);
             gtk_box_pack_start(GTK_BOX(hbox), entry, false, false, 2);
             if (mode == KW_INT_2) {
@@ -2965,7 +2942,7 @@ xEnt::create_widgets(xKWent *kwstruct, const char *defstring,
                     del, pgsize, 0);
                 entry2 = gtk_spin_button_new(GTK_ADJUSTMENT(adj), rate, numd);
                 gtk_widget_show(entry2);
-                gtk_widget_set_usize(entry2, 80, -1);
+                gtk_widget_set_size_request(entry2, 80, -1);
                 gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(entry2), true);
                 gtk_box_pack_start(GTK_BOX(hbox), entry2, false, false, 2);
             }
@@ -2977,7 +2954,7 @@ xEnt::create_widgets(xKWent *kwstruct, const char *defstring,
         if (kwstruct->type != VTYP_LIST || mode != KW_NO_CB) {
             entry = gtk_entry_new();
             gtk_widget_show(entry);
-            gtk_widget_set_usize(entry, 80, -1);
+            gtk_widget_set_size_request(entry, 80, -1);
             gtk_box_pack_start(GTK_BOX(hbox), entry, true, true, 2);
         }
         if (cb && mode != KW_NO_SPIN && mode != KW_NO_CB) {
@@ -2993,12 +2970,12 @@ xEnt::create_widgets(xKWent *kwstruct, const char *defstring,
             gtk_widget_show(ebox);
             gtk_container_add(GTK_CONTAINER(ebox), arrow);
             gtk_widget_add_events(ebox, GDK_BUTTON_PRESS_MASK);
-            gtk_signal_connect_after(GTK_OBJECT(ebox), "button_press_event",
-                GTK_SIGNAL_FUNC(cb), kwstruct);
+            g_signal_connect_after(G_OBJECT(ebox), "button_press_event",
+                G_CALLBACK(cb), kwstruct);
             if (mode == KW_FLOAT) {
                 gtk_widget_add_events(ebox, GDK_BUTTON_RELEASE_MASK);
-                gtk_signal_connect_after(GTK_OBJECT(ebox),
-                    "button_release_event", GTK_SIGNAL_FUNC(cb), kwstruct);
+                g_signal_connect_after(G_OBJECT(ebox),
+                    "button_release_event", G_CALLBACK(cb), kwstruct);
             }
             gtk_box_pack_start(GTK_BOX(vbox), ebox, false, false, 0);
 
@@ -3008,14 +2985,14 @@ xEnt::create_widgets(xKWent *kwstruct, const char *defstring,
             gtk_widget_show(ebox);
             gtk_container_add(GTK_CONTAINER(ebox), arrow);
             gtk_widget_add_events(ebox, GDK_BUTTON_PRESS_MASK);
-            gtk_signal_connect_after(GTK_OBJECT(ebox), "button_press_event",
-                GTK_SIGNAL_FUNC(cb), kwstruct);
+            g_signal_connect_after(G_OBJECT(ebox), "button_press_event",
+                G_CALLBACK(cb), kwstruct);
             if (mode == KW_FLOAT) {
                 gtk_widget_add_events(ebox, GDK_BUTTON_RELEASE_MASK);
-                gtk_signal_connect_after(GTK_OBJECT(ebox),
-                    "button_release_event", GTK_SIGNAL_FUNC(cb), kwstruct);
+                g_signal_connect_after(G_OBJECT(ebox),
+                    "button_release_event", G_CALLBACK(cb), kwstruct);
             }
-            gtk_object_set_data(GTK_OBJECT(ebox), "down", (void*)1);
+            g_object_set_data(G_OBJECT(ebox), "down", (void*)1);
             gtk_box_pack_start(GTK_BOX(vbox), ebox, false, false, 0);
 
             gtk_box_pack_start(GTK_BOX(hbox), vbox, false, false, 2);
@@ -3055,11 +3032,11 @@ xEnt::create_widgets(xKWent *kwstruct, const char *defstring,
         }
         else if (update)
             (*update)(true, v, this);
-        gtk_signal_connect(GTK_OBJECT(entry), "changed",
-            GTK_SIGNAL_FUNC(value_changed), kwstruct);
+        g_signal_connect(G_OBJECT(entry), "changed",
+            G_CALLBACK(value_changed), kwstruct);
         if (entry2)
-            gtk_signal_connect(GTK_OBJECT(entry2), "changed",
-                GTK_SIGNAL_FUNC(value_changed), kwstruct);
+            g_signal_connect(G_OBJECT(entry2), "changed",
+                G_CALLBACK(value_changed), kwstruct);
     }
     if (mode != KW_NO_CB)
         set_state(v ? true : false);
@@ -3069,8 +3046,8 @@ xEnt::create_widgets(xKWent *kwstruct, const char *defstring,
     gtk_container_add(GTK_CONTAINER(frame), hbox);
 
     if (mode != KW_NO_CB)
-        gtk_signal_connect(GTK_OBJECT(active), "clicked",
-            GTK_SIGNAL_FUNC(action_proc), kwstruct);
+        g_signal_connect(G_OBJECT(active), "clicked",
+            G_CALLBACK(action_proc), kwstruct);
 }
 
 
@@ -3284,7 +3261,7 @@ namespace {
     //
     void bump(xKWent *entry)
     {
-        if (!GTK_WIDGET_SENSITIVE(entry->ent->entry))
+        if (!gtk_widget_is_sensitive(entry->ent->entry))
             return;
         char *string =
             gtk_editable_get_chars(GTK_EDITABLE(entry->ent->entry), 0, -1);
@@ -3335,7 +3312,7 @@ namespace {
     int delay_timer(void *client_data)
     {
         xKWent *entry = static_cast<xKWent*>(client_data);
-        entry->ent->thandle = gtk_timeout_add(50, repeat_timer, client_data);
+        entry->ent->thandle = g_timeout_add(50, repeat_timer, client_data);
         return (false);
     }
 }
@@ -3349,12 +3326,12 @@ kw_float_hdlr(GtkWidget *caller, GdkEvent *event, void *client_data)
     xKWent *entry = static_cast<xKWent*>(client_data);
     if (event->type == GDK_BUTTON_PRESS) {
         entry->ent->down =
-            gtk_object_get_data(GTK_OBJECT(caller), "down") ? true : false;
+            g_object_get_data(G_OBJECT(caller), "down") ? true : false;
         bump(entry);
-        entry->ent->thandle = gtk_timeout_add(200, delay_timer, entry);
+        entry->ent->thandle = g_timeout_add(200, delay_timer, entry);
     }
     else if (event->type == GDK_BUTTON_RELEASE)
-        gtk_timeout_remove(entry->ent->thandle);
+        g_source_remove(entry->ent->thandle);
     return (true);
 }
 

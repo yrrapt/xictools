@@ -177,6 +177,7 @@ sPc::sPc()
     pc_dspmode = -1;
 
     wb_shell = gtk_NewPopup(0, "Cell Property Editor", pc_cancel_proc, 0);
+    wb_window = gtk_widget_get_window(wb_shell);
     if (!wb_shell)
         return;
 
@@ -194,16 +195,16 @@ sPc::sPc()
     gtk_widget_set_name(button, "Edit");
     gtk_widget_show(button);
     pc_edit = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(pc_action_proc), (void*)EditCode);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(pc_action_proc), (void*)EditCode);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     button = gtk_toggle_button_new_with_label("Delete");
     gtk_widget_set_name(button, "Delete");
     gtk_widget_show(button);
     pc_del = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(pc_action_proc), (void*)DeleteCode);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(pc_action_proc), (void*)DeleteCode);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     // Add button and its menu
@@ -215,16 +216,16 @@ sPc::sPc()
     pc_item = gtk_menu_item_new_with_label("Add");
     gtk_widget_set_name(pc_item, "AddI");
     gtk_widget_show(pc_item);
-    gtk_menu_bar_append(GTK_MENU_BAR(menubar), pc_item);
-    gtk_signal_connect(GTK_OBJECT(pc_item), "event",
-        GTK_SIGNAL_FUNC(pc_button_press), 0);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menubar), pc_item);
+    g_signal_connect(G_OBJECT(pc_item), "event",
+        G_CALLBACK(pc_button_press), 0);
     gtk_box_pack_start(GTK_BOX(hbox), menubar, true, true, 0);
 
     button = gtk_button_new_with_label("Help");
     gtk_widget_set_name(button, "Help");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(pc_help_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(pc_help_proc), 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 0, 1,
@@ -237,12 +238,12 @@ sPc::sPc()
     GtkWidget *contr;
     text_scrollable_new(&contr, &wb_textarea, FNT_FIXED);
 
-    gtk_signal_connect(GTK_OBJECT(wb_textarea), "button-press-event",
-        GTK_SIGNAL_FUNC(pc_text_btn_hdlr), 0);
-    gtk_signal_connect(GTK_OBJECT(wb_textarea), "button-release-event",
-        GTK_SIGNAL_FUNC(pc_text_btn_release_hdlr), 0);
-    gtk_signal_connect_after(GTK_OBJECT(wb_textarea), "realize",
-        GTK_SIGNAL_FUNC(text_realize_proc), 0);
+    g_signal_connect(G_OBJECT(wb_textarea), "button-press-event",
+        G_CALLBACK(pc_text_btn_hdlr), 0);
+    g_signal_connect(G_OBJECT(wb_textarea), "button-release-event",
+        G_CALLBACK(pc_text_btn_release_hdlr), 0);
+    g_signal_connect_after(G_OBJECT(wb_textarea), "realize",
+        G_CALLBACK(text_realize_proc), 0);
 
     GtkTextBuffer *textbuf =
         gtk_text_view_get_buffer(GTK_TEXT_VIEW(wb_textarea));
@@ -252,10 +253,10 @@ sPc::sPc()
         "paragraph-background", bclr,
 #endif
         NULL);
-    gtk_widget_set_usize(wb_textarea, 300, 200);
+    gtk_widget_set_size_request(wb_textarea, 300, 200);
 
     // The font change pop-up uses this to redraw the widget
-    gtk_object_set_data(GTK_OBJECT(wb_textarea), "font_changed",
+    g_object_set_data(G_OBJECT(wb_textarea), "font_changed",
         (void*)pc_font_changed);
 
     gtk_table_attach(GTK_TABLE(form), contr, 0, 1, 1, 2,
@@ -274,8 +275,8 @@ sPc::sPc()
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(pc_cancel_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(pc_cancel_proc), 0);
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, 3, 4,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -297,8 +298,8 @@ sPc::~sPc()
     Menu()->MenuButtonSet(0, MenuCPROP, false);
     PL()->AbortLongText();
     if (wb_shell)
-        gtk_signal_disconnect_by_func(GTK_OBJECT(wb_shell),
-            GTK_SIGNAL_FUNC(pc_cancel_proc), wb_shell);
+        g_signal_handlers_disconnect_by_func(G_OBJECT(wb_shell),
+            (gpointer)pc_cancel_proc, wb_shell);
 }
 
 
@@ -324,9 +325,9 @@ sPc::update()
                 break;
             GtkWidget *menu_item = gtk_menu_item_new_with_label(s);
             gtk_widget_set_name(menu_item, s);
-            gtk_menu_append(GTK_MENU(menu), menu_item);
-            gtk_signal_connect(GTK_OBJECT(menu_item), "activate",
-                GTK_SIGNAL_FUNC(pc_menu_proc), &pc_phys_addmenu[i]);
+            gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
+            g_signal_connect(G_OBJECT(menu_item), "activate",
+                G_CALLBACK(pc_menu_proc), &pc_phys_addmenu[i]);
             gtk_widget_show(menu_item);
         }
     }
@@ -337,9 +338,9 @@ sPc::update()
                 break;
             GtkWidget *menu_item = gtk_menu_item_new_with_label(s);
             gtk_widget_set_name(menu_item, s);
-            gtk_menu_append(GTK_MENU(menu), menu_item);
-            gtk_signal_connect(GTK_OBJECT(menu_item), "activate",
-                GTK_SIGNAL_FUNC(pc_menu_proc), &pc_elec_addmenu[i]);
+            gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
+            g_signal_connect(G_OBJECT(menu_item), "activate",
+                G_CALLBACK(pc_menu_proc), &pc_elec_addmenu[i]);
             gtk_widget_show(menu_item);
         }
     }
@@ -534,7 +535,7 @@ sPc::pc_menu_proc(GtkWidget*, void *client_data)
 int
 sPc::pc_button_press(GtkWidget *widget, GdkEvent *event)
 {
-    GtkWidget *menu = GTK_MENU_ITEM(widget)->submenu;
+    GtkWidget *menu = gtk_menu_item_get_submenu(GTK_MENU_ITEM(widget));
     if (event->type == GDK_BUTTON_PRESS) {
         GRX->Deselect(Pc->pc_edit);
         GRX->Deselect(Pc->pc_del);

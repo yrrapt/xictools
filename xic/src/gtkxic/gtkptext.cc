@@ -232,17 +232,17 @@ cEdit::polytext(const char *string, int psz, int x, int y)
 
     int wid, hei, numlines;
     polytextExtent(string, &wid, &hei, &numlines);
-    GdkPixmap *pixmap = gdk_pixmap_new(mainBag()->Window(), wid, hei,
-        GRX->Visual()->depth);
+    // cairo_surface_t *pixmap = gdk_pixmap_new(mainBag()->Window(), wid, hei,
+    //     GRX->Visual()->depth);
 
-    GdkGC *gc = gdk_gc_new(mainBag()->Window());
-    GdkColor c;
-    gdk_color_white(GRX->Colormap(), &c);
-    gdk_gc_set_background(gc, &c);
-    gdk_gc_set_foreground(gc, &c);
-    gdk_draw_rectangle(pixmap, gc, true, 0, 0, wid, hei);
-    gdk_color_black(GRX->Colormap(), &c);
-    gdk_gc_set_foreground(gc, &c);
+    // GdkGC *gc = gdk_gc_new(mainBag()->Window());
+    // GdkColor c;
+    // gdk_color_white(GRX->Colormap(), &c);
+    // gdk_gc_set_background(gc, &c);
+    // gdk_gc_set_foreground(gc, &c);
+    // gdk_draw_rectangle(pixmap, gc, true, 0, 0, wid, hei);
+    // gdk_color_black(GRX->Colormap(), &c);
+    // gdk_gc_set_foreground(gc, &c);
 
     PangoFontDescription *pfd =
         pango_font_description_from_string(sPf::font());
@@ -275,7 +275,7 @@ cEdit::polytext(const char *string, int psz, int x, int y)
             tx += wid - len;
             break;
         }
-        gdk_draw_layout(pixmap, gc, tx, ty, lout);
+        // gdk_draw_layout(pixmap, gc, tx, ty, lout);
         g_object_unref(lout);
         t = s+1;
         s = strchr(t, '\n');
@@ -294,23 +294,23 @@ cEdit::polytext(const char *string, int psz, int x, int y)
         tx += wid - len;
         break;
     }
-    gdk_draw_layout(pixmap, gc, tx, ty, lout);
+    // gdk_draw_layout(pixmap, gc, tx, ty, lout);
     g_object_unref(lout);
     pango_font_description_free(pfd);
     y -= psz*(hei - fh);
 
-    GdkImage *im = gdk_image_get(pixmap, 0, 0, wid, hei);
-    gdk_pixmap_unref(pixmap);
-    gdk_gc_unref(gc);
+    // GdkImage *im = gdk_image_get(pixmap, 0, 0, wid, hei);
+    // g_object_unref(pixmap);
+    // gdk_gc_unref(gc);
 
     Zlist *z0 = 0;
     for (int i = 0; i < hei; i++) {
         for (int j = 0; j < wid;  j++) {
-            int px = gdk_image_get_pixel(im, j, i);
+            // int px = gdk_image_get_pixel(im, j, i);
             // Many fonts are anti-aliased, the code below does a
             // semi-reasonable job of filtering the pixels.
             int r, g, b;
-            GRX->RGBofPixel(px, &r, &g, &b);
+            // GRX->RGBofPixel(px, &r, &g, &b);
             if (r + g + b <= 512) {
                 Zoid Z(x + j*psz, x + (j+1)*psz, y + (hei-i-1)*psz,
                     x + j*psz, x + (j+1)*psz, y + (hei-i)*psz);
@@ -318,7 +318,7 @@ cEdit::polytext(const char *string, int psz, int x, int y)
             }
         }
     }
-    gdk_image_destroy(im);
+    // gdk_image_destroy(im);
     PolyList *po = Zlist::to_poly_list(z0);
     return (po);
 }

@@ -228,7 +228,7 @@ protected:
     bool wib_resized;           // window was just resized
 
     GdkWindow *wib_window_bak;  // screen buffer
-    GdkPixmap *wib_draw_pixmap; // backing pixmap
+    cairo_surface_t *wib_draw_pixmap; // backing pixmap
     int wib_px_width;           // pixmap width
     int wib_px_height;          // pixmap height
 

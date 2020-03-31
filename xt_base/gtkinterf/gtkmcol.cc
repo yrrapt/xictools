@@ -80,7 +80,7 @@ gtk_bag::PopUpMultiCol(stringlist *symlist, const char *title,
     mcol_count++;
     if (mcol_count == 6)
         mcol_count = 0;
-    gtk_widget_set_uposition(mcol->Shell(), x, y);
+    // gtk_widget_set_size_request(mcol->Shell(), x, y);
 
     mcol->set_visible(true);
     return (mcol);
@@ -134,6 +134,7 @@ GTKmcolPopup::GTKmcolPopup(gtk_bag *owner, stringlist *symlist,
         owner->MonitorAdd(this);
 
     wb_shell = gtk_NewPopup(owner, "Listing", mc_quit_proc, this);
+    wb_window = gtk_widget_get_window(wb_shell);
     gtk_window_set_default_size(GTK_WINDOW(wb_shell), 350, 250);
 
     GtkWidget *form = gtk_table_new(1, 3, false);
@@ -159,25 +160,25 @@ GTKmcolPopup::GTKmcolPopup(gtk_bag *owner, stringlist *symlist,
     text_scrollable_new(&contr, &wb_textarea, FNT_FIXED);
 
     gtk_widget_add_events(wb_textarea, GDK_BUTTON_PRESS_MASK);
-    gtk_signal_connect(GTK_OBJECT(wb_textarea), "button-press-event",
-        GTK_SIGNAL_FUNC(mc_btn_proc), this);
-    gtk_signal_connect(GTK_OBJECT(wb_textarea), "button-release-event",
-        GTK_SIGNAL_FUNC(mc_btn_release_proc), this);
-    gtk_signal_connect(GTK_OBJECT(wb_textarea), "motion-notify-event",
-        GTK_SIGNAL_FUNC(mc_motion_proc), this);
-    gtk_signal_connect(GTK_OBJECT(wb_textarea), "drag-data-get",
-        GTK_SIGNAL_FUNC(mc_source_drag_data_get), this);
-    gtk_signal_connect(GTK_OBJECT(wb_textarea), "map-event",
-        GTK_SIGNAL_FUNC(mc_map_hdlr), this);
-    gtk_signal_connect_after(GTK_OBJECT(wb_textarea), "realize",
-        GTK_SIGNAL_FUNC(text_realize_proc), this);
+    g_signal_connect(G_OBJECT(wb_textarea), "button-press-event",
+        G_CALLBACK(mc_btn_proc), this);
+    g_signal_connect(G_OBJECT(wb_textarea), "button-release-event",
+        G_CALLBACK(mc_btn_release_proc), this);
+    g_signal_connect(G_OBJECT(wb_textarea), "motion-notify-event",
+        G_CALLBACK(mc_motion_proc), this);
+    g_signal_connect(G_OBJECT(wb_textarea), "drag-data-get",
+        G_CALLBACK(mc_source_drag_data_get), this);
+    g_signal_connect(G_OBJECT(wb_textarea), "map-event",
+        G_CALLBACK(mc_map_hdlr), this);
+    g_signal_connect_after(G_OBJECT(wb_textarea), "realize",
+        G_CALLBACK(text_realize_proc), this);
 
     // this callback formats the text
-    gtk_signal_connect_after(GTK_OBJECT(wb_textarea), "size-allocate",
-        GTK_SIGNAL_FUNC(mc_resize_proc), this);
+    g_signal_connect_after(G_OBJECT(wb_textarea), "size-allocate",
+        G_CALLBACK(mc_resize_proc), this);
 
     // drop handler needs this
-    gtk_object_set_data(GTK_OBJECT(wb_textarea), "label", label);
+    g_object_set_data(G_OBJECT(wb_textarea), "label", label);
 
     GtkTextBuffer *textbuf =
         gtk_text_view_get_buffer(GTK_TEXT_VIEW(wb_textarea));
@@ -193,11 +194,11 @@ GTKmcolPopup::GTKmcolPopup(gtk_bag *owner, stringlist *symlist,
     GtkWidget*button = gtk_toggle_button_new_with_label("Save Text ");
     gtk_widget_set_name(button, "Save");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(mc_save_btn_hdlr), this);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(mc_save_btn_hdlr), this);
     gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
 
-    mc_pagesel = gtk_option_menu_new();
+    mc_pagesel = gtk_menu_new();
     gtk_box_pack_start(GTK_BOX(hbox), mc_pagesel, false, false, 0);
 
     // Dismiss button.
@@ -205,8 +206,8 @@ GTKmcolPopup::GTKmcolPopup(gtk_bag *owner, stringlist *symlist,
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(mc_quit_proc), this);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(mc_quit_proc), this);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     if (buttons) {
@@ -215,8 +216,8 @@ GTKmcolPopup::GTKmcolPopup(gtk_bag *owner, stringlist *symlist,
             gtk_widget_set_name(button, buttons[i]);
             gtk_widget_set_sensitive(button, false);
             gtk_widget_show(button);
-            gtk_signal_connect(GTK_OBJECT(button), "clicked",
-                GTK_SIGNAL_FUNC(mc_action_proc), this);
+            g_signal_connect(G_OBJECT(button), "clicked",
+                G_CALLBACK(mc_action_proc), this);
             gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
             mc_buttons[i] = button;
         }
@@ -250,8 +251,8 @@ GTKmcolPopup::~GTKmcolPopup()
         GRX->Deselect(p_caller);
     stringlist::destroy(mc_strings);
 
-    gtk_signal_disconnect_by_func(GTK_OBJECT(wb_shell),
-        GTK_SIGNAL_FUNC(mc_quit_proc), this);
+    g_signal_handlers_disconnect_by_func(G_OBJECT(wb_shell),
+        (gpointer)mc_quit_proc, this);
 }
 
 
@@ -289,7 +290,7 @@ GTKmcolPopup::update(stringlist *symlist, const char *title)
 
     if (title) {
         GtkWidget *label = (GtkWidget*)
-            gtk_object_get_data(GTK_OBJECT(wb_textarea), "label");
+            g_object_get_data(G_OBJECT(wb_textarea), "label");
         if (label)
             gtk_label_set_text(GTK_LABEL(label), title);
     }
@@ -363,23 +364,27 @@ GTKmcolPopup::relist()
             sprintf(buf, "%d - %d", i*mc_pagesize + 1, tmpmax);
             GtkWidget *mi = gtk_menu_item_new_with_label(buf);
             gtk_widget_show(mi);
-            gtk_object_set_data(GTK_OBJECT(mi), "menuent", (void*)(long)i);
-            gtk_signal_connect(GTK_OBJECT(mi), "activate",
-                GTK_SIGNAL_FUNC(mc_menu_proc), this);
-            gtk_menu_append(GTK_MENU(menu), mi);
+            g_object_set_data(G_OBJECT(mi), "menuent", (void*)(long)i);
+            g_signal_connect(G_OBJECT(mi), "activate",
+                G_CALLBACK(mc_menu_proc), this);
+            gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
         }
-        gtk_option_menu_remove_menu(GTK_OPTION_MENU(mc_pagesel));
-        gtk_option_menu_set_menu(GTK_OPTION_MENU(mc_pagesel), menu);
-        gtk_option_menu_set_history(GTK_OPTION_MENU(mc_pagesel), mc_page);
+        // // gtk_option_menu_remove_menu(GTK_OPTION_MENU(mc_pagesel));
+        // // gtk_option_menu_set_menu(GTK_OPTION_MENU(mc_pagesel), menu);
+        // // gtk_option_menu_set_history(GTK_OPTION_MENU(mc_pagesel), mc_page);
         gtk_widget_show(mc_pagesel);
     }
 
-    int cols = (wb_textarea->allocation.width - 4)/
+    GtkAllocation *allocation = g_new0 (GtkAllocation, 1);
+    gtk_widget_get_allocation(GTK_WIDGET(wb_textarea), allocation);
+
+    int cols = (allocation->width - 4)/
         GTKfont::stringWidth(wb_textarea, 0);
     char *s = stringlist::col_format(s0, cols);
     stringlist::destroy(s0);
     text_set_chars(wb_textarea, s);
     delete [] s;
+    g_free(allocation);
 }
 
 
@@ -388,7 +393,7 @@ GTKmcolPopup::relist()
 void
 GTKmcolPopup::resize_handler(int width)
 {
-    if (wb_textarea && wb_textarea->window && mc_strings) {
+    if (wb_textarea && gtk_widget_get_window(wb_textarea) && mc_strings) {
         if (width > 0 && width != mc_alloc_width) {
             mc_alloc_width = width;
             relist();
@@ -518,7 +523,7 @@ GTKmcolPopup::mc_menu_proc(GtkWidget *widget, void *client_data)
 {
     GTKmcolPopup *mcol = static_cast<GTKmcolPopup*>(client_data);
     if (mcol) {
-        long i = (long)gtk_object_get_data(GTK_OBJECT(widget), "menuent");
+        long i = (long)g_object_get_data(G_OBJECT(widget), "menuent");
         if (mcol->mc_page != i) {
             mcol->mc_page = i;
             mcol->relist();
@@ -565,8 +570,11 @@ int
 GTKmcolPopup::mc_map_hdlr(GtkWidget*, GdkEvent*, void *client_data)
 {
     GTKmcolPopup *mcol = static_cast<GTKmcolPopup*>(client_data);
+    GtkAllocation *allocation = g_new0 (GtkAllocation, 1);
+    gtk_widget_get_allocation(GTK_WIDGET(mcol->wb_textarea), allocation);
     if (mcol && mcol->wb_textarea)
-        mcol->resize_handler(mcol->wb_textarea->allocation.width);
+        mcol->resize_handler(allocation->width);
+    g_free(allocation);
     return (false);
 }
 
@@ -636,7 +644,7 @@ GTKmcolPopup::mc_motion_proc(GtkWidget *widget, GdkEvent *event, void *arg)
             // Strange voodoo to "turn on" motion events, that are
             // otherwise suppressed since GDK_POINTER_MOTION_HINT_MASK
             // is set.  See GdkEventMask doc.
-            gdk_window_get_pointer(widget->window, 0, 0, 0);
+            gdk_window_get_pointer(gtk_widget_get_window(widget), 0, 0, 0);
 #endif
             if ((abs((int)event->motion.x - mcol->mc_drag_x) > 4 ||
                     abs((int)event->motion.y - mcol->mc_drag_y) > 4)) {
@@ -663,24 +671,24 @@ GTKmcolPopup::mc_source_drag_data_get(GtkWidget *widget, GdkDragContext*,
 {
     if (GTK_IS_TEXT_VIEW(widget)) {
         // stop text view native handler
-        gtk_signal_emit_stop_by_name(GTK_OBJECT(widget), "drag-data-get");
+        g_signal_stop_emission_by_name(G_OBJECT(widget), "drag-data-get");
     }
 
-    GtkWidget *label = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(widget),
+    GtkWidget *label = (GtkWidget*)g_object_get_data(G_OBJECT(widget),
         "label");
     char *s = text_get_selection(widget);
     if (!s)
         return;
 
-    if (selection_data->target == gdk_atom_intern("TWOSTRING", true)) {
+    if (gtk_selection_data_get_target(selection_data) == gdk_atom_intern("TWOSTRING", true)) {
         // We use a newline to separate the file and cell names, the
         // drop receiver must handle this.
 
-        char *ltext = 0;
+        const gchar *ltext = 0;
         if (label)
-            gtk_label_get(GTK_LABEL(label), &ltext);
+            ltext = gtk_label_get_text(GTK_LABEL(label));
         if (ltext) {
-            char *t = strchr(ltext, '\n');
+            const char *t = strchr(ltext, '\n');
             if (t)
                 ltext = t+1;
         }
@@ -690,13 +698,13 @@ GTKmcolPopup::mc_source_drag_data_get(GtkWidget *widget, GdkDragContext*,
         strcat(t, "\n");
         strcat(t, s);
         delete [] s;
-        gtk_selection_data_set(selection_data, selection_data->target,
+        gtk_selection_data_set(selection_data, gtk_selection_data_get_target(selection_data),
             8, (unsigned char*)t, strlen(t) + 1);
         delete [] t;
     }
     else {
         // Plain text format, just pass the listing text.
-        gtk_selection_data_set(selection_data, selection_data->target,
+        gtk_selection_data_set(selection_data, gtk_selection_data_get_target(selection_data),
             8, (unsigned char*)s, strlen(s) + 1);
         delete [] s;
     }
@@ -771,7 +779,7 @@ GTKmcolPopup::mc_save_cb(const char *string, void *arg)
         GRX->SetPopupLocation(GRloc(), mcp->mc_msg_pop->pw_shell,
             mcp->wb_shell);
         mcp->mc_msg_pop->set_visible(true);
-        gtk_timeout_add(2000, mc_timeout, mcp);
+        g_timeout_add(2000, mc_timeout, mcp);
     }
     return (ESTR_DN);
 }

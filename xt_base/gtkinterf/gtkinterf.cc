@@ -321,7 +321,7 @@ GTKdev::Init(int *argc, char **argv)
     // supported.  Let's handle it ourselves.
     for (int i = 1; i < *argc; i++) {
         if (!strcmp(argv[i], "--no-xshm")) {
-            gdk_set_use_xshm(false);
+            // gdk_set_use_xshm(false);
             (*argc)--;
             while (i < *argc) {
                 argv[i] = argv[i+1];
@@ -369,7 +369,7 @@ GTKdev::Init(int *argc, char **argv)
 #ifdef WITH_X11
     int foc;
     Window xwin;
-    XGetInputFocus(gdk_display, &xwin, &foc);
+    // XGetInputFocus(gdk_display, &xwin, &foc);
     dv_console_xid = xwin;
 #endif
 
@@ -396,7 +396,7 @@ GTKdev::Init(int *argc, char **argv)
             ks->key_press_event = my_key_press_event;
         }
         g_object_ref(entry);
-        gtk_object_ref(GTK_OBJECT(entry));
+        g_object_ref(G_OBJECT(entry));
         gtk_widget_destroy(entry);
         g_object_unref(entry);
     }
@@ -420,7 +420,7 @@ GTKdev::Init(int *argc, char **argv)
 bool
 GTKdev::InitColormap(int mincolors, int maxcolors, bool dualplane)
 {
-    dv_cmap = gdk_colormap_get_system();
+    dv_cmap = gdk_visual_get_system();
     dv_visual = gdk_visual_get_system();
 
     if (maxcolors <= 0) {
@@ -435,37 +435,37 @@ GTKdev::InitColormap(int mincolors, int maxcolors, bool dualplane)
         return (true);
     }
     const char *msg = "Found %s visual, %d planes.\n";
-    switch (dv_visual->type) {
+    switch (gdk_visual_get_visual_type(dv_visual)) {
     case GDK_VISUAL_STATIC_GRAY:
-        printf(msg, "static gray", dv_visual->depth);
+        printf(msg, "static gray", gdk_visual_get_depth(dv_visual));
         dv_true_color = true;
         ColorAlloc.no_alloc = true;
         return (false);
     case GDK_VISUAL_STATIC_COLOR:
-        printf(msg, "static color", dv_visual->depth);
+        printf(msg, "static color", gdk_visual_get_depth(dv_visual));
         dv_true_color = true;
         ColorAlloc.no_alloc = true;
         return (false);
     case GDK_VISUAL_GRAYSCALE:
-        printf(msg, "grayscale", dv_visual->depth);
+        printf(msg, "grayscale", gdk_visual_get_depth(dv_visual));
         dv_true_color = false;
         break;
     case GDK_VISUAL_PSEUDO_COLOR:
-        printf(msg, "pseudo color", dv_visual->depth);
+        printf(msg, "pseudo color", gdk_visual_get_depth(dv_visual));
         dv_true_color = false;
         break;
     case GDK_VISUAL_TRUE_COLOR:
-        printf(msg, "true color", dv_visual->depth);
+        printf(msg, "true color", gdk_visual_get_depth(dv_visual));
         dv_true_color = true;
         ColorAlloc.no_alloc = true;
         return (false);
     case GDK_VISUAL_DIRECT_COLOR:
-        printf(msg, "direct color", dv_visual->depth);
+        printf(msg, "direct color", gdk_visual_get_depth(dv_visual));
         dv_true_color = true;
         ColorAlloc.no_alloc = true;
         return (false);
     }
-    int ncolors = dv_visual->colormap_size;
+    int ncolors = gdk_visual_get_colormap_size(dv_visual);
 
     // limit allocation to 48 dual-plane cells
     if (ncolors > 96)
@@ -486,58 +486,60 @@ GTKdev::InitColormap(int mincolors, int maxcolors, bool dualplane)
 
     int n = maxcolors;
     int ok = false;
-    while (n >= 16) {
-        if (dualplane)
-            ok = gdk_colors_alloc(dv_cmap, false,
-                ColorAlloc.plane_mask, 1, ColorAlloc.drawing_pixels, n);
-        else
-            ok = gdk_colors_alloc(dv_cmap, false,
-                0, 0, ColorAlloc.drawing_pixels, n);
-        if (ok)
-            break;
-        n -= 4;
-    }
+    // while (n >= 16) {
+    //     if (dualplane)
+    //         ok = gdk_colors_alloc(dv_cmap, false,
+    //             ColorAlloc.plane_mask, 1, ColorAlloc.drawing_pixels, n);
+    //     else
+    //         ok = gdk_colors_alloc(dv_cmap, false,
+    //             0, 0, ColorAlloc.drawing_pixels, n);
+    //     if (ok)
+    //         break;
+    //     n -= 4;
+    // }
     if (!ok) {
-        // Failed to allocate colors from default colormap.  Create
-        // a new colormap and try again.
-        printf("Allocating colormap.\n");
-        n = maxcolors;
-        GdkColormap *newcmap = gdk_colormap_new(dv_visual, false);
-        ncolors = dv_visual->colormap_size;
-        ncolors -= (dualplane ? 2*maxcolors : maxcolors);
-        // ncolors is number of unallocated colorcells.  Allocate half
-        // for friendliness with default colormap, and leave half
-        // unallocated.
-        ncolors /= 2;
-        if (ncolors > 0) {
-            unsigned long xx[256];
-            gdk_colors_alloc(newcmap, true, 0, 0, xx, ncolors);
-            for (int i = 0; i < ncolors; i++) {
-                GdkColor clr;
-                clr.pixel = i;
-                gtk_QueryColor(&clr);
-                gdk_color_change(newcmap, &clr);
-            }
-        }
-        dv_cmap = newcmap;
-        gtk_widget_set_default_colormap(dv_cmap);
-        while (n >= mincolors) {
-            if (dualplane)
-                ok = gdk_colors_alloc(dv_cmap, false,
-                    ColorAlloc.plane_mask, 1, ColorAlloc.drawing_pixels, n);
-            else
-                ok = gdk_colors_alloc(dv_cmap, false,
-                    0, 0, ColorAlloc.drawing_pixels, n);
-            if (ok)
-                break;
-            n -= 4;
-        }
-        if (!ok) {
-            fprintf(stderr,
-                "Fatal error: Can't allocate %d read/write colorcells.\n",
-                mincolors);
-            return (true);
-        }
+        dv_cmap = dv_visual;
+
+        // // Failed to allocate colors from default colormap.  Create
+        // // a new colormap and try again.
+        // printf("Allocating colormap.\n");
+        // n = maxcolors;
+        // GdkColormap *newcmap = gdk_colormap_new(dv_visual, false);
+        // ncolors = dv_visual->colormap_size;
+        // ncolors -= (dualplane ? 2*maxcolors : maxcolors);
+        // // ncolors is number of unallocated colorcells.  Allocate half
+        // // for friendliness with default colormap, and leave half
+        // // unallocated.
+        // ncolors /= 2;
+        // if (ncolors > 0) {
+        //     unsigned long xx[256];
+        //     gdk_colors_alloc(newcmap, true, 0, 0, xx, ncolors);
+        //     for (int i = 0; i < ncolors; i++) {
+        //         GdkColor clr;
+        //         clr.pixel = i;
+        //         gtk_QueryColor(&clr);
+        //         gdk_color_change(newcmap, &clr);
+        //     }
+        // }
+        // dv_cmap = newcmap;
+        // g_object_set_default_colormap(dv_cmap);
+        // while (n >= mincolors) {
+        //     if (dualplane)
+        //         ok = gdk_colors_alloc(dv_cmap, false,
+        //             ColorAlloc.plane_mask, 1, ColorAlloc.drawing_pixels, n);
+        //     else
+        //         ok = gdk_colors_alloc(dv_cmap, false,
+        //             0, 0, ColorAlloc.drawing_pixels, n);
+        //     if (ok)
+        //         break;
+        //     n -= 4;
+        // }
+        // if (!ok) {
+        //     fprintf(stderr,
+        //         "Fatal error: Can't allocate %d read/write colorcells.\n",
+        //         mincolors);
+        //     return (true);
+        // }
     }
 
     if (dualplane) {
@@ -605,44 +607,49 @@ GTKdev::RGBofPixel(int pixel, int *r, int *g, int *b)
 int
 GTKdev::AllocateColor(int *address, int red, int green, int blue)
 {
-    static int num_used;
-    GdkColor newcolor;
-    newcolor.red   = (red   * 256);
-    newcolor.green = (green * 256);
-    newcolor.blue  = (blue  * 256);
-    if (num_used < ColorAlloc.num_mask_allocated ||
-            num_used < ColorAlloc.num_allocated) {
-        newcolor.pixel = ColorAlloc.drawing_pixels[num_used++];
-        *address = (int)newcolor.pixel;
-        gdk_color_change(dv_cmap, &newcolor);
-        return (false);
-    }
-    if ((ColorAlloc.num_mask_allocated || ColorAlloc.num_allocated) &&
-            gdk_colormap_alloc_color(dv_cmap, &newcolor, true, false)) {
-        *address = (int)newcolor.pixel;
-        num_used++;
-        return (false);
-    }
-    else {
-        gdk_colormap_alloc_color(dv_cmap, &newcolor, false, true);
-        *address = newcolor.pixel;
-        return (true);
-    }
+    // static int num_used;
+    // GdkColor newcolor;
+    // newcolor.red   = (red   * 256);
+    // newcolor.green = (green * 256);
+    // newcolor.blue  = (blue  * 256);
+    // if (num_used < ColorAlloc.num_mask_allocated ||
+    //         num_used < ColorAlloc.num_allocated) {
+    //     newcolor.pixel = ColorAlloc.drawing_pixels[num_used++];
+    //     *address = (int)newcolor.pixel;
+    //     gdk_color_change(dv_cmap, &newcolor);
+    //     return (false);
+    // }
+    // if ((ColorAlloc.num_mask_allocated || ColorAlloc.num_allocated) &&
+    //         gdk_colormap_alloc_color(dv_cmap, &newcolor, true, false)) {
+    //     *address = (int)newcolor.pixel;
+    //     num_used++;
+    //     return (false);
+    // }
+    // else {
+    //     gdk_colormap_alloc_color(dv_cmap, &newcolor, false, true);
+    //     *address = newcolor.pixel;
+    //     return (true);
+    // }
 }
 
 
 // Return the pixel that is the closest match to colorname.  Also handle
 // decimal triples.
 //
-int
+GdkRGBA
 GTKdev::NameColor(const char *colorname)
 {
-    GdkColor c;
-    if (gtk_ColorSet(&c, colorname))
-        return (c.pixel);
-    if (gdk_color_black(Colormap(), &c))
-        return (c.pixel);
-    return (0);
+    GdkRGBA c;
+    // if (gdk_rgba_parse(&c, colorname))
+        // TODO very wrong
+        // return (c);
+    // if (gdk_color_black(Colormap(), &c))
+    //     return (c);
+    // return (0);
+    
+
+    gdk_rgba_parse(&c, colorname);
+    return (c);
 }
 
 
@@ -710,7 +717,8 @@ GTKdev::NewWbag(const char *appname, GRwbag *reuse)
 {
     gtk_bag *w = reuse ? dynamic_cast<gtk_bag*>(reuse) : new gtk_bag();
     w->wb_shell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_policy(GTK_WINDOW(w->Shell()), true, true, false);
+    w->wb_window = gtk_widget_get_window(w->wb_shell);
+    // gtk_window_set_policy(GTK_WINDOW(w->Shell()), true, true, false);
     if (appname) {
         char buf[128];
         strcpy(buf, appname);  // appname is actually the class name
@@ -728,7 +736,7 @@ int
 GTKdev::AddTimer(int msecs, int(*callback)(void*), void *arg)
 {
     // Note: callback must have an int return, not a bool!
-    return (gtk_timeout_add(msecs, (GtkFunction)callback, arg));
+    return (g_timeout_add(msecs, callback, arg));
 }
 
 
@@ -737,7 +745,7 @@ GTKdev::AddTimer(int msecs, int(*callback)(void*), void *arg)
 void
 GTKdev::RemoveTimer(int id)
 {
-    gtk_timeout_remove(id);
+    g_source_remove(id);
 }
 
 
@@ -897,9 +905,9 @@ GTKdev::UseSHM()
 {
 #ifdef WITH_X11
 #ifdef HAVE_SHMGET
-    if (!gdk_get_use_xshm())
+    // TODO if (!gdk_get_use_xshm())
         // --no_xshm was given on command line
-        return (0);
+        // return (0);
 
     int major, minor, ignore;
     Bool pixmaps;
@@ -937,16 +945,15 @@ GTKdev::Deselect(GRobject btn)
         return;
     if (GTK_IS_TOGGLE_BUTTON(btn)) {
         GtkToggleButton *toggle = (GtkToggleButton*)btn;
-        if (toggle->active) {
-            toggle->active = 0;
-            toggle->button.depressed = false;
-            GtkStateType new_state = (GTK_BUTTON(toggle)->in_button ?
+        if (gtk_toggle_button_get_active(toggle)) {
+            gtk_toggle_button_set_active(toggle, false);
+            GtkStateType new_state = (gtk_toggle_button_get_active(toggle) ?
                 GTK_STATE_PRELIGHT : GTK_STATE_NORMAL);
             gtk_widget_set_state(GTK_WIDGET(toggle), new_state);
         }
     }
     else if (GTK_IS_CHECK_MENU_ITEM(btn)) {
-        GTK_CHECK_MENU_ITEM(btn)->active = 0;
+        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(btn), false);
     }
 }
 
@@ -960,16 +967,15 @@ GTKdev::Select(GRobject btn)
         return;
     if (GTK_IS_TOGGLE_BUTTON(btn)) {
         GtkToggleButton *toggle = (GtkToggleButton*)btn;
-        if (!toggle->active) {
-            toggle->active = 1;
-            toggle->button.depressed = true;
-            GtkStateType new_state = (GTK_BUTTON(toggle)->in_button ?
+        if (!gtk_toggle_button_get_active(toggle)) {
+            gtk_toggle_button_set_active(toggle, true);
+            GtkStateType new_state = (gtk_toggle_button_get_active(toggle) ?
                 GTK_STATE_PRELIGHT : GTK_STATE_ACTIVE);
             gtk_widget_set_state(GTK_WIDGET(toggle), new_state);
         }
     }
     else if (GTK_IS_CHECK_MENU_ITEM(btn)) {
-        GTK_CHECK_MENU_ITEM(btn)->active = 1;
+        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(btn), true);
     }
 }
 
@@ -982,9 +988,9 @@ GTKdev::GetStatus(GRobject btn)
     if (!btn)
         return (false);
     if (GTK_IS_TOGGLE_BUTTON(btn))
-        return (GTK_TOGGLE_BUTTON(btn)->active);
+        return (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(btn)));
     if (GTK_IS_CHECK_MENU_ITEM(btn))
-        return (GTK_CHECK_MENU_ITEM(btn)->active);
+        return (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(btn)));
     return (true);
 }
 
@@ -998,23 +1004,21 @@ GTKdev::SetStatus(GRobject btn, bool state)
         return;
     if (GTK_IS_TOGGLE_BUTTON(btn)) {
         GtkToggleButton *toggle = (GtkToggleButton*)btn;
-        if (toggle->active && !state) {
-            toggle->active = false;
-            toggle->button.depressed = false;
-            GtkStateType new_state = (GTK_BUTTON(toggle)->in_button ?
+        if (gtk_toggle_button_get_active(toggle) && !state) {
+            gtk_toggle_button_set_active(toggle, false);
+            GtkStateType new_state = (gtk_toggle_button_get_active(toggle) ?
                 GTK_STATE_PRELIGHT : GTK_STATE_NORMAL);
             gtk_widget_set_state(GTK_WIDGET(toggle), new_state);
         }
-        else if (!toggle->active && state) {
-            toggle->active = true;
-            toggle->button.depressed = true;
-            GtkStateType new_state = (GTK_BUTTON(toggle)->in_button ?
+        else if (!gtk_toggle_button_get_active(toggle) && state) {
+            gtk_toggle_button_set_active(toggle, true);
+            GtkStateType new_state = (gtk_toggle_button_get_active(toggle) ?
                 GTK_STATE_PRELIGHT : GTK_STATE_ACTIVE);
             gtk_widget_set_state(GTK_WIDGET(toggle), new_state);
         }
     }
     else if (GTK_IS_CHECK_MENU_ITEM(btn)) {
-        GTK_CHECK_MENU_ITEM(btn)->active = state;
+        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(btn), state);
     }
 }
 
@@ -1042,21 +1046,24 @@ GTKdev::Location(GRobject obj, int *x, int *y)
 {
     *x = 0;
     *y = 0;
-    if (obj && GTK_WIDGET(obj)->window) {
+    if (obj && gtk_widget_get_window(GTK_WIDGET(obj))) {
         GdkWindow *wnd = gtk_widget_get_parent_window(GTK_WIDGET(obj));
         int rx, ry;
         gdk_window_get_origin(wnd, &rx, &ry);
-        GtkAllocation *a = &GTK_WIDGET(obj)->allocation;
+
+        GtkAllocation *a = g_new0 (GtkAllocation, 1);
+        gtk_widget_get_allocation(GTK_WIDGET(obj), a);
         *x = rx + a->x + a->width;
         *y = ry + a->y;
+        g_free (a); 
         return;
     }
     GtkWidget *w = GTK_WIDGET(obj);
-    while (w && w->parent)
-        w = w->parent;
-    if (w->window) {
+    while (w && gtk_widget_get_parent(w))
+        w = gtk_widget_get_parent(w);
+    if (gtk_widget_get_window(w)) {
         int rx, ry;
-        gdk_window_get_origin(w->window, &rx, &ry);
+        gdk_window_get_origin(gtk_widget_get_window(w), &rx, &ry);
         if (x)
             *x = rx + 50;
         if (y)
@@ -1086,29 +1093,33 @@ GTKdev::PointerRootLoc(int *x, int *y)
 
 // Return the label string of the button
 //
-char *
+const char *
 GTKdev::GetLabel(GRobject btn)
 {
     if (!btn)
         return (0);
-    char *string = 0;
-    GtkWidget *child = GTK_BIN(btn)->child;
-    if (!child)
-        return (0);
-    if (GTK_IS_LABEL(child))
-        gtk_label_get(GTK_LABEL(child), &string);
-    else if (GTK_IS_CONTAINER(child)) {
-        GList *stuff = gtk_container_children(GTK_CONTAINER(child));
-        for (GList *a = stuff; a; a = a->next) {
-            GtkWidget *item = (GtkWidget*)a->data;
-            if (GTK_IS_LABEL(item)) {
-                gtk_label_get(GTK_LABEL(item), &string);
-                break;
-            }
-        }
-        g_list_free(stuff);
-    }
+    const char *string = 0;
+    string = gtk_button_get_label(GTK_BUTTON(btn));
     return (string);
+    
+    // GtkWidget *child = gtk_bin_get_child(GTK_BIN(btn));
+
+    // if (!child)
+    //     return (0);
+    // if (GTK_IS_LABEL(child))
+    //     gtk_label_get_text(GTK_LABEL(child), &string);
+    // else if (GTK_IS_CONTAINER(child)) {
+    //     GList *stuff = gtk_container_get_children(GTK_CONTAINER(child));
+    //     for (GList *a = stuff; a; a = a->next) {
+    //         GtkWidget *item = (GtkWidget*)a->data;
+    //         if (GTK_IS_LABEL(item)) {
+    //             gtk_label_get_text(GTK_LABEL(item), &string);
+    //             break;
+    //         }
+    //     }
+    //     g_list_free(stuff);
+    // }
+    // return (string);
 }
 
 
@@ -1119,22 +1130,24 @@ GTKdev::SetLabel(GRobject btn, const char *text)
 {
     if (!btn)
         return;
-    GtkWidget *child = GTK_BIN(btn)->child;
-    if (!child)
-        return;
-    if (GTK_IS_LABEL(child))
-        gtk_label_set_text(GTK_LABEL(child), text);
-    else if (GTK_IS_CONTAINER(child)) {
-        GList *stuff = gtk_container_children(GTK_CONTAINER(child));
-        for (GList *a = stuff; a; a = a->next) {
-            GtkWidget *item = (GtkWidget*)a->data;
-            if (GTK_IS_LABEL(item)) {
-                gtk_label_set_text(GTK_LABEL(item), text);
-                break;
-            }
-        }
-        g_list_free(stuff);
-    }
+
+    gtk_button_set_label(GTK_BUTTON(btn), text);
+    // GtkWidget *child = gtk_bin_get_child(GTK_BIN(btn));
+    // if (!child)
+    //     return;
+    // if (GTK_IS_LABEL(child))
+    //     gtk_label_set_text(GTK_LABEL(child), text);
+    // else if (GTK_IS_CONTAINER(child)) {
+    //     GList *stuff = gtk_container_get_children(GTK_CONTAINER(child));
+    //     for (GList *a = stuff; a; a = a->next) {
+    //         GtkWidget *item = (GtkWidget*)a->data;
+    //         if (GTK_IS_LABEL(item)) {
+    //             gtk_label_set_text(GTK_LABEL(item), text);
+    //             break;
+    //         }
+    //     }
+    //     g_list_free(stuff);
+    // }
 }
 
 
@@ -1153,9 +1166,9 @@ GTKdev::IsSensitive(GRobject obj)
         return (false);
     GtkWidget *w = GTK_WIDGET(obj);
     while (w) {
-        if (!GTK_WIDGET_SENSITIVE(w))
+        if (!gtk_widget_is_sensitive(w))
             return (false);
-        w = w->parent;
+        w = gtk_widget_get_parent(w);
     }
     return (true);
 }
@@ -1180,9 +1193,9 @@ GTKdev::IsVisible(GRobject obj)
         return (false);
     GtkWidget *w = GTK_WIDGET(obj);
     while (w) {
-        if (!GTK_WIDGET_MAPPED(w))
+        if (!gtk_widget_get_mapped(w))
             return (false);
-        w = w->parent;
+        w = gtk_widget_get_parent(w);
     }
     return (true);
 }
@@ -1287,8 +1300,8 @@ sGdraw::show_ghost(bool show)
             // frequently, so we put it in a timeout.
 
             if (ghost_timer_id)
-                gtk_timeout_remove(ghost_timer_id);
-            ghost_timer_id = gtk_timeout_add(100, ghost_timeout, 0);
+                g_source_remove(ghost_timer_id);
+            ghost_timer_id = g_timeout_add(100, ghost_timeout, 0);
         }
     }
 }
@@ -1370,15 +1383,20 @@ gtk_draw::Halt()
 void
 gtk_draw::Clear()
 {
-    if (!GDK_IS_PIXMAP(gd_window)) {
-        // doesn't work for pixmaps
-        gdk_window_clear(gd_window);
-    }
-    else {
+    // if (!GDK_IS_PIXMAP(gd_window)) {
+    //     // doesn't work for pixmaps
+    //     gdk_window_clear(gd_window);
+    // }
+    // else {
         int w, h;
-        gdk_window_get_size(gd_window, &w, &h);
-        gdk_draw_rectangle(gd_window, GC(), true, 0, 0, w, h);
-    }
+        w = gdk_window_get_width(gd_window);
+        h = gdk_window_get_height(gd_window);
+        cairo_t *cr;
+        cr = gdk_cairo_create(gd_window);
+        cairo_rectangle(cr, 0, 0, w, h);
+        cairo_fill(cr);
+        cairo_destroy(cr);
+    // }
 }
 
 
@@ -1443,7 +1461,11 @@ gtk_draw::Pixel(int x, int y)
 #ifdef DIRECT_TO_X
     XDrawPoint(gr_x_display(), gr_x_window(gd_window), gr_x_gc(GC()), x, y);
 #else
-    gdk_draw_point(gd_window, GC(), x, y);
+    cairo_t *cr;
+    cr = gdk_cairo_create(gd_window);
+    cairo_rectangle(cr, x, y, x+1, y+1);
+    cairo_fill(cr);
+    cairo_destroy(cr);
 #endif
 #endif
 }
@@ -1510,7 +1532,19 @@ gtk_draw::Pixels(GRmultiPt *data, int n)
     XDrawPoints(gr_x_display(), gr_x_window(gd_window), gr_x_gc(GC()),
         (XPoint*)data->data(), n, CoordModeOrigin);
 #else
-    gdk_draw_points(gd_window, GC(), (GdkPoint*)data->data(), n);
+    cairo_t *cr;
+    cr = gdk_cairo_create(gd_window);
+
+    data->data_ptr_init();
+    for (int ni=0; ni < n; ni++) {
+        int x = data->data_ptr_x();
+        int y = data->data_ptr_y();
+
+        cairo_rectangle(cr, x, y, x+1, y+1);
+        data->data_ptr_inc();
+    }
+    cairo_fill(cr);
+    cairo_destroy(cr);
 #endif
 #endif
 }
@@ -1548,6 +1582,8 @@ gtk_draw::Line(int x1, int y1, int x2, int y2)
     gdk_win32_hdc_release(gd_window, GC(), LineGCvalues);
     return;
     *****/
+    cairo_t *cr;
+    cr = gdk_cairo_create(gd_window);
 
     if (XorLineDb()) {
         // We are drawing in XOR mode, filter the Manhattan lines so
@@ -1557,15 +1593,19 @@ gtk_draw::Line(int x1, int y1, int x2, int y2)
         // "lines".
         if (x1 == x2) {
             const llist_t *ll = XorLineDb()->add_vert(x1, y1, y2);
+
+
             while (ll) {
 #ifdef DIRECT_TO_X
                 XDrawLine(gr_x_display(), gr_x_window(gd_window),
-                    gr_x_gc(GC()), x1, ll->vmin(), x1, ll->vmax());
 #else
-                gdk_draw_line(gd_window, GC(), x1, ll->vmin(), x1, ll->vmax());
+                cairo_move_to(cr, x1, ll->vmin());
+                cairo_line_to(cr, x1, ll->vmax());
 #endif
                 ll = ll->next();
             }
+            cairo_fill(cr);
+            cairo_destroy(cr);
         }
         else if (y1 == y2) {
             const llist_t *ll = XorLineDb()->add_horz(y1, x1, x2);
@@ -1574,7 +1614,8 @@ gtk_draw::Line(int x1, int y1, int x2, int y2)
                 XDrawLine(gr_x_display(), gr_x_window(gd_window),
                     gr_x_gc(GC()), ll->vmin(), y1, ll->vmax(), y1);
 #else
-                gdk_draw_line(gd_window, GC(), ll->vmin(), y1, ll->vmax(), y1);
+                cairo_move_to(cr, ll->vmin(), y1);
+                cairo_line_to(cr, ll->vmax(), y1);
 #endif
                 ll = ll->next();
             }
@@ -1586,8 +1627,8 @@ gtk_draw::Line(int x1, int y1, int x2, int y2)
                 XDrawLine(gr_x_display(), gr_x_window(gd_window),
                     gr_x_gc(GC()), ll->x1(), ll->y1(), ll->x2(), ll->y2());
 #else
-                gdk_draw_line(gd_window, GC(),
-                    ll->x1(), ll->y1(), ll->x2(), ll->y2());
+                cairo_move_to(cr, ll->x1(), ll->y1());
+                cairo_line_to(cr, ll->x2(), ll->y2());
 #endif
                 ll = ll->next();
             }
@@ -1599,8 +1640,11 @@ gtk_draw::Line(int x1, int y1, int x2, int y2)
     XDrawLine(gr_x_display(), gr_x_window(gd_window), gr_x_gc(GC()),
         x1, y1, x2, y2);
 #else
-    gdk_draw_line(gd_window, GC(), x1, y1, x2, y2);
+    cairo_move_to(cr, x1, y1);
+    cairo_line_to(cr, x2, y2);
 #endif
+    cairo_fill(cr);
+    cairo_destroy(cr);
 }
 
 
@@ -1609,6 +1653,9 @@ gtk_draw::Line(int x1, int y1, int x2, int y2)
 void
 gtk_draw::PolyLine(GRmultiPt *p, int n)
 {
+    cairo_t *cr;
+    cr = gdk_cairo_create(gd_window);
+
     if (n < 2)
         return;
     if (XorLineDb()) {
@@ -1634,8 +1681,21 @@ gtk_draw::PolyLine(GRmultiPt *p, int n)
     XDrawLines(gr_x_display(), gr_x_window(gd_window), gr_x_gc(GC()),
         (XPoint*)p->data(), n, CoordModeOrigin);
 #else
-    gdk_draw_lines(gd_window, GC(), (GdkPoint*)p->data(), n);
+
+    p->data_ptr_init();
+    int x = p->data_ptr_x();
+    int y = p->data_ptr_y();
+    cairo_move_to(cr, x, y);
+    
+    for (int ni=0; ni < n; ni++) {
+        x = p->data_ptr_x();
+        y = p->data_ptr_y();
+        cairo_line_to(cr, x, y);
+        p->data_ptr_inc();
+    }
 #endif
+    cairo_fill(cr);
+    cairo_destroy(cr);
 }
 
 
@@ -1644,6 +1704,9 @@ gtk_draw::PolyLine(GRmultiPt *p, int n)
 void
 gtk_draw::Lines(GRmultiPt *p, int n)
 {
+    cairo_t *cr;
+    cr = gdk_cairo_create(gd_window);
+
     if (n < 1)
         return;
     if (XorLineDb()) {
@@ -1662,8 +1725,23 @@ gtk_draw::Lines(GRmultiPt *p, int n)
     XDrawSegments(gr_x_display(), gr_x_window(gd_window), gr_x_gc(GC()),
         (XSegment*)p->data(), n);
 #else
-    gdk_draw_segments(gd_window, GC(), (GdkSegment*)p->data(), n);
+
+    p->data_ptr_init();
+    int x;
+    int y;
+    for (int ni=0; ni < n; ni++) {
+        x = p->data_ptr_x();
+        y = p->data_ptr_y();
+        cairo_move_to(cr, x, y);
+    
+        x = p->data_ptr_x();
+        y = p->data_ptr_y();
+        cairo_line_to(cr, x, y);
+        p->data_ptr_inc();
+    }
 #endif
+    cairo_fill(cr);
+    cairo_destroy(cr);
 }
 
 
@@ -1672,6 +1750,9 @@ gtk_draw::Lines(GRmultiPt *p, int n)
 void
 gtk_draw::Box(int x1, int y1, int x2, int y2)
 {
+    cairo_t *cr;
+    cr = gdk_cairo_create(gd_window);
+
     if (x1 > x2) {
         int temp = x1;
         x1 = x2;
@@ -1725,9 +1806,11 @@ gtk_draw::Box(int x1, int y1, int x2, int y2)
     XFillRectangle(gr_x_display(), gr_x_window(gd_window), gr_x_gc(GC()),
         x1, y1, x2-x1 + 1, y2-y1 + 1);
 #else
-    gdk_draw_rectangle(gd_window, GC(), true, x1, y1, x2-x1 + 1, y2-y1 + 1);
+    cairo_rectangle(cr, x1, y1, x2-x1 + 1, y2-y1 + 1);
 #endif
 #endif
+    cairo_fill(cr);
+    cairo_destroy(cr);
 }
 
 
@@ -1820,6 +1903,9 @@ gtk_draw::Boxes(GRmultiPt *data, int n)
 void
 gtk_draw::Arc(int x0, int y0, int rx, int ry, double theta1, double theta2)
 {
+    cairo_t *cr;
+    cr = gdk_cairo_create(gd_window);
+
     if (theta1 >= theta2)
         theta2 = 2 * M_PI + theta2;
     int t1 = (int)(64 * (180.0 / M_PI) * theta1);
@@ -1834,8 +1920,9 @@ gtk_draw::Arc(int x0, int y0, int rx, int ry, double theta1, double theta2)
     XDrawArc(gr_x_display(), gr_x_window(gd_window), gr_x_gc(GC()),
         x0 - rx, y0 - ry, dx, dy, t1, t2);
 #else
-    gdk_draw_arc(gd_window, GC(), false, x0 - rx, y0 - ry, dx, dy, t1, t2);
+    cairo_arc(cr, x0, y0, rx, t1, t2);
 #endif
+    cairo_destroy(cr);
 }
 
 
@@ -1844,6 +1931,9 @@ gtk_draw::Arc(int x0, int y0, int rx, int ry, double theta1, double theta2)
 void
 gtk_draw::Polygon(GRmultiPt *data, int numv)
 {
+    cairo_t *cr;
+    cr = gdk_cairo_create(gd_window);
+
     if (numv < 4)
         return;
 #if defined(WIN32) && defined(DIRECT_TO_GDI)
@@ -1900,9 +1990,22 @@ gtk_draw::Polygon(GRmultiPt *data, int numv)
     XFillPolygon(gr_x_display(), gr_x_window(gd_window), gr_x_gc(GC()),
         (XPoint*)data->data(), numv, Complex, CoordModeOrigin);
 #else
-    gdk_draw_polygon(gd_window, GC(), true, (GdkPoint*)data->data(), numv);
+    data->data_ptr_init();
+    int x = data->data_ptr_x();
+    int y = data->data_ptr_y();
+    cairo_move_to(cr, x, y);
+    
+    for (int ni=0; ni < numv; ni++) {
+        x = data->data_ptr_x();
+        y = data->data_ptr_y();
+        cairo_line_to(cr, x, y);
+        data->data_ptr_inc();
+    }
+    cairo_close_path(cr);
 #endif
 #endif
+    cairo_fill(cr);
+    cairo_destroy(cr);
 }
 
 
@@ -1910,6 +2013,9 @@ gtk_draw::Polygon(GRmultiPt *data, int numv)
 void
 gtk_draw::Zoid(int yl, int yu, int xll, int xul, int xlr, int xur)
 {
+    cairo_t *cr;
+    cr = gdk_cairo_create(gd_window);
+
     if (yl >= yu)
         return;
 #if defined(WIN32) && defined(DIRECT_TO_GDI)
@@ -1991,9 +2097,21 @@ gtk_draw::Zoid(int yl, int yu, int xll, int xul, int xlr, int xur)
     XFillPolygon(gr_x_display(), gr_x_window(gd_window), gr_x_gc(GC()),
         points, n, Convex, CoordModeOrigin);
 #else
-    gdk_draw_polygon(gd_window, GC(), true, points, n);
+    int x = points[0].x;
+    int y = points[0].y;
+    cairo_move_to(cr, x, y);
+    
+    for (int ni=1; ni < n; ni++) {
+        x = points[ni].x;
+        y = points[ni].y;
+        cairo_line_to(cr, x, y);
+    }
+    cairo_close_path(cr);
+
 #endif
 #endif
+    cairo_fill(cr);
+    cairo_destroy(cr);
 }
 
 
@@ -2014,20 +2132,22 @@ gtk_draw::Text(const char *text, int x, int y, int xform, int, int)
     if (!text || !*text)
         return;
 
-    // Save the GC state.
-    GdkGCValues vals;
-    gdk_gc_get_values(GC(), &vals);
+    cairo_t *cr;
 
-    if (GC() == XorGC()) {
-        // Set the foreground to the true ghost-drawing color, this is
-        // currently the true color xor'ed with the background.
-        GdkColor clr;
-        clr.pixel = gd_foreg;
-        gdk_gc_set_foreground(GC(), &clr);
-    }
+    // // Save the GC state.
+    // GdkGCValues vals;
+    // gdk_gc_get_values(GC(), &vals);
 
-    // Switch to copy function.
-    gdk_gc_set_function(GC(), GDK_COPY);
+    // if (GC() == XorGC()) {
+    //     // Set the foreground to the true ghost-drawing color, this is
+    //     // currently the true color xor'ed with the background.
+    //     GdkColor clr;
+    //     clr.pixel = gd_foreg;
+    //     gdk_gc_set_foreground(GC(), &clr);
+    // }
+
+    // // Switch to copy function.
+    // gdk_gc_set_function(GC(), GDK_COPY);
 
     // We need to handle strings with embedded newlines on a single
     // line.  GTK-1 does this naturally.  With Pango, one can set
@@ -2061,9 +2181,9 @@ gtk_draw::Text(const char *text, int x, int y, int xform, int, int)
     if (wid <= 0 || hei <= 0) {
         g_object_unref(lout);
         // Fix up the GC as it was.
-        if (GC() == XorGC())
-            gdk_gc_set_foreground(GC(), &vals.foreground);
-        gdk_gc_set_function(GC(), vals.function);
+        // if (GC() == XorGC())
+        //     gdk_gc_set_foreground(GC(), &vals.foreground);
+        // gdk_gc_set_function(GC(), vals.function);
         return;
     }
     y -= hei;
@@ -2085,13 +2205,16 @@ gtk_draw::Text(const char *text, int x, int y, int xform, int, int)
     if (!xform || xform == 14) {
         // 0 no rotation, 14 MX MY R180
 
-        gdk_draw_layout(gd_window, GC(), x, y, lout);
+        // gdk_draw_layout(gd_window, GC(), x, y, lout);
+
+        cairo_move_to(cr, x, y);
+        pango_cairo_show_layout(cr, lout);
         g_object_unref(lout);
 
         // Fix up the GC as it was.
-        if (GC() == XorGC())
-            gdk_gc_set_foreground(GC(), &vals.foreground);
-        gdk_gc_set_function(GC(), vals.function);
+        // if (GC() == XorGC())
+        //     gdk_gc_set_foreground(GC(), &vals.foreground);
+        // gdk_gc_set_function(GC(), vals.function);
         return;
     }
 
@@ -2101,64 +2224,74 @@ gtk_draw::Text(const char *text, int x, int y, int xform, int, int)
     unsigned int bg_pixel;
     if (GC() == XorGC())
         bg_pixel = gd_foreg;
-    else
-        bg_pixel = vals.foreground.pixel;
+    // else
+    //     bg_pixel = vals.foreground.pixel;
     if (bg_pixel == 0) {
         GdkColor c;
-        if (gdk_color_white(GRX->Colormap(), &c))
-            bg_pixel = c.pixel;
-        else
-            bg_pixel = -1;
+        // TODO
+        // if (gdk_color_white(GRX->Colormap(), &c))
+        //     bg_pixel = c.pixel;
+        // else
+        //     bg_pixel = -1;
+        bg_pixel = c.pixel;
     }
     else {
         GdkColor c;
-        if (gdk_color_black(GRX->Colormap(), &c))
-            bg_pixel = c.pixel;
-        else
-            bg_pixel = 0;
+        // TODO
+        // if (gdk_color_black(GRX->Colormap(), &c))
+        //     bg_pixel = c.pixel;
+        // else
+        //     bg_pixel = 0;
+        bg_pixel = c.pixel;
     }
 
-    GdkPixmap *p = gdk_pixmap_new(gd_window, wid, hei, GRX->Visual()->depth);
-    if (p) {
+    cairo_surface_t *s;
+    s = cairo_image_surface_create (CAIRO_FORMAT_A1, wid, hei);
+
+    if (s) {
         GdkColor clr;
         clr.pixel = bg_pixel;
-        gdk_gc_set_foreground(GC(), &clr);
-        gdk_draw_rectangle(p, GC(), true, 0, 0, wid, hei);
+        // gdk_gc_set_foreground(GC(), &clr);
+        cairo_rectangle(cr, 0, 0, wid, hei);
         if (GC() == XorGC()) {
             clr.pixel = gd_foreg;
-            gdk_gc_set_foreground(GC(), &clr);
+            // gdk_gc_set_foreground(GC(), &clr);
         }
-        else
-            gdk_gc_set_foreground(GC(), &vals.foreground);
+        // else
+        //     gdk_gc_set_foreground(GC(), &vals.foreground);
     }
     else {
         // Fix up the GC as it was.
-        if (GC() == XorGC())
-            gdk_gc_set_foreground(GC(), &vals.foreground);
-        gdk_gc_set_function(GC(), vals.function);
+        // if (GC() == XorGC())
+        //     gdk_gc_set_foreground(GC(), &vals.foreground);
+        // gdk_gc_set_function(GC(), vals.function);
         return;
     }
 
-    gdk_draw_layout(p, GC(), 0, 0, lout);
+    // cr = gdk_cairo_create(s);
+
+    cairo_move_to (cr, 0, 0);
+    pango_cairo_show_layout(cr, lout);
+
     g_object_unref(lout);
-    GdkImage *im = gdk_image_get(p, 0, 0, wid, hei);
-    gdk_pixmap_unref(p);
+    // GdkImage *im = gdk_image_get(s, 0, 0, wid, hei);
+    // g_object_unref(s);
 
     // Create a second image for the transformed copy.  This will cntain
     // the background pixels from the rendering area.
 
-    GdkImage *im1;
-    if (xform & 1) {
-        // rotation
-        p = (GdkPixmap*)GetRegion(x, y, hei, wid);
-        im1 = gdk_image_get(p, 0, 0, hei, wid);
-        gdk_pixmap_unref(p);
-    }
-    else {
-        p = (GdkPixmap*)GetRegion(x, y, wid, hei);
-        im1 = gdk_image_get(p, 0, 0, wid, hei);
-        gdk_pixmap_unref(p);
-    }
+    // GdkImage *im1;
+    // if (xform & 1) {
+    //     // rotation
+    //     s = (cairo_surface_t*)GetRegion(x, y, hei, wid);
+    //     im1 = gdk_image_get(s, 0, 0, hei, wid);
+    //     g_object_unref(s);
+    // }
+    // else {
+    //     s = (cairo_surface_t*)GetRegion(x, y, wid, hei);
+    //     im1 = gdk_image_get(s, 0, 0, wid, hei);
+    //     g_object_unref(s);
+    // }
 
     // Transform and copy the pixels, only those that are non-background.
 
@@ -2169,9 +2302,9 @@ gtk_draw::Text(const char *text, int x, int y, int xform, int, int)
     case 15: // MX MY R270
         for (i = 0; i < wid; i++) {
             for (j = 0; j < hei;  j++) {
-                px = gdk_image_get_pixel(im, i, j);
-                if (px != bg_pixel)
-                    gdk_image_put_pixel(im1, j, wid-i-1, px);
+                // px = gdk_image_get_pixel(im, i, j);
+                // if (px != bg_pixel)
+                    // gdk_image_put_pixel(im1, j, wid-i-1, px);
             }
         }
         y += wid;
@@ -2181,9 +2314,9 @@ gtk_draw::Text(const char *text, int x, int y, int xform, int, int)
     case 12: // MX MY
         for (i = 0; i < wid; i++) {
             for (j = 0; j < hei;  j++) {
-                px = gdk_image_get_pixel(im, i, j);
-                if (px != bg_pixel)
-                    gdk_image_put_pixel(im1, wid-i-1, hei-j-1, px);
+                // px = gdk_image_get_pixel(im, i, j);
+                // if (px != bg_pixel)
+                    // gdk_image_put_pixel(im1, wid-i-1, hei-j-1, px);
             }
         }
         y += hei;
@@ -2193,9 +2326,9 @@ gtk_draw::Text(const char *text, int x, int y, int xform, int, int)
     case 13: // MX MY R90
         for (i = 0; i < wid; i++) {
             for (j = 0; j < hei;  j++) {
-                px = gdk_image_get_pixel(im, i, j);
-                if (px != bg_pixel)
-                    gdk_image_put_pixel(im1, hei-j-1, i, px);
+                // px = gdk_image_get_pixel(im, i, j);
+                // if (px != bg_pixel)
+                    // gdk_image_put_pixel(im1, hei-j-1, i, px);
             }
         }
         y += wid;
@@ -2205,9 +2338,9 @@ gtk_draw::Text(const char *text, int x, int y, int xform, int, int)
     case 10: // MX R180
         for (i = 0; i < wid; i++) {
             for (j = 0; j < hei;  j++) {
-                px = gdk_image_get_pixel(im, i, j);
-                if (px != bg_pixel)
-                    gdk_image_put_pixel(im1, i, hei-j-1, px);
+                // px = gdk_image_get_pixel(im, i, j);
+                // if (px != bg_pixel)
+                //     gdk_image_put_pixel(im1, i, hei-j-1, px);
             }
         }
         y += hei;
@@ -2217,9 +2350,9 @@ gtk_draw::Text(const char *text, int x, int y, int xform, int, int)
     case 11: // MX R270
         for (i = 0; i < wid; i++) {
             for (j = 0; j < hei;  j++) {
-                px = gdk_image_get_pixel(im, i, j);
-                if (px != bg_pixel)
-                    gdk_image_put_pixel(im1, j, i, px);
+                // px = gdk_image_get_pixel(im, i, j);
+                // if (px != bg_pixel)
+                //     gdk_image_put_pixel(im1, j, i, px);
             }
         }
         y += wid;
@@ -2229,9 +2362,9 @@ gtk_draw::Text(const char *text, int x, int y, int xform, int, int)
     case 8:  // MX
         for (i = 0; i < wid; i++) {
             for (j = 0; j < hei;  j++) {
-                px = gdk_image_get_pixel(im, i, j);
-                if (px != bg_pixel)
-                    gdk_image_put_pixel(im1, wid-i-1, j, px);
+                // px = gdk_image_get_pixel(im, i, j);
+                // if (px != bg_pixel)
+                //     gdk_image_put_pixel(im1, wid-i-1, j, px);
             }
         }
         y += hei;
@@ -2241,27 +2374,29 @@ gtk_draw::Text(const char *text, int x, int y, int xform, int, int)
     case 9:  // MX R90
         for (i = 0; i < wid; i++) {
             for (j = 0; j < hei;  j++) {
-                px = gdk_image_get_pixel(im, i, j);
-                if (px != bg_pixel)
-                    gdk_image_put_pixel(im1, hei-j-1, wid-i-1, px);
+                // px = gdk_image_get_pixel(im, i, j);
+                // if (px != bg_pixel)
+                //     gdk_image_put_pixel(im1, hei-j-1, wid-i-1, px);
             }
         }
         y += wid;
         break;
     }
 
-    gdk_image_destroy(im);
-    if (xform & 1)
-        // rotation
-        gdk_draw_image(gd_window, GC(), im1, 0, 0, x, y, hei, wid);
-    else
-        gdk_draw_image(gd_window, GC(), im1, 0, 0, x, y, wid, hei);
-    gdk_image_destroy(im1);
+    // gdk_image_destroy(im);
+    // if (xform & 1)
+    //     // rotation
+    //     gdk_draw_image(gd_window, GC(), im1, 0, 0, x, y, hei, wid);
+    // else
+    //     gdk_draw_image(gd_window, GC(), im1, 0, 0, x, y, wid, hei);
+    // gdk_image_destroy(im1);
 
-    // Fix up the GC as it was.
-    if (GC() == XorGC())
-        gdk_gc_set_foreground(GC(), &vals.foreground);
-    gdk_gc_set_function(GC(), vals.function);
+    // // Fix up the GC as it was.
+    // if (GC() == XorGC())
+    //     gdk_gc_set_foreground(GC(), &vals.foreground);
+    // gdk_gc_set_function(GC(), vals.function);
+
+    cairo_destroy (cr);
 }
 
 
@@ -2360,25 +2495,27 @@ gtk_draw::DefineColor(int *pixel, int red, int green, int blue)
     newcolor.blue  = (blue  * 256);
     newcolor.pixel = *pixel;
     if (ColorAlloc.no_alloc) {
-        if (gdk_colormap_alloc_color(GRX->Colormap(), &newcolor, false, true))
-            *pixel = newcolor.pixel;
-        else
-            *pixel = 0;
+        *pixel = newcolor.pixel;
+        // if (gdk_colormap_alloc_color(GRX->Colormap(), &newcolor, false, true))
+        //     *pixel = newcolor.pixel;
+        // else
+        //     *pixel = 0;
     }
     else {
         gdk_error_trap_push();
         GRX->SetSilenceErrs(true);
-        gdk_color_change(GRX->Colormap(), &newcolor);
+        // gdk_color_change(GRX->Colormap(), &newcolor);
         gdk_flush();  // important!
         if (gdk_error_trap_pop()) {
-            if (gdk_colormap_alloc_color(GRX->Colormap(), &newcolor,
-                    false, true))
-                *pixel = newcolor.pixel;
-            else
-                *pixel = 0;
+            // if (gdk_colormap_alloc_color(GRX->Colormap(), &newcolor,
+            //         false, true))
+            //     *pixel = newcolor.pixel;
+            // else
+            //     *pixel = 0;
+            *pixel = newcolor.pixel;
         }
-        if (gd_gbag && gd_gbag->get_gc())
-            gdk_gc_set_foreground(GC(), &newcolor);
+        // if (gd_gbag && gd_gbag->get_gc())
+        //     gdk_gc_set_foreground(GC(), &newcolor);
         GRX->SetSilenceErrs(false);
     }
 }
@@ -2392,11 +2529,11 @@ gtk_draw::SetBackground(int pixel)
     gd_backg = pixel;
     GdkColor clr;
     clr.pixel = pixel;
-    gdk_gc_set_background(GC(), &clr);
-    gdk_gc_set_background(XorGC(), &clr);
+    // gdk_gc_set_background(GC(), &clr);
+    // gdk_gc_set_background(XorGC(), &clr);
     if (!ColorAlloc.num_mask_allocated) {
         clr.pixel = gd_foreg ^ pixel;
-        gdk_gc_set_foreground(XorGC(), &clr);
+        // gdk_gc_set_foreground(XorGC(), &clr);
     }
 }
 
@@ -2406,11 +2543,11 @@ gtk_draw::SetBackground(int pixel)
 void
 gtk_draw::SetWindowBackground(int pixel)
 {
-    if (!GDK_IS_PIXMAP(gd_window)) {
+    // if (!GDK_IS_PIXMAP(gd_window)) {
         GdkColor clr;
         clr.pixel = pixel;
         gdk_window_set_background(gd_window, &clr);
-    }
+    // }
 }
 
 
@@ -2425,13 +2562,13 @@ gtk_draw::SetGhostColor(int pixel)
     if (ColorAlloc.num_mask_allocated) {
         GdkColor newcolor;
         newcolor.pixel = pixel;
-        newcolor.red = GRX->Colormap()->colors[pixel].red;
-        newcolor.green = GRX->Colormap()->colors[pixel].green;
-        newcolor.blue = GRX->Colormap()->colors[pixel].blue;
+        // newcolor.red = GRX->Colormap()->colors[pixel].red;
+        // newcolor.green = GRX->Colormap()->colors[pixel].green;
+        // newcolor.blue = GRX->Colormap()->colors[pixel].blue;
         for (int i = 0; i < ColorAlloc.num_mask_allocated; i++) {
             newcolor.pixel =
                 ColorAlloc.plane_mask[0] | ColorAlloc.drawing_pixels[i];
-            gdk_color_change(GRX->Colormap(), &newcolor);
+            // gdk_color_change(GRX->Colormap(), &newcolor);
         }
 #ifdef WITH_X11
         XGCValues gcv;
@@ -2440,13 +2577,13 @@ gtk_draw::SetGhostColor(int pixel)
 #endif
         gd_foreg = ColorAlloc.plane_mask[0] | ColorAlloc.drawing_pixels[0];
         newcolor.pixel = gd_foreg;
-        gdk_gc_set_foreground(XorGC(), &newcolor);
+        // gdk_gc_set_foreground(XorGC(), &newcolor);
     }
     else {
         gd_foreg = pixel;
         GdkColor newcolor;
         newcolor.pixel = pixel ^ gd_backg;
-        gdk_gc_set_foreground(XorGC(), &newcolor);
+        // gdk_gc_set_foreground(XorGC(), &newcolor);
     }
 }
 
@@ -2460,7 +2597,7 @@ gtk_draw::SetColor(int pixel)
         return;
     GdkColor clr;
     clr.pixel = pixel;
-    gdk_gc_set_foreground(GC(), &clr);
+    // gdk_gc_set_foreground(GC(), &clr);
 }
 
 
@@ -2470,15 +2607,15 @@ void
 gtk_draw::SetLinestyle(const GRlineType *lineptr)
 {
     if (!lineptr || !lineptr->mask || lineptr->mask == -1) {
-        gdk_gc_set_line_attributes(GC(), 0, GDK_LINE_SOLID,
-            GDK_CAP_BUTT, GDK_JOIN_MITER);
+        // gdk_gc_set_line_attributes(GC(), 0, GDK_LINE_SOLID,
+        //     GDK_CAP_BUTT, GDK_JOIN_MITER);
         return;
     }
-    gdk_gc_set_line_attributes(GC(), 0, GDK_LINE_ON_OFF_DASH,
-         GDK_CAP_BUTT, GDK_JOIN_MITER);
+    // gdk_gc_set_line_attributes(GC(), 0, GDK_LINE_ON_OFF_DASH,
+    //      GDK_CAP_BUTT, GDK_JOIN_MITER);
 
-    gdk_gc_set_dashes(GC(), lineptr->offset,
-        (signed char*)lineptr->dashes, lineptr->length);
+    // gdk_gc_set_dashes(GC(), lineptr->offset,
+    //     (signed char*)lineptr->dashes, lineptr->length);
 }
 
 
@@ -2549,13 +2686,13 @@ gtk_draw::DefineFillpattern(GRfillType *fillp)
     }
 #else
     if (fillp->xPixmap()) {
-        gdk_pixmap_unref((GdkPixmap*)fillp->xPixmap());
+        // g_object_unref(fillp->xPixmap());
         fillp->setXpixmap(0);
     }
     if (fillp->hasMap()) {
         unsigned char *map = fillp->newBitmap();
-        fillp->setXpixmap((GRfillData)gdk_bitmap_create_from_data(gd_window,
-            (char*)map, fillp->nX(), fillp->nY()));
+        // fillp->setXpixmap((GRfillData)gdk_bitmap_create_from_data(gd_window,
+            // (char*)map, fillp->nX(), fillp->nY()));
         delete [] map;
     }
 #endif
@@ -2575,12 +2712,13 @@ gtk_draw::SetFillpattern(const GRfillType *fillp)
     gd_gbag->set_fillpattern(fillp);
 
 #else
-    if (!fillp || !fillp->xPixmap())
-        gdk_gc_set_fill(GC(), GDK_SOLID);
-    else {
-        gdk_gc_set_stipple(GC(), (GdkPixmap*)fillp->xPixmap());
-        gdk_gc_set_fill(GC(), GDK_STIPPLED);
-    }
+    // TODO
+    // if (!fillp || !fillp->xPixmap())
+    //     gdk_gc_set_fill(GC(), GDK_SOLID);
+    // else {
+    //     gdk_gc_set_stipple(GC(), (cairo_surface_t*)fillp->xPixmap());
+    //     gdk_gc_set_fill(GC(), GDK_STIPPLED);
+    // }
 #endif
 }
 
@@ -2604,11 +2742,11 @@ gtk_draw::Update()
     };
     static myrect onepixrect;
 
-    if (gd_viewport && GDK_IS_WINDOW(gd_viewport->window))
-        gdk_window_invalidate_rect(gd_viewport->window, &onepixrect, false);
+    if (gd_viewport && GDK_IS_WINDOW(gtk_widget_get_window(gd_viewport)))
+        gdk_window_invalidate_rect(gtk_widget_get_window(gd_viewport), &onepixrect, false);
 
     // Equivalent to above but slightly less efficient.
-    // if (gd_viewport && GDK_IS_WINDOW(gd_viewport->window))
+    // if (gd_viewport && GDK_IS_WINDOW(gtk_widget_get_window(gd_viewport)))
     //     gtk_widget_queue_draw_area(gd_viewport, 0, 0, 1, 1);
 #endif
     gdk_flush();
@@ -2659,18 +2797,18 @@ gtk_draw::SetXOR(int val)
 {
     switch (val) {
     case GRxNone:
-        gdk_gc_set_function(XorGC(), GDK_XOR);
+        // gdk_gc_set_function(XorGC(), GDK_XOR);
         gd_gbag->set_xor(false);
         break;
     case GRxXor:
         gd_gbag->set_xor(true);
         break;
     case GRxHlite:
-        gdk_gc_set_function(XorGC(), GDK_OR);
+        // gdk_gc_set_function(XorGC(), GDK_OR);
         gd_gbag->set_xor(true);
         break;
     case GRxUnhlite:
-        gdk_gc_set_function(XorGC(), GDK_AND_INVERT);
+        // gdk_gc_set_function(XorGC(), GDK_AND_INVERT);
         gd_gbag->set_xor(true);
         break;
     }
@@ -2688,7 +2826,8 @@ namespace {
 #ifdef WIN32
     HBITMAP pmap;
 #else
-        GdkPixmap *pmap;
+        // cairo_surface_t *pmap;
+    int fake;
 #endif
         char bits[GlyphWidth];
     };
@@ -2709,6 +2848,7 @@ namespace {
 void
 gtk_draw::ShowGlyph(int gnum, int x, int y)
 {
+    cairo_t *cr;
     x -= GlyphWidth/2;
     y -= GlyphWidth/2;
     gnum = gnum % (sizeof(glyphs)/sizeof(stmap));
@@ -2752,15 +2892,15 @@ gtk_draw::ShowGlyph(int gnum, int x, int y)
     gdk_win32_hdc_release(gd_window, GC(), Win32GCvalues);
 
 #else
-    if (!st->pmap)
-        st->pmap = gdk_bitmap_create_from_data(gd_window, (char*)st->bits,
-            GlyphWidth, GlyphWidth);
-    gdk_gc_set_stipple(GC(), st->pmap);
-    gdk_gc_set_fill(GC(), GDK_STIPPLED);
-    gdk_gc_set_ts_origin(GC(), x, y);
-    gdk_draw_rectangle(gd_window, GC(), true, x, y, GlyphWidth, GlyphWidth);
-    gdk_gc_set_ts_origin(GC(), 0, 0);
-    gdk_gc_set_fill(GC(), GDK_SOLID);
+    // if (!st->pmap)
+    //     st->pmap = gdk_bitmap_create_from_data(gd_window, (char*)st->bits,
+    //         GlyphWidth, GlyphWidth);
+    // gdk_gc_set_stipple(GC(), st->pmap);
+    // gdk_gc_set_fill(GC(), GDK_STIPPLED);
+    // gdk_gc_set_ts_origin(GC(), x, y);
+    cairo_rectangle(cr, x, y, GlyphWidth, GlyphWidth);
+    // gdk_gc_set_ts_origin(GC(), 0, 0);
+    // gdk_gc_set_fill(GC(), GDK_SOLID);
 #endif
 }
 
@@ -2768,24 +2908,25 @@ gtk_draw::ShowGlyph(int gnum, int x, int y)
 GRobject
 gtk_draw::GetRegion(int x, int y, int wid, int hei)
 {
-    GdkPixmap *pm = gdk_pixmap_new(gd_window, wid, hei, GRX->Visual()->depth);
-    gdk_window_copy_area(pm, GC(), 0, 0, gd_window, x, y, wid, hei);
-    return ((GRobject)pm);
+    // cairo_surface_t *pm = gdk_pixmap_new(gd_window, wid, hei, GRX->Visual()->depth);
+    // gdk_window_copy_area(pm, GC(), 0, 0, gd_window, x, y, wid, hei);
+    // return ((GRobject)pm);
+    return ((GRobject)0);
 }
 
 
 void
 gtk_draw::PutRegion(GRobject pm, int x, int y, int wid, int hei)
 {
-    gdk_window_copy_area(gd_window, GC(), x, y, (GdkPixmap*)pm, 0, 0,
-        wid, hei);
+    // gdk_window_copy_area(gd_window, GC(), x, y, (cairo_surface_t*)pm, 0, 0,
+    //     wid, hei);
 }
 
 
 void
 gtk_draw::FreeRegion(GRobject pm)
 {
-    gdk_pixmap_unref((GdkPixmap*)pm);
+    // g_object_unref((cairo_surface_t*)pm);
 }
 
 
@@ -2800,24 +2941,24 @@ gtk_draw::DisplayImage(const GRimage *image, int x, int y,
 
     if (image->shmid()) {
         XShmSegmentInfo shminfo;
-        XImage *im = XShmCreateImage(gr_x_display(),
-            gr_x_visual(GRX->Visual()), GRX->Visual()->depth, ZPixmap,
-            0, &shminfo, image->width(), image->height());
-        if (!im)
-            goto normal;
-        shminfo.shmid = image->shmid();
-        shminfo.shmaddr = im->data = (char*)image->data();
-        shminfo.readOnly = False;
-        if (XShmAttach(gr_x_display(), &shminfo) != True) {
-            im->data = 0;
-            XDestroyImage(im);
-            goto normal;
-        }
-        XShmPutImage(gr_x_display(), gr_x_window(gd_window), gr_x_gc(GC()),
-            im, x, y, x, y, width, height, True);
-        XShmDetach(gr_x_display(), &shminfo);
-        im->data = 0;
-        XDestroyImage(im);
+        // XImage *im = XShmCreateImage(gr_x_display(),
+        //     gr_x_visual(GRX->Visual()), GRX->Visual()->depth, ZPixmap,
+        //     0, &shminfo, image->width(), image->height());
+        // if (!im)
+        //     goto normal;
+        // shminfo.shmid = image->shmid();
+        // shminfo.shmaddr = im->data = (char*)image->data();
+        // shminfo.readOnly = False;
+        // if (XShmAttach(gr_x_display(), &shminfo) != True) {
+        //     im->data = 0;
+        //     XDestroyImage(im);
+        //     goto normal;
+        // }
+        // XShmPutImage(gr_x_display(), gr_x_window(gd_window), gr_x_gc(GC()),
+        //     im, x, y, x, y, width, height, True);
+        // XShmDetach(gr_x_display(), &shminfo);
+        // im->data = 0;
+        // XDestroyImage(im);
         return;
     }
 normal:
@@ -2881,14 +3022,14 @@ normal:
         // same as ours.  Maybe there is an endian issue?  Anyway, this
         // code seems to work, and avoids the copy overhead.
 
-        XImage *im = XCreateImage(gr_x_display(),
-            gr_x_visual(GRX->Visual()), GRX->Visual()->depth, ZPixmap,
-            0, 0, image->width(), image->height(), 32, 0);
-        im->data = (char*)image->data();
-        XPutImage(gr_x_display(), gr_x_window(gd_window), gr_x_gc(GC()), im,
-            x, y, x, y, width, height);
-        im->data = 0;
-        XDestroyImage(im);
+        // XImage *im = XCreateImage(gr_x_display(),
+        //     gr_x_visual(GRX->Visual()), GRX->Visual()->depth, ZPixmap,
+        //     0, 0, image->width(), image->height(), 32, 0);
+        // im->data = (char*)image->data();
+        // XPutImage(gr_x_display(), gr_x_window(gd_window), gr_x_gc(GC()), im,
+        //     x, y, x, y, width, height);
+        // im->data = 0;
+        // XDestroyImage(im);
         return;
     }
     if (GRX->ImageCode() == 1) {
@@ -2896,70 +3037,70 @@ normal:
         // code, but does not use SHM.  I can't see any difference
         // with/without SHM anyway.
 
-        XImage *im = XCreateImage(gr_x_display(),
-            gr_x_visual(GRX->Visual()), GRX->Visual()->depth, ZPixmap,
-            0, 0, width, height, 32, 0);
-        im->data = (char*)malloc(im->bytes_per_line * im->height);
+        // XImage *im = XCreateImage(gr_x_display(),
+        //     gr_x_visual(GRX->Visual()), GRX->Visual()->depth, ZPixmap,
+        //     0, 0, width, height, 32, 0);
+        // im->data = (char*)malloc(im->bytes_per_line * im->height);
 
-        for (int i = 0; i < height; i++) {
-            int yd = i + y;
-            if (yd < 0)
-                continue;
-            if ((unsigned int)yd >= image->height())
-                break;
-            unsigned int *lptr = image->data() + yd*image->width();
-            for (int j = 0; j < width; j++) {
-                int xd = j + x;
-                if (xd < 0)
-                    continue;
-                if ((unsigned int)xd >= image->width())
-                    break;
-                XPutPixel(im, j, i, lptr[xd]);
-            }
-        }
-        XPutImage(gr_x_display(), gr_x_window(gd_window), gr_x_gc(GC()), im,
-            0, 0, x, y, width, height);
-        XDestroyImage(im);
+        // for (int i = 0; i < height; i++) {
+        //     int yd = i + y;
+        //     if (yd < 0)
+        //         continue;
+        //     if ((unsigned int)yd >= image->height())
+        //         break;
+        //     unsigned int *lptr = image->data() + yd*image->width();
+        //     for (int j = 0; j < width; j++) {
+        //         int xd = j + x;
+        //         if (xd < 0)
+        //             continue;
+        //         if ((unsigned int)xd >= image->width())
+        //             break;
+        //         XPutPixel(im, j, i, lptr[xd]);
+        //     }
+        // }
+        // XPutImage(gr_x_display(), gr_x_window(gd_window), gr_x_gc(GC()), im,
+        //     0, 0, x, y, width, height);
+        // XDestroyImage(im);
         return;
     }
 #endif
 
     // Gdk version.
 
-    GdkImage *im = gdk_image_new(GDK_IMAGE_FASTEST, GRX->Visual(),
-        width, height);
+//     GdkImage *im = gdk_image_new(GDK_IMAGE_FASTEST, GRX->Visual(),
+//         width, height);
 
-    for (int i = 0; i < height; i++) {
-        int yd = i + y;
-        if (yd < 0)
-            continue;
-        if ((unsigned int)yd >= image->height())
-            break;
-        for (int j = 0; j < width; j++) {
-            int xd = j + x;
-            if (xd < 0)
-                continue;
-            if ((unsigned int)xd >= image->width())
-                break;
-            unsigned int px = image->data()[xd + yd*image->width()];
-#ifdef WITH_QUARTZ
-            // Hmmmm, seems that Quartz requires byte reversal.
-            unsigned int qpx;
-            unsigned char *c1 = ((unsigned char*)&px) + 3;
-            unsigned char *c2 = (unsigned char*)&qpx;
-            *c2++ = *c1--;
-            *c2++ = *c1--;
-            *c2++ = *c1--;
-            *c2++ = *c1--;
-            gdk_image_put_pixel(im, j, i, qpx);
-#else
-            gdk_image_put_pixel(im, j, i, px);
-#endif
-        }
-    }
+//     for (int i = 0; i < height; i++) {
+//         int yd = i + y;
+//         if (yd < 0)
+//             continue;
+//         if ((unsigned int)yd >= image->height())
+//             break;
+//         for (int j = 0; j < width; j++) {
+//             int xd = j + x;
+//             if (xd < 0)
+//                 continue;
+//             if ((unsigned int)xd >= image->width())
+//                 break;
+//             unsigned int px = image->data()[xd + yd*image->width()];
+// #ifdef WITH_QUARTZ
+//             // Hmmmm, seems that Quartz requires byte reversal.
+//             unsigned int qpx;
+//             unsigned char *c1 = ((unsigned char*)&px) + 3;
+//             unsigned char *c2 = (unsigned char*)&qpx;
+//             *c2++ = *c1--;
+//             *c2++ = *c1--;
+//             *c2++ = *c1--;
+//             *c2++ = *c1--;
+//             gdk_image_put_pixel(im, j, i, qpx);
+// #else
+//             gdk_image_put_pixel(im, j, i, px);
+// #endif
+//         }
+//     }
 
-    gdk_draw_image(gd_window, GC(), im, 0, 0, x, y, width, height);
-    gdk_image_destroy(im);
+//     gdk_draw_image(gd_window, GC(), im, 0, 0, x, y, width, height);
+//     gdk_image_destroy(im);
 }
 // End of gtk_draw functions.
 
@@ -3082,17 +3223,17 @@ namespace {
 
         // Don't propagate modifiers, these can cause focus change to
         // the main window in the GTK-2 in RHEL6.
-        switch (event->keyval) {
-        case GDK_Shift_L:
-        case GDK_Shift_R:
-        case GDK_Control_L:
-        case GDK_Control_R:
-            return (x);
-        default:
-            break;
-        }
+        // switch (event->keyval) {
+        // case GDK_KEY_Shift_L:
+        // case GDK_KEY_Shift_R:
+        // case GDK_KEY_Control_L:
+        // case GDK_KEY_Control_R:
+        //     return (x);
+        // default:
+        //     break;
+        // }
 
-        if (gtk_object_get_data(GTK_OBJECT(widget), "no_prop_key"))
+        if (g_object_get_data(G_OBJECT(widget), "no_prop_key"))
             return (x);
         if (!x && GRX->MainFrame() && widget != GRX->MainFrame()->Shell()) {
             gtk_propagate_event(GRX->MainFrame()->Shell(), (GdkEvent*)event);
@@ -3112,17 +3253,17 @@ namespace {
     {
         int x = (*key_up_ev)(widget, event);
 
-        switch (event->keyval) {
-        case GDK_Shift_L:
-        case GDK_Shift_R:
-        case GDK_Control_L:
-        case GDK_Control_R:
-            return (x);
-        default:
-            break;
-        }
+        // switch (event->keyval) {
+        // case GDK_KEY_Shift_L:
+        // case GDK_KEY_Shift_R:
+        // case GDK_KEY_Control_L:
+        // case GDK_KEY_Control_R:
+        //     return (x);
+        // default:
+        //     break;
+        // }
 
-        if (gtk_object_get_data(GTK_OBJECT(widget), "no_prop_key"))
+        if (g_object_get_data(G_OBJECT(widget), "no_prop_key"))
             return (x);
         if (!x && GRX->MainFrame() && widget != GRX->MainFrame()->Shell()) {
             gtk_propagate_event(GRX->MainFrame()->Shell(), (GdkEvent*)event);
@@ -3140,8 +3281,8 @@ namespace {
     delete_event_hdlr(GtkWidget *widget, GdkEvent*, void *arg)
     {
         void (*cb)(GtkWidget*, void*) =
-            (void(*)(GtkWidget*, void*))gtk_object_get_data(
-                GTK_OBJECT(widget), "delete_ev_cb");
+            (void(*)(GtkWidget*, void*))g_object_get_data(
+                G_OBJECT(widget), "delete_ev_cb");
         if (cb) {
             (*cb)(widget, arg);
             // The callback takes care of deleting the window (or
@@ -3183,21 +3324,21 @@ gtkinterf::gtk_NewPopup(gtk_bag *w, const char *title,
             keyprop_init = true;
         }
         gtk_widget_add_events(popup, GDK_VISIBILITY_NOTIFY_MASK);
-        gtk_signal_connect(GTK_OBJECT(popup), "visibility-notify-event",
-            GTK_SIGNAL_FUNC(ToTop), w ? w->Shell() : 0);
-        gtk_widget_add_events(popup, GDK_BUTTON_PRESS_MASK);
-        gtk_signal_connect_after(GTK_OBJECT(popup), "button-press-event",
-            GTK_SIGNAL_FUNC(Btn1MoveHdlr), 0);
+        // g_signal_connect(G_OBJECT(popup), "visibility-notify-event",
+        //     ToTop, w ? w->Shell() : 0);
+        // gtk_widget_add_events(popup, GDK_BUTTON_PRESS_MASK);
+        // g_signal_connect_after(G_OBJECT(popup), "button-press-event",
+        //     Btn1MoveHdlr, 0);
     }
     if (title)
         gtk_window_set_title(GTK_WINDOW(popup), title);
     if (quit_cb) {
-        gtk_object_set_data(GTK_OBJECT(popup), "delete_ev_cb",
+        g_object_set_data(G_OBJECT(popup), "delete_ev_cb",
             (void*)quit_cb);
-        gtk_signal_connect(GTK_OBJECT(popup), "delete-event",
-            GTK_SIGNAL_FUNC(delete_event_hdlr), arg ? arg : popup);
-        gtk_signal_connect(GTK_OBJECT(popup), "destroy",
-            GTK_SIGNAL_FUNC(quit_cb), arg ? arg : popup);
+        // g_signal_connect(G_OBJECT(popup), "delete-event",
+        //     delete_event_hdlr, arg ? arg : popup);
+        // g_signal_connect(G_OBJECT(popup), "destroy",
+        //     quit_cb, arg ? arg : popup);
     }
     return (popup);
 }
@@ -3208,18 +3349,9 @@ gtkinterf::gtk_NewPopup(gtk_bag *w, const char *title,
 void
 gtkinterf::gtk_QueryColor(GdkColor *clr)
 {
-    gdk_colormap_query_color(GRX->Colormap(), clr->pixel, clr);
+    // gdk_colormap_query_color(GRX->Colormap(), clr->pixel, clr);
 }
 
-
-// Convenience function for creating a colored tooltip.
-//
-GtkTooltips *
-gtkinterf::gtk_NewTooltip()
-{
-    GtkTooltips *tt = gtk_tooltips_new();
-    return (tt);
-}
 
 
 // Set the RGB values and allocate the pixel from cname.  This supports
@@ -3248,9 +3380,9 @@ gtkinterf::gtk_ColorSet(GdkColor *clr, const char *cname)
         }
         else if (!gdk_color_parse(cname, clr))
             return (false);
-        GdkColormap *cmap = GRX ? GRX->Colormap() : gdk_colormap_get_system();
-        if (gdk_colormap_alloc_color(cmap, clr, false, true))
-            return (true);
+        // GdkColormap *cmap = GRX ? GRX->Colormap() : gdk_colormap_get_system();
+        // if (gdk_colormap_alloc_color(cmap, clr, false, true))
+        //     return (true);
     }
     return (false);
 }

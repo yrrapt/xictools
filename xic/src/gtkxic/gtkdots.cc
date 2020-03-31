@@ -130,9 +130,9 @@ sDt::sDt(GRobject caller)
     dt_none = gtk_radio_button_new_with_label(0, "Don't show dots");
     gtk_widget_set_name(dt_none, "none");
     gtk_widget_show(dt_none);
-    GSList *group = gtk_radio_button_group(GTK_RADIO_BUTTON(dt_none));
-    gtk_signal_connect(GTK_OBJECT(dt_none), "clicked",
-        GTK_SIGNAL_FUNC(dt_action), 0);
+    GSList *group = gtk_radio_button_get_group(GTK_RADIO_BUTTON(dt_none));
+    g_signal_connect(G_OBJECT(dt_none), "clicked",
+        G_CALLBACK(dt_action), 0);
 
     gtk_table_attach(GTK_TABLE(form), dt_none, 0, 1, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -142,9 +142,9 @@ sDt::sDt(GRobject caller)
     dt_norm = gtk_radio_button_new_with_label(group, "Show dots normally");
     gtk_widget_set_name(dt_norm, "norm");
     gtk_widget_show(dt_norm);
-    group = gtk_radio_button_group(GTK_RADIO_BUTTON(dt_norm));
-    gtk_signal_connect(GTK_OBJECT(dt_norm), "clicked",
-        GTK_SIGNAL_FUNC(dt_action), 0);
+    group = gtk_radio_button_get_group(GTK_RADIO_BUTTON(dt_norm));
+    g_signal_connect(G_OBJECT(dt_norm), "clicked",
+        G_CALLBACK(dt_action), 0);
 
     gtk_table_attach(GTK_TABLE(form), dt_norm, 0, 1, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -155,8 +155,8 @@ sDt::sDt(GRobject caller)
         "Show dot at every connection");
     gtk_widget_set_name(dt_all, "all");
     gtk_widget_show(dt_all);
-    gtk_signal_connect(GTK_OBJECT(dt_all), "clicked",
-        GTK_SIGNAL_FUNC(dt_action), 0);
+    g_signal_connect(G_OBJECT(dt_all), "clicked",
+        G_CALLBACK(dt_action), 0);
 
     gtk_table_attach(GTK_TABLE(form), dt_all, 0, 1, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -173,8 +173,8 @@ sDt::sDt(GRobject caller)
     GtkWidget *button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(dt_cancel_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(dt_cancel_proc), 0);
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -182,7 +182,7 @@ sDt::sDt(GRobject caller)
     gtk_window_set_focus(GTK_WINDOW(dt_popup), button);
 
     // Constrain overall widget width so title text isn't truncated.
-    gtk_widget_set_usize(button, 240, -1);
+    gtk_widget_set_size_request(button, 240, -1);
     update();
 }
 

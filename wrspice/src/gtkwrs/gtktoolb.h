@@ -78,7 +78,7 @@ struct tb_bag : public gtk_bag, public gtk_draw
 
     int b_wid;
     int b_hei;
-    GdkPixmap *b_pixmap;
+    cairo_surface_t *b_pixmap;
     GdkWindow *b_winbak;
 };
 
@@ -252,7 +252,7 @@ private:
 
     double tb_elapsed_start;
     char *tb_dropfile;
-    GtkItemFactory *tb_item_factory;
+    GtkUIManager *tb_item_factory;
     GReditPopup *tb_mailer;
     int tb_clr_1, tb_clr_2, tb_clr_3, tb_clr_4;
     bool tb_suppress_update;

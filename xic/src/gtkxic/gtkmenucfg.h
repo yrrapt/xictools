@@ -53,7 +53,7 @@ public:
     void instantiateMainMenus();
     void instantiateTopButtonMenu();
     void instantiateSideButtonMenus();
-    void instantiateSubwMenus(int, GtkItemFactory*);
+    void instantiateSubwMenus(int, GtkUIManager*);
     void updateDynamicMenus();
     void switch_menu_mode(DisplayMode, int);
     void set_main_global_sens(bool);
@@ -71,8 +71,8 @@ private:
     static void menu_handler(GtkWidget*, void*, unsigned);
     static int user_cmd_proc(void*);
     static int cmd_proc(void*);
-    static void make_entries(GtkItemFactory*, GtkItemFactoryEntry*, int,
-        MenuEnt*, int);
+    // static void make_entries(GtkUIManager*, GtkUIManagerEntry*, int,
+    //     MenuEnt*, int);
     static void edmenu_proc(GtkWidget*, void*);
     static void vimenu_proc(GtkWidget*, void*);
     static void stmenu_proc(GtkWidget*, void*);

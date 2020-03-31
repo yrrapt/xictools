@@ -219,7 +219,7 @@ namespace {
             {
                 if (be->button >= GS_NBTNS)
                     return;
-                gdk_pointer_grab(w->window, true, GDK_BUTTON_RELEASE_MASK,
+                gdk_pointer_grab(gtk_widget_get_window(w), true, GDK_BUTTON_RELEASE_MASK,
                     0, 0, be->time);
                 caller[be->button] = w;
                 send_event[be->button] = be->send_event;
@@ -329,8 +329,8 @@ namespace {
 
     inline bool is_modifier_key(unsigned keysym)
     {
-        return ((keysym >= GDK_Shift_L && keysym <= GDK_Hyper_R) ||
-            keysym == GDK_Mode_switch || keysym == GDK_Num_Lock);
+        return ((keysym >= GDK_KEY_Shift_L && keysym <= GDK_KEY_Hyper_R) ||
+            keysym == GDK_KEY_Mode_switch || keysym == GDK_KEY_Num_Lock);
     }
 
     // When the application is busy, all button presses and all key
@@ -430,7 +430,8 @@ GTKpkg::Initialize(GRwbag *wcp)
     // Initialize the application's GUI.
     //
     int wid, hei;
-    gdk_window_get_size(w->Window(), &wid, &hei);
+    wid = gdk_window_get_width(w->Window());
+    hei = gdk_window_get_height(w->Window());
     DSP()->Initialize(wid, hei, 0, (XM()->RunMode() != ModeNormal));
     LT()->InitLayerTable();
 
@@ -554,26 +555,26 @@ GTKpkg::CheckForInterrupt()
     lasttime = Timer()->elapsed_msec();
 
     if (dispatch_events) {
-        GdkGC *gc = mainBag()->GC();
+        cairo_t *gc = mainBag()->GC();
         if (gc == mainBag()->XorGC())
             // If ghost-drawing, defer event processing, which may
             // foul up the display.
             return (false);
-        GdkGCValues gcv;
-        gdk_gc_get_values(gc, &gcv);
+        // cairo_tValues gcv;
+        // gdk_gc_get_values(gc, &gcv);
 
-        // Dispatch all events, this is the default operation.  Turn
-        // off Peek mode in case we have to do some drawing.
-        bool b = DSP()->SlowMode();
-        DSP()->SetSlowMode(false);
-        gtk_DoEvents(1000);
-        DSP()->SetSlowMode(b);
+        // // Dispatch all events, this is the default operation.  Turn
+        // // off Peek mode in case we have to do some drawing.
+        // bool b = DSP()->SlowMode();
+        // DSP()->SetSlowMode(false);
+        // gtk_DoEvents(1000);
+        // DSP()->SetSlowMode(b);
 
-        // Reset the GC, these may have changed during event processing.
-        gdk_gc_set_foreground(gc, &gcv.foreground);
-        gdk_gc_set_fill(gc, gcv.fill);
-        gdk_gc_set_line_attributes(gc, gcv.line_width, gcv.line_style,
-        gcv.cap_style, gcv.join_style);
+        // // Reset the GC, these may have changed during event processing.
+        // gdk_gc_set_foreground(gc, &gcv.foreground);
+        // gdk_gc_set_fill(gc, gcv.fill);
+        // gdk_gc_set_line_attributes(gc, gcv.line_width, gcv.line_style,
+        // gcv.cap_style, gcv.join_style);
 
         return (DSP()->Interrupt());
     }
@@ -761,8 +762,8 @@ GTKpkg::GetMainWinIdentifier(char *buf)
     if (!MainDev() || MainDev()->ident != _devGTK_)
         return (false);
 #ifdef WITH_X11
-    if (mainBag() && mainBag()->Shell() && mainBag()->Shell()->window) {
-        sprintf(buf, "%ld", (long)gr_x_window(mainBag()->Shell()->window));
+    if (mainBag() && mainBag()->Shell() && gtk_widget_get_window(mainBag()->Shell())) {
+        sprintf(buf, "%ld", (long)gr_x_window(gtk_widget_get_window(mainBag()->Shell())));
         return (true);
     }
 #endif
@@ -931,7 +932,7 @@ GTKpkg::RegisterIdleProc(int(*proc)(void*), void *arg)
 {
     if (!MainDev() || MainDev()->ident != _devGTK_)
          return (0);
-    return (gtk_idle_add(proc, arg));
+    return (g_idle_add(proc, arg));
 }
 
 
@@ -940,7 +941,7 @@ GTKpkg::RemoveIdleProc(int id)
 {
     if (!MainDev() || MainDev()->ident != _devGTK_)
          return (false);
-    gtk_idle_remove(id);
+    g_source_remove(id);
     return (true);
 }
 
@@ -975,7 +976,7 @@ GTKpkg::StartTimer(int time, bool *set)
     if (set)
         *set = false;
     if (time > 0)
-        id = gtk_timeout_add(time, main_local::timer_cb, set);
+        id = g_timeout_add(time, main_local::timer_cb, set);
     return (id);
 }
 
@@ -1066,7 +1067,7 @@ win_bag::~win_bag()
     PopUpGrid(0, MODE_OFF);
     PopUpZoom(0, MODE_OFF);
     if (wib_draw_pixmap)
-        gdk_pixmap_unref(wib_draw_pixmap);
+        g_object_unref(wib_draw_pixmap);
 }
 
 
@@ -1083,6 +1084,7 @@ win_bag::subw_initialize(int wnum)
     sprintf(buf, "%s %d", XM()->Product(), wnum);
     wb_shell = gtk_NewPopup(mainBag(), buf, subwin_cancel_proc,
         (void*)(long)wnum);
+    wb_window = gtk_widget_get_window(wb_shell);
 
     wib_windesc = DSP()->Window(wnum);
     DSP()->Window(wnum)->SetWbag(this);
@@ -1093,8 +1095,8 @@ win_bag::subw_initialize(int wnum)
         // multi-monitor safe.
 
         int x, y;
-        gdk_window_get_origin(mainBag()->Shell()->window, &x, &y);
-        gtk_widget_set_uposition(wb_shell,
+        gdk_window_get_origin(gtk_widget_get_window(mainBag()->Shell()), &x, &y);
+        gtk_widget_set_size_request(wb_shell,
             LastPos[wnum].x + x, LastPos[wnum].y + y);
         gtk_window_set_default_size(GTK_WINDOW(wb_shell),
             LastPos[wnum].width, LastPos[wnum].height);
@@ -1104,7 +1106,7 @@ win_bag::subw_initialize(int wnum)
         ShellGeometry(mainBag()->Shell(), &rect, 0);
         rect.x += rect.width - 560;
         rect.y += (wnum-1)*40 + 60; // make room for device toolbar
-        gtk_widget_set_uposition(wb_shell, rect.x, rect.y);
+        gtk_widget_set_size_request(wb_shell, rect.x, rect.y);
     }
 
     GtkWidget *menu = GTK_WIDGET(Menu()->CreateSubwinMenu(wnum));
@@ -1121,44 +1123,44 @@ win_bag::subw_initialize(int wnum)
 
     gd_viewport = gtk_drawing_area_new();
     gtk_widget_set_name(gd_viewport, "Viewport");
-    gtk_drawing_area_size(GTK_DRAWING_AREA(gd_viewport), 500, 400);
+    gtk_widget_set_size_request(gd_viewport, 500, 400);
     gtk_widget_show(gd_viewport);
 
     gtk_widget_add_events(gd_viewport, GDK_STRUCTURE_MASK);
     gtk_widget_add_events(gd_viewport, GDK_EXPOSURE_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "expose-event",
-        GTK_SIGNAL_FUNC(redraw_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "expose-event",
+        G_CALLBACK(redraw_hdlr), this);
     gtk_widget_add_events(gd_viewport, GDK_KEY_PRESS_MASK);
-    gtk_signal_connect_after(GTK_OBJECT(gd_viewport), "key-press-event",
-        GTK_SIGNAL_FUNC(key_dn_hdlr), this);
+    g_signal_connect_after(G_OBJECT(gd_viewport), "key-press-event",
+        G_CALLBACK(key_dn_hdlr), this);
     gtk_widget_add_events(gd_viewport, GDK_KEY_RELEASE_MASK);
-    gtk_signal_connect_after(GTK_OBJECT(gd_viewport), "key-release-event",
-        GTK_SIGNAL_FUNC(key_up_hdlr), this);
+    g_signal_connect_after(G_OBJECT(gd_viewport), "key-release-event",
+        G_CALLBACK(key_up_hdlr), this);
     gtk_widget_add_events(gd_viewport, GDK_BUTTON_PRESS_MASK);
-    gtk_signal_connect_after(GTK_OBJECT(gd_viewport), "button-press-event",
-        GTK_SIGNAL_FUNC(button_dn_hdlr), this);
+    g_signal_connect_after(G_OBJECT(gd_viewport), "button-press-event",
+        G_CALLBACK(button_dn_hdlr), this);
     gtk_widget_add_events(gd_viewport, GDK_BUTTON_RELEASE_MASK);
-    gtk_signal_connect_after(GTK_OBJECT(gd_viewport), "button-release-event",
-        GTK_SIGNAL_FUNC(button_up_hdlr), this);
+    g_signal_connect_after(G_OBJECT(gd_viewport), "button-release-event",
+        G_CALLBACK(button_up_hdlr), this);
     gtk_widget_add_events(gd_viewport, GDK_POINTER_MOTION_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "motion-notify-event",
-        GTK_SIGNAL_FUNC(motion_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "motion-notify-event",
+        G_CALLBACK(motion_hdlr), this);
     gtk_widget_add_events(gd_viewport, GDK_ENTER_NOTIFY_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "enter-notify-event",
-        GTK_SIGNAL_FUNC(enter_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "enter-notify-event",
+        G_CALLBACK(enter_hdlr), this);
     gtk_widget_add_events(gd_viewport, GDK_LEAVE_NOTIFY_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "leave-notify-event",
-        GTK_SIGNAL_FUNC(leave_hdlr), this);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "scroll-event",
-        GTK_SIGNAL_FUNC(scroll_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "leave-notify-event",
+        G_CALLBACK(leave_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "scroll-event",
+        G_CALLBACK(scroll_hdlr), this);
 
     // For gtk2 - this avoids issue of an expose event on focus change.
     //
     gtk_widget_add_events(gd_viewport, GDK_FOCUS_CHANGE_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "focus-in-event",
-        GTK_SIGNAL_FUNC(focus_hdlr), this);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "focus-out-event",
-        GTK_SIGNAL_FUNC(focus_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "focus-in-event",
+        G_CALLBACK(focus_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "focus-out-event",
+        G_CALLBACK(focus_hdlr), this);
 
     // Drop handler setup.
     //
@@ -1166,12 +1168,12 @@ win_bag::subw_initialize(int wnum)
         (GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_DROP);
     gtk_drag_dest_set(gd_viewport, DD, main_targets, n_main_targets,
         GDK_ACTION_COPY);
-    gtk_signal_connect_after(GTK_OBJECT(gd_viewport), "drag-data-received",
-        GTK_SIGNAL_FUNC(drag_data_received), 0);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "drag-leave",
-        GTK_SIGNAL_FUNC(target_drag_leave), 0);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "drag-motion",
-        GTK_SIGNAL_FUNC(target_drag_motion), 0);
+    g_signal_connect_after(G_OBJECT(gd_viewport), "drag-data-received",
+        G_CALLBACK(drag_data_received), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "drag-leave",
+        G_CALLBACK(target_drag_leave), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "drag-motion",
+        G_CALLBACK(target_drag_motion), 0);
 
     GTKfont::setupFont(gd_viewport, FNT_SCREEN, false);
 
@@ -1198,8 +1200,8 @@ win_bag::subw_initialize(int wnum)
     gtk_widget_size_allocate(wib_keyspressed, &a);
 
     gtk_widget_add_events(ebox, GDK_BUTTON_PRESS_MASK);
-    gtk_signal_connect(GTK_OBJECT(ebox), "button-press-event",
-        GTK_SIGNAL_FUNC(keys_hdlr), this);
+    g_signal_connect(G_OBJECT(ebox), "button-press-event",
+        G_CALLBACK(keys_hdlr), this);
 
     // Arrange and pack the widgets.
     //
@@ -1221,23 +1223,24 @@ win_bag::subw_initialize(int wnum)
     gtk_window_set_transient_for(GTK_WINDOW(wb_shell),
         GTK_WINDOW(mainBag()->Shell()));
     gtk_widget_show(wb_shell);
-    gd_window = gd_viewport->window;
+    gd_window = gtk_widget_get_window(gd_viewport);
 
-    gd_backg = GRX->NameColor("black");
-    gd_foreg = GRX->NameColor("white");
+    // gd_backg = GRX->NameColor("black");
+    // gd_foreg = GRX->NameColor("white");
     SetWindowBackground(gd_backg);
     Clear();
 
     // Application initialization callback.
     //
     int wid, hei;
-    gdk_window_get_size(gd_window, &wid, &hei);
+    wid = gdk_window_get_width(gd_window);
+    hei = gdk_window_get_height(gd_window);
     DSP()->Initialize(wid, hei, wnum);
 
     // Have to set this after initialization.
     //
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "configure-event",
-        GTK_SIGNAL_FUNC(resize_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "configure-event",
+        G_CALLBACK(resize_hdlr), this);
 
     XM()->UpdateCursor(wib_windesc, (CursorType)Gbag()->get_cursor_type(),
         true);
@@ -1255,14 +1258,14 @@ win_bag::pre_destroy(int wnum)
     // multi-monitor setups.
 
     int x, y;
-    gdk_window_get_origin(mainBag()->Shell()->window, &x, &y);
+    gdk_window_get_origin(gtk_widget_get_window(mainBag()->Shell()), &x, &y);
     LastPos[wnum].x = rect_d.x - x;
     LastPos[wnum].y = rect_d.y - y;
     LastPos[wnum].width = rect.width;
     LastPos[wnum].height = rect.height;
 
-    gtk_signal_disconnect_by_func(GTK_OBJECT(wb_shell),
-        GTK_SIGNAL_FUNC(subwin_cancel_proc), (void*)(long)wnum);
+    g_signal_handlers_disconnect_by_func(G_OBJECT(wb_shell),
+        (gpointer)subwin_cancel_proc, (void*)(long)wnum);
 }
 
 
@@ -1286,26 +1289,26 @@ win_bag::SwitchToPixmap()
 
     if (!wib_draw_pixmap ||
             vp_width != wib_px_width || vp_height != wib_px_height) {
-        GdkPixmap *pm = wib_draw_pixmap;
+        cairo_surface_t *pm = wib_draw_pixmap;
         if (pm)
-            gdk_pixmap_unref(pm);
+            g_object_unref(pm);
         wib_px_width = vp_width;
         wib_px_height = vp_height;
-        pm = gdk_pixmap_new(gd_window, wib_px_width, wib_px_height,
-            GRX->Visual()->depth);
-        if (pm)
-            wib_draw_pixmap = pm;
-        else {
-            wib_px_width = 0;
-            wib_px_height = 0;
-            wib_draw_pixmap = 0;
-            return;
-        }
+        // pm = gdk_pixmap_new(gd_window, wib_px_width, wib_px_height,
+        //     GRX->Visual()->depth);
+        // if (pm)
+        //     wib_draw_pixmap = pm;
+        // else {
+        //     wib_px_width = 0;
+        //     wib_px_height = 0;
+        //     wib_draw_pixmap = 0;
+        //     return;
+        // }
     }
 
     // swap in the pixmap
     wib_window_bak = gd_window;
-    gd_window = wib_draw_pixmap;
+    // gd_window = wib_draw_pixmap;
 }
 
 
@@ -1317,9 +1320,9 @@ win_bag::SwitchFromPixmap(const BBox *BB)
 {
     // Note that the bounding values are included in the display.
     if (wib_window_bak) {
-        gdk_window_copy_area(wib_window_bak, CpyGC(),
-            BB->left, BB->top, gd_window, BB->left, BB->top,
-            BB->width() + 1, abs(BB->height()) + 1);
+        // gdk_window_copy_area(wib_window_bak, CpyGC(),
+        //     BB->left, BB->top, gd_window, BB->left, BB->top,
+        //     BB->width() + 1, abs(BB->height()) + 1);
         gd_window = wib_window_bak;
         wib_window_bak = 0;
     }
@@ -1347,9 +1350,9 @@ win_bag::CopyPixmap(const BBox *BB)
 {
     // Note that the bounding values are included in the display.
     if (wib_window_bak) {
-        gdk_window_copy_area(wib_window_bak, CpyGC(),
-            BB->left, BB->top, gd_window, BB->left, BB->top,
-            BB->width() + 1, abs(BB->height()) + 1);
+        // gdk_window_copy_area(wib_window_bak, CpyGC(),
+        //     BB->left, BB->top, gd_window, BB->left, BB->top,
+        //     BB->width() + 1, abs(BB->height()) + 1);
     }
 }
 
@@ -1364,7 +1367,7 @@ win_bag::DestroyPixmap()
         wib_window_bak = 0;
     }
     if (wib_draw_pixmap)
-        gdk_pixmap_unref(wib_draw_pixmap);
+        g_object_unref(wib_draw_pixmap);
     wib_draw_pixmap = 0;
     wib_px_width = 0;
     wib_px_height = 0;
@@ -1402,7 +1405,7 @@ win_bag::DumpWindow(const char *filename, const BBox *AOI = 0)
     if (BB.right < BB.left || BB.bottom < BB.top)
         return (false);
 
-    GdkPixmap *pm = 0;
+    cairo_surface_t *pm = 0;
     bool native = false;
     int vp_width = wib_windesc->ViewportWidth();
     int vp_height = wib_windesc->ViewportHeight();
@@ -1422,7 +1425,7 @@ win_bag::DumpWindow(const char *filename, const BBox *AOI = 0)
         gd_window = tmpw;
     }
 #ifdef WIN32
-    GdkGCValuesMask Win32GCvalues = (GdkGCValuesMask)(
+    cairo_tValuesMask Win32GCvalues = (cairo_tValuesMask)(
         GDK_GC_FOREGROUND |
         GDK_GC_BACKGROUND);
     HDC dc = gdk_win32_hdc_get(gd_window, GC(), Win32GCvalues);
@@ -1452,7 +1455,7 @@ win_bag::DumpWindow(const char *filename, const BBox *AOI = 0)
 #endif
 #endif
     if (!native)
-        gdk_pixmap_unref(pm);
+        g_object_unref(pm);
     if (!im)
         return (false);
     ImErrType ret = im->save_image(filename, 0);
@@ -1518,20 +1521,20 @@ win_bag::ShowKeys()
 
             // Restyle the label.
             GtkStyle *style = gtk_style_copy(wib_keyspressed->style);
-            gtk_widget_set_style(wib_keyspressed, style);
+            g_object_set_style(wib_keyspressed, style);
 
             // Restyle the parent event box.
             style = gtk_style_copy(wib_keyspressed->parent->style);
-            gtk_widget_set_style(wib_keyspressed->parent, style);
+            g_object_set_style(wib_keyspressed->parent, style);
 
             // Replace the foreground gc in the label.
-            GdkGC *gc = gdk_gc_new(wib_keyspressed->window);
+            cairo_t *gc = gdk_gc_new(gtk_widget_get_window(wib_keyspressed));
             local_style.fg_gc[state] = gc;
             gdk_gc_copy(gc, wib_keyspressed->style->fg_gc[state]);
             wib_keyspressed->style->fg_gc[state] = gc;
 
             // Replace the background gc in the event box.
-            gc = gdk_gc_new(wib_keyspressed->parent->window);
+            gc = gdk_gc_new(wib_keyspressed->gtk_widget_get_window(parent));
             local_style.bg_gc[state] = gc;
             gdk_gc_copy(gc, wib_keyspressed->parent->style->bg_gc[state]);
             wib_keyspressed->parent->style->bg_gc[state] = gc;
@@ -1806,7 +1809,8 @@ win_bag::resize_hdlr(GtkWidget *caller, GdkEvent *event, void *client_data)
     win_bag *w = static_cast<win_bag*>(client_data);
     if (event->type == GDK_CONFIGURE && w->wib_windesc) {
         int width, height;
-        gdk_window_get_size(caller->window, &width, &height);
+        width = gdk_window_get_width(gtk_widget_get_window(caller));
+        height = gdk_window_get_height(gtk_widget_get_window(caller));
         EV()->ResizeCallback(w->wib_windesc, width, height);
         w->wib_resized = true;  // used in redraw_hdlr
     }
@@ -1822,7 +1826,7 @@ win_bag::resize_hdlr(GtkWidget *caller, GdkEvent *event, void *client_data)
 int
 win_bag::redraw_hdlr(GtkWidget *widget, GdkEvent *event, void *client_data)
 {
-    if (widget->parent == DontRedrawMe) {
+    if (gtk_widget_get_parent(widget) == DontRedrawMe) {
         DontRedrawMe = 0;
         return (false);
     }
@@ -1842,7 +1846,7 @@ win_bag::redraw_hdlr(GtkWidget *widget, GdkEvent *event, void *client_data)
         XM()->SetAppReady(true);
         GdkRectangle *rects;
         int nrects;
-        gdk_region_get_rectangles(pev->region, &rects, &nrects);
+        // gdk_region_get_rectangles(pev->region, &rects, &nrects);
         for (int i = 0; i < nrects; i++) {
             GdkRectangle *r = rects + i;
 #ifdef WITH_QUARTZ
@@ -1917,9 +1921,9 @@ win_bag::key_dn_hdlr(GtkWidget *caller, GdkEvent *event, void *client_data)
     else if (KbMac()->MacroExpand(kev->keyval, kev->state, false))
         return (true);
 
-    if (kev->keyval == GDK_Shift_L || kev->keyval == GDK_Shift_R ||
-            kev->keyval == GDK_Control_L || kev->keyval == GDK_Control_R) {
-        gdk_keyboard_grab(caller->window, true, kev->time);
+    if (kev->keyval == GDK_KEY_Shift_L || kev->keyval == GDK_KEY_Shift_R ||
+            kev->keyval == GDK_KEY_Control_L || kev->keyval == GDK_KEY_Control_R) {
+        gdk_keyboard_grab(gtk_widget_get_window(caller), true, kev->time);
         grabbed_key = kev->keyval;
     }
 
@@ -1957,7 +1961,7 @@ win_bag::button_dn_hdlr(GtkWidget *caller, GdkEvent *event, void *client_data)
 {
     GdkEventButton *bev = (GdkEventButton*)event;
     int button = Kmap()->ButtonMap(bev->button);
-    if (!GTK_WIDGET_SENSITIVE(gtkMenu()->MainMenu()) && button == 1)
+    if (!gtk_widget_get_sensitive(gtkMenu()->MainMenu()) && button == 1)
         // menu is insensitive, so ignore press
         return (true);
     if (event->type == GDK_2BUTTON_PRESS ||
@@ -2041,7 +2045,7 @@ win_bag::button_up_hdlr(GtkWidget*, GdkEvent *event, void *client_data)
 {
     GdkEventButton *bev = (GdkEventButton*)event;
     int button = Kmap()->ButtonMap(bev->button);
-    if (!GTK_WIDGET_SENSITIVE(gtkMenu()->MainMenu()) && button == 1)
+    if (!gtk_widget_get_sensitive(gtkMenu()->MainMenu()) && button == 1)
         // menu is insensitive, so ignore release
         return (true);
     if (bev->button < GS_NBTNS)
@@ -2153,13 +2157,13 @@ win_bag::motion_hdlr(GtkWidget*, GdkEvent *event, void *client_data)
 #ifdef MOTION_IDLE
     if (w->wib_windesc) {
         if (w->wib_id) {
-            gtk_idle_remove(w->wib_id);
+            g_source_remove(w->wib_id);
             w->wib_id = 0;
         }
         w->wib_state = mev->state;
         w->wib_x = (int)mev->x;
         w->wib_y = (int)mev->y;
-        w->wib_id = gtk_idle_add(motion_idle, client_data);
+        w->wib_id = g_idle_add(motion_idle, client_data);
     }
 #else
     if (w->wib_windesc) {
@@ -2232,11 +2236,11 @@ win_bag::enter_hdlr(GtkWidget *caller, GdkEvent *event, void *client_data)
 
 #ifdef MOTION_IDLE
     if (w->wib_id) {
-        gtk_idle_remove(w->wib_id);
+        g_source_remove(w->wib_id);
         w->wib_id = 0;
     }
 #endif
-    GTK_WIDGET_SET_FLAGS(caller, GTK_CAN_FOCUS);
+    gtk_widget_set_can_focus(caller, true);
     gtk_window_set_focus(GTK_WINDOW(w->Shell()), caller);
 
     GdkEventCrossing *cev = (GdkEventCrossing*)event;
@@ -2295,7 +2299,7 @@ win_bag::leave_hdlr(GtkWidget*, GdkEvent *event, void *client_data)
 
 #ifdef MOTION_IDLE
     if (w->wib_id) {
-        gtk_idle_remove(w->wib_id);
+        g_source_remove(w->wib_id);
         w->wib_id = 0;
     }
 #endif
@@ -2365,11 +2369,11 @@ win_bag::drag_data_received(GtkWidget*, GdkDragContext *context, gint, gint,
     GtkSelectionData *data, guint, guint time)
 {
     bool success = false;
-    if (!data->data)
+    if (!gtk_selection_data_get_data(data))
         ;
-    else if (data->target == gdk_atom_intern("property", true)) {
+    else if (gtk_selection_data_get_target(data) == gdk_atom_intern("property", true)) {
         if (gtkEdit() && gtkEdit()->is_active()) {
-            unsigned char *val = data->data + sizeof(int);
+            unsigned char *val = (unsigned char*)gtk_selection_data_get_data(data) + sizeof(int);
             CDs *cursd = CurCell(true);
             hyList *hp = new hyList(cursd, (char*)val, HYcvAscii);
             gtkEdit()->insert(hp);
@@ -2377,10 +2381,10 @@ win_bag::drag_data_received(GtkWidget*, GdkDragContext *context, gint, gint,
             success = true;
         }
     }
-    else if (data->length >= 0 && data->format == 8) {
-        char *src = (char*)data->data;
+    else if (gtk_selection_data_get_length(data) >= 0 && gtk_selection_data_get_format(data) == 8) {
+        char *src = (char*)gtk_selection_data_get_data(data);
         char *t = 0;
-        if (data->target == gdk_atom_intern("TWOSTRING", true)) {
+        if (gtk_selection_data_get_target(data) == gdk_atom_intern("TWOSTRING", true)) {
             // Drops from content lists may be in the form
             // "fname_or_chd\ncellname".
             t = strchr(src, '\n');
@@ -2420,9 +2424,9 @@ win_bag::target_drag_leave(GtkWidget *widget, GdkDragContext*, guint)
 {
     // called on drop, too
     if (HaveDrag) {
-        if (gtk_object_get_data(GTK_OBJECT(widget), "drag_hlite")) {
+        if (g_object_get_data(G_OBJECT(widget), "drag_hlite")) {
             gtk_drag_unhighlight(widget);
-            gtk_object_remove_data(GTK_OBJECT(widget), "drag_hlite");
+            // gtk_object_remove_data(G_OBJECT(widget), "drag_hlite");
         }
         DontRedrawMe = widget;
         HaveDrag = false;
@@ -2445,7 +2449,7 @@ win_bag::target_drag_motion(GtkWidget *widget, GdkDragContext*, gint, gint,
         HaveDrag = true;
         DontRedrawMe = widget;
         gtk_drag_highlight(widget);
-        gtk_object_set_data(GTK_OBJECT(widget), "drag_hlite", (void*)1);
+        g_object_set_data(G_OBJECT(widget), "drag_hlite", (void*)1);
     }
     return (true);
 }
@@ -2525,14 +2529,14 @@ main_bag::initialize()
 
     // set up signals for top level window
     gtk_widget_add_events(wb_shell, GDK_STRUCTURE_MASK);
-    gtk_signal_connect(GTK_OBJECT(wb_shell), "map-event",
-        GTK_SIGNAL_FUNC(map_hdlr), this);
-    gtk_signal_connect(GTK_OBJECT(wb_shell), "unmap-event",
-        GTK_SIGNAL_FUNC(map_hdlr), this);
-    gtk_signal_connect(GTK_OBJECT(wb_shell), "destroy-event",
-        GTK_SIGNAL_FUNC(main_destroy_proc), 0);
-    gtk_signal_connect(GTK_OBJECT(wb_shell), "delete-event",
-        GTK_SIGNAL_FUNC(main_destroy_proc), 0);
+    g_signal_connect(G_OBJECT(wb_shell), "map-event",
+        G_CALLBACK(map_hdlr), this);
+    g_signal_connect(G_OBJECT(wb_shell), "unmap-event",
+        G_CALLBACK(map_hdlr), this);
+    g_signal_connect(G_OBJECT(wb_shell), "destroy-event",
+        G_CALLBACK(main_destroy_proc), 0);
+    g_signal_connect(G_OBJECT(wb_shell), "delete-event",
+        G_CALLBACK(main_destroy_proc), 0);
 
     GtkWidget *frame = gtk_frame_new(0);
     gtk_widget_show(frame);
@@ -2593,7 +2597,7 @@ main_bag::initialize()
             rowcnt++;
         }
         else
-            gtk_widget_set_usize(btnarray, 36, -1);
+            gtk_widget_set_size_request(btnarray, 36, -1);
     }
 
     // Main drawing window (in frame).
@@ -2601,46 +2605,46 @@ main_bag::initialize()
     gd_viewport = gtk_drawing_area_new();
 
     gtk_widget_set_name(gd_viewport, "Viewport");
-    gtk_drawing_area_size(GTK_DRAWING_AREA(gd_viewport), 800, 600);
+    gtk_widget_set_size_request(gd_viewport, 800, 600);
     gtk_widget_show(gd_viewport);
 
     gtk_widget_add_events(gd_viewport, GDK_STRUCTURE_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "configure-event",
-        GTK_SIGNAL_FUNC(resize_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "configure-event",
+        G_CALLBACK(resize_hdlr), this);
     gtk_widget_add_events(gd_viewport, GDK_EXPOSURE_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "expose-event",
-        GTK_SIGNAL_FUNC(redraw_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "expose-event",
+        G_CALLBACK(redraw_hdlr), this);
     gtk_widget_add_events(gd_viewport, GDK_KEY_PRESS_MASK);
-    gtk_signal_connect_after(GTK_OBJECT(gd_viewport), "key-press-event",
-        GTK_SIGNAL_FUNC(key_dn_hdlr), this);
+    g_signal_connect_after(G_OBJECT(gd_viewport), "key-press-event",
+        G_CALLBACK(key_dn_hdlr), this);
     gtk_widget_add_events(gd_viewport, GDK_KEY_RELEASE_MASK);
-    gtk_signal_connect_after(GTK_OBJECT(gd_viewport), "key-release-event",
-        GTK_SIGNAL_FUNC(key_up_hdlr), this);
+    g_signal_connect_after(G_OBJECT(gd_viewport), "key-release-event",
+        G_CALLBACK(key_up_hdlr), this);
     gtk_widget_add_events(gd_viewport, GDK_BUTTON_PRESS_MASK);
-    gtk_signal_connect_after(GTK_OBJECT(gd_viewport), "button-press-event",
-        GTK_SIGNAL_FUNC(button_dn_hdlr), this);
+    g_signal_connect_after(G_OBJECT(gd_viewport), "button-press-event",
+        G_CALLBACK(button_dn_hdlr), this);
     gtk_widget_add_events(gd_viewport, GDK_BUTTON_RELEASE_MASK);
-    gtk_signal_connect_after(GTK_OBJECT(gd_viewport), "button-release-event",
-        GTK_SIGNAL_FUNC(button_up_hdlr), this);
+    g_signal_connect_after(G_OBJECT(gd_viewport), "button-release-event",
+        G_CALLBACK(button_up_hdlr), this);
     gtk_widget_add_events(gd_viewport, GDK_POINTER_MOTION_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "motion-notify-event",
-        GTK_SIGNAL_FUNC(motion_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "motion-notify-event",
+        G_CALLBACK(motion_hdlr), this);
     gtk_widget_add_events(gd_viewport, GDK_ENTER_NOTIFY_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "enter-notify-event",
-        GTK_SIGNAL_FUNC(enter_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "enter-notify-event",
+        G_CALLBACK(enter_hdlr), this);
     gtk_widget_add_events(gd_viewport, GDK_LEAVE_NOTIFY_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "leave-notify-event",
-        GTK_SIGNAL_FUNC(leave_hdlr), this);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "scroll-event",
-        GTK_SIGNAL_FUNC(scroll_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "leave-notify-event",
+        G_CALLBACK(leave_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "scroll-event",
+        G_CALLBACK(scroll_hdlr), this);
 
     // For gtk2 - this avoids issue of an expose event on focus change.
     //
     gtk_widget_add_events(gd_viewport, GDK_FOCUS_CHANGE_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "focus-in-event",
-        GTK_SIGNAL_FUNC(focus_hdlr), this);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "focus-out-event",
-        GTK_SIGNAL_FUNC(focus_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "focus-in-event",
+        G_CALLBACK(focus_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "focus-out-event",
+        G_CALLBACK(focus_hdlr), this);
 
     GtkWidget *maindrawingwin = gtk_frame_new(0);
     gtk_widget_show(maindrawingwin);
@@ -2652,13 +2656,13 @@ main_bag::initialize()
         (GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_DROP);
     gtk_drag_dest_set(maindrawingwin, DD, main_targets, n_main_targets,
         GDK_ACTION_COPY);
-    gtk_signal_connect_after(GTK_OBJECT(maindrawingwin),
+    g_signal_connect_after(G_OBJECT(maindrawingwin),
         "drag-data-received",
-        GTK_SIGNAL_FUNC(drag_data_received), 0);
-    gtk_signal_connect(GTK_OBJECT(maindrawingwin), "drag-leave",
-        GTK_SIGNAL_FUNC(target_drag_leave), 0);
-    gtk_signal_connect(GTK_OBJECT(frame), "drag-motion",
-        GTK_SIGNAL_FUNC(target_drag_motion), 0);
+        G_CALLBACK(drag_data_received), 0);
+    g_signal_connect(G_OBJECT(maindrawingwin), "drag-leave",
+        G_CALLBACK(target_drag_leave), 0);
+    g_signal_connect(G_OBJECT(frame), "drag-motion",
+        G_CALLBACK(target_drag_motion), 0);
 
     GTKfont::setupFont(gd_viewport, FNT_SCREEN, false);
 
@@ -2785,7 +2789,7 @@ main_bag::initialize()
         int x = r.x + (r.width - w)/2;
         int y = r.y + (r.height - h)/2;
         gtk_window_set_default_size(GTK_WINDOW(wb_shell), w, h);
-        gtk_widget_set_uposition(wb_shell, x, y);
+        gtk_widget_set_size_request(wb_shell, x, y);
     }
     else {
         gtk_window_parse_geometry(GTK_WINDOW(wb_shell), XM()->Geometry());
@@ -2794,57 +2798,57 @@ main_bag::initialize()
     // Realize
     //
     gtk_widget_show(wb_shell);
-    gd_window = gd_viewport->window;
+    gd_window = gtk_widget_get_window(gd_viewport);
     GRX->SetDefaultFocusWin(gd_window);
 
     // Make the GC's.
     //
-    GdkGCValues gcvalues;
-    gcvalues.cap_style = GDK_CAP_BUTT;
-    Gbag()->set_gc(gdk_gc_new_with_values(gd_window, &gcvalues,
-        (GdkGCValuesMask)GDK_GC_CAP_STYLE));
+    // cairo_tValues gcvalues;
+//     gcvalues.cap_style = GDK_CAP_BUTT;
+//     Gbag()->set_gc(gdk_gc_new_with_values(gd_window, &gcvalues,
+//         (cairo_tValuesMask)GDK_GC_CAP_STYLE));
 
-    // Growl... GTK doesn't have this
-#ifdef WITH_X11
-    XGCValues xval;
-    xval.fill_rule = WindingRule;
-    XChangeGC(gr_x_display(), gr_x_gc(GC()), GCFillRule, &xval);
-#endif
+//     // Growl... GTK doesn't have this
+// #ifdef WITH_X11
+//     XGCValues xval;
+//     xval.fill_rule = WindingRule;
+//     XChangeGC(gr_x_display(), gr_x_gc(GC()), GCFillRule, &xval);
+// #endif
 
-    gcvalues.function = GDK_XOR;
-    Gbag()->set_xorgc(gdk_gc_new_with_values(gd_window, &gcvalues,
-        (GdkGCValuesMask)(GDK_GC_FUNCTION | GDK_GC_CAP_STYLE)));
+//     gcvalues.function = GDK_XOR;
+//     Gbag()->set_xorgc(gdk_gc_new_with_values(gd_window, &gcvalues,
+//         (cairo_tValuesMask)(GDK_GC_FUNCTION | GDK_GC_CAP_STYLE)));
 
-    gd_backg = GRX->NameColor("black");
-    gd_foreg = GRX->NameColor("white");
+    // gd_backg = GRX->NameColor("black");
+    // gd_foreg = GRX->NameColor("white");
 
     GdkColor clr;
     clr.pixel = gd_backg;
     gtk_QueryColor(&clr);
-    gdk_gc_set_background(GC(), &clr);
-    gdk_gc_set_background(XorGC(), &clr);
+    // gdk_gc_set_background(GC(), &clr);
+    // gdk_gc_set_background(XorGC(), &clr);
     clr.pixel = gd_foreg;
     gtk_QueryColor(&clr);
-    gdk_gc_set_foreground(GC(), &clr);
+    // gdk_gc_set_foreground(GC(), &clr);
     clr.pixel = gd_backg ^ gd_foreg;
     gtk_QueryColor(&clr);
-    gdk_gc_set_foreground(XorGC(), &clr);
+    // gdk_gc_set_foreground(XorGC(), &clr);
 
     // Set backgrounds of text areas and drawing areas.
     //
     SetWindowBackground(gd_backg);
     clr.pixel = DSP()->Color(PromptBackgroundColor);
     gtk_QueryColor(&clr);
-    gdk_window_set_background(wb_textarea->window, &clr);
-    gdk_window_clear(wb_textarea->window);
-    gdk_window_set_background(mb_readout->window, &clr);
-    gdk_window_clear(mb_readout->window);
+    // gdk_window_set_background(gtk_widget_get_window(wb_textarea), &clr);
+    // gdk_window_clear(gtk_widget_get_window(wb_textarea));
+    // gdk_window_set_background(gtk_widget_get_window(mb_readout), &clr);
+    // gdk_window_clear(gtk_widget_get_window(mb_readout));
 
     // Set the I-beam cursor in the prompt and status text area.
 
     GdkCursor *i_cursor = gdk_cursor_new(GDK_XTERM);
-    gdk_window_set_cursor(wb_textarea->window, i_cursor);
-    gdk_window_set_cursor(mb_readout->window, i_cursor);
+    gdk_window_set_cursor(gtk_widget_get_window(wb_textarea), i_cursor);
+    gdk_window_set_cursor(gtk_widget_get_window(mb_readout), i_cursor);
 }
 
 
@@ -2977,7 +2981,7 @@ sEventHdlr::main_event_handler(GdkEvent *event, void*)
         LogEvent(event);
         if (gtkPkgIf()->IsBusy()) {
             GtkWidget *evw = gtk_get_event_widget(event);
-            if (gtk_object_get_data(GTK_OBJECT(evw), "abort"))
+            if (g_object_get_data(G_OBJECT(evw), "abort"))
                 gtk_main_do_event(event);
             else if (event->button.button < 4)
                 // Ignore mouse wheel events.
@@ -3009,7 +3013,7 @@ sEventHdlr::main_event_handler(GdkEvent *event, void*)
                     return;
                 }
                 GtkWidget *evw = gtk_get_event_widget(event);
-                if (gtk_object_get_data(GTK_OBJECT(evw), "abort"))
+                if (g_object_get_data(G_OBJECT(evw), "abort"))
                     gtk_main_do_event(event);
                 return;
             }

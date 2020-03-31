@@ -241,13 +241,13 @@ Xdev::NewDraw(int)
     px->lcx = GRappIf()->SetupLayers(display, px, 0);
 
     if (width && height) {
-        Pixmap pm = XCreatePixmap(display, px->window, width, height,
-            DefaultDepth(display, DefaultScreen(display)));
-        if (!pm) {
-            delete px;
-            return (0);
-        }
-        px->window = pm;
+        // Pixmap pm = XCreatePixmap(display, px, width, height,
+        //     DefaultDepth(display, DefaultScreen(display)));
+        // if (!pm) {
+        //     delete px;
+        //     return (0);
+        // }
+        // gtk_widget_get_window(px) = pm;
         px->SetFillpattern(0);
         px->SetColor(GRappIf()->BackgroundPixel());
         px->Box(0, 0, width, height);

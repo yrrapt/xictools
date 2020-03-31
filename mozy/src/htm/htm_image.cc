@@ -2159,10 +2159,10 @@ htmImageManager::imageDefaultProc(htmRawImageData *img_data, const char *url)
 
         // Upon return, image has been dithered/quantized and cmap
         // contains a new colormap.
-        img_data->data = image->data;
+        img_gtk_selection_data_get_data(data) = image->data;
         quantizeImage(img_data, max_colors);
-        image->data = img_data->data;
-        img_data->data = 0;
+        image->data = img_gtk_selection_data_get_data(data);
+        img_gtk_selection_data_get_data(data) = 0;
         bg_bad = true;  // The background pixel (if any) is now crap.
 
         // need to get a new used array
@@ -2363,11 +2363,11 @@ htmImageManager::animDefaultProc(htmRawImageData *img_data,
             use_local_cmap = true;
         }
 
-        // do it, have to reset img_data->data temporarily
-        img_data->data = image->data;
+        // do it, have to reset img_gtk_selection_data_get_data(data) temporarily
+        img_gtk_selection_data_get_data(data) = image->data;
         quantizeImage(img_data, max_colors);
-        image->data = img_data->data;
-        img_data->data = 0;
+        image->data = img_gtk_selection_data_get_data(data);
+        img_gtk_selection_data_get_data(data) = 0;
 
         // need to get a new used array
         memset(used, 0, MAX_IMAGE_COLORS*sizeof(int));
@@ -2495,9 +2495,9 @@ htmImageManager::imageDelayedProc(htmRawImageData *img_data, ImageBuffer *ib)
     image->colorspace   = img_data->color_class;
     image->options      = IMAGE_DELAYED_CREATION | IMAGE_ALLOW_SCALE;
     image->fg_gamma     = img_data->fg_gamma;
-    image->alpha        = img_data->data;
+    image->alpha        = img_gtk_selection_data_get_data(data);
 
-    img_data->data = 0;  // ownership change
+    img_gtk_selection_data_get_data(data) = 0;  // ownership change
 
     // return loaded image data
     return (image);

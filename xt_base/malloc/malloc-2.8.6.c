@@ -230,7 +230,7 @@ WIN32                    default: defined if _WIN32 defined
   cases where this malloc might not be a pure drop-in replacement for
   Win32 malloc: Random-looking failures from Win32 GDI API's (eg;
   SetDIBits()) may be due to bugs in some video driver implementations
-  when pixel buffers are malloc()ed, and the region spans more than
+  when pixel buffers are mallocG_CALLBACK(ed), and the region spans more than
   one VirtualAlloc()ed region. Because dlmalloc uses a small (64Kb)
   default granularity, pixel buffers may straddle virtual allocation
   regions more often than when using the Microsoft allocator.  You can

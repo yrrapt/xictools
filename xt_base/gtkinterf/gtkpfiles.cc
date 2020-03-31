@@ -115,6 +115,7 @@ files_bag::files_bag(gtk_bag *w, const char **buttons, int numbuttons,
     f_directory = 0;
 
     wb_shell = gtk_NewPopup(w, "Path Files Listing", f_destroy, f_instptr);
+    wb_window = gtk_widget_get_window(wb_shell);
 
     GtkWidget *form = gtk_table_new(1, 5, false);
     gtk_widget_show(form);
@@ -134,8 +135,8 @@ files_bag::files_bag(gtk_bag *w, const char **buttons, int numbuttons,
             gtk_widget_set_name(button, buttons[i]);
             gtk_widget_show(button);
             f_buttons[i] = button;
-            gtk_signal_connect(GTK_OBJECT(button), "clicked",
-                GTK_SIGNAL_FUNC(action_proc), this);
+            g_signal_connect(G_OBJECT(button), "clicked",
+                G_CALLBACK(action_proc), this);
             gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
         }
     }
@@ -175,7 +176,7 @@ files_bag::files_bag(gtk_bag *w, const char **buttons, int numbuttons,
         f_idle_proc(0);
     }
 
-    f_menu = gtk_option_menu_new();
+    f_menu = gtk_menu_new();
     gtk_widget_show(f_menu);
     gtk_table_attach(GTK_TABLE(form), f_menu, 0, 1, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -205,8 +206,8 @@ files_bag::files_bag(gtk_bag *w, const char **buttons, int numbuttons,
     GtkWidget *button = gtk_toggle_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(destroy), this);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(destroy), this);
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -218,8 +219,8 @@ files_bag::files_bag(gtk_bag *w, const char **buttons, int numbuttons,
 files_bag::~files_bag()
 {
     if (f_destroy)
-        gtk_signal_disconnect_by_func(GTK_OBJECT(wb_shell),
-            GTK_SIGNAL_FUNC(f_destroy), f_instptr);
+        g_signal_handlers_disconnect_by_func(G_OBJECT(wb_shell),
+            (gpointer)f_destroy, f_instptr);
     f_instptr = 0;
     if (f_path_list) {
         for (sDirList *dl = f_path_list->dirs(); dl; dl = dl->next())
@@ -266,8 +267,8 @@ files_bag::update(const char *path, const char **buttons, int numbuttons,
             gtk_widget_set_name(button, buttons[i]);
             gtk_widget_show(button);
             f_buttons[i] = button;
-            gtk_signal_connect(GTK_OBJECT(button), "clicked",
-                GTK_SIGNAL_FUNC(action_proc), this);
+            g_signal_connect(G_OBJECT(button), "clicked",
+                G_CALLBACK(action_proc), this);
             gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
         }
         gtk_widget_show(hbox);
@@ -291,9 +292,9 @@ files_bag::viewing_area(int width, int height)
         gtk_widget_show(f_notebook);
     }
     else {
-        gtk_signal_disconnect_by_func(GTK_OBJECT(f_notebook),
-            GTK_SIGNAL_FUNC(f_page_proc), this);
-        while (GTK_NOTEBOOK(f_notebook)->children)
+        g_signal_handlers_disconnect_by_func(G_OBJECT(f_notebook),
+            (gpointer)f_page_proc, this);
+        while (gtk_notebook_get_n_pages(GTK_NOTEBOOK(f_notebook)))
             gtk_notebook_remove_page(GTK_NOTEBOOK(f_notebook), 0);
     }
     if (!f_path_list)
@@ -336,26 +337,26 @@ files_bag::viewing_area(int width, int height)
 
         GtkWidget *mi = gtk_menu_item_new_with_label(buf);
         gtk_widget_show(mi);
-        gtk_object_set_data(GTK_OBJECT(mi), "index", (void*)(long)i);
-        gtk_menu_append(GTK_MENU(menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(f_menu_proc), this);
+        g_object_set_data(G_OBJECT(mi), "index", (void*)(long)i);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(f_menu_proc), this);
 
         GtkWidget *page = create_page(dl);
         gtk_notebook_append_page(GTK_NOTEBOOK(f_notebook), page, 0);
         GtkWidget *nbtext = (GtkWidget*)dl->dataptr();
         if (i == init_page) {
             wb_textarea = nbtext;
-            gtk_widget_set_usize(nbtext, width, height);  // Just set one.
+            gtk_widget_set_size_request(nbtext, width, height);  // Just set one.
         }
 
     }
-    gtk_signal_connect(GTK_OBJECT(f_notebook), "switch-page",
-        GTK_SIGNAL_FUNC(f_page_proc), this);
-    gtk_notebook_set_page(GTK_NOTEBOOK(f_notebook), init_page);
-    gtk_option_menu_remove_menu(GTK_OPTION_MENU(f_menu));
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(f_menu), menu);
-    gtk_option_menu_set_history(GTK_OPTION_MENU(f_menu), init_page);
+    g_signal_connect(G_OBJECT(f_notebook), "switch-page",
+        G_CALLBACK(f_page_proc), this);
+    // gtk_notebook_set_current_page(GTK_NOTEBOOK(f_notebook), init_page);
+    // // gtk_option_menu_remove_menu(GTK_OPTION_MENU(f_menu));
+    // // gtk_option_menu_set_menu(GTK_OPTION_MENU(f_menu), menu);
+    // // gtk_option_menu_set_history(GTK_OPTION_MENU(f_menu), init_page);
 }
 
 
@@ -407,9 +408,10 @@ files_bag::relist(stringlist *oldlist)
         int width = DEF_WIDTH;
         int height = DEF_HEIGHT;
         GtkWidget *text1 =
-            (GtkWidget*)gtk_object_get_data(GTK_OBJECT(wb_shell), "text1");
-        if (text1 && text1->window)
-            gdk_window_get_size(text1->window, &width, &height);
+            (GtkWidget*)g_object_get_data(G_OBJECT(wb_shell), "text1");
+        if (text1 && gtk_widget_get_window(text1))
+            width = gdk_window_get_width(gtk_widget_get_window(text1));
+            height = gdk_window_get_height(gtk_widget_get_window(text1));
         viewing_area(width, height);
         return;
     }
@@ -426,7 +428,7 @@ files_bag::relist(stringlist *oldlist)
         stmp = stmp->next;
     }
 
-    GtkWidget *menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(f_menu));
+    GtkWidget *menu = f_menu;
 
     int n = 0;
     for (sDirList *dl = f_path_list->dirs(); dl; n++, dl = dl->next()) {
@@ -472,9 +474,9 @@ files_bag::relist(stringlist *oldlist)
 
         GtkWidget *mi = gtk_menu_item_new_with_label(buf);
         gtk_widget_show(mi);
-        gtk_menu_insert(GTK_MENU(menu), mi, n);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(f_menu_proc), this);
+        gtk_menu_shell_insert((GtkMenuShell *)GTK_MENU(menu), mi, n);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(f_menu_proc), this);
 
         const char **nary = new const char*[len+1];
         for (int i = 0; i < n; i++)
@@ -595,18 +597,18 @@ files_bag::create_page(sDirList *dl)
 
     if (f_btn_hdlr) {
         gtk_widget_add_events(nbtext, GDK_BUTTON_PRESS_MASK);
-        gtk_signal_connect(GTK_OBJECT(nbtext), "button-press-event",
-            GTK_SIGNAL_FUNC(f_btn_hdlr), this);
+        g_signal_connect(G_OBJECT(nbtext), "button-press-event",
+            G_CALLBACK(f_btn_hdlr), this);
     }
-    gtk_signal_connect(GTK_OBJECT(nbtext), "button-release-event",
-        GTK_SIGNAL_FUNC(f_btn_release_hdlr), this);
-    gtk_signal_connect(GTK_OBJECT(nbtext), "motion-notify-event",
-        GTK_SIGNAL_FUNC(f_motion), this);
-    gtk_signal_connect_after(GTK_OBJECT(nbtext), "realize",
-        GTK_SIGNAL_FUNC(f_realize_proc), this);
+    g_signal_connect(G_OBJECT(nbtext), "button-release-event",
+        G_CALLBACK(f_btn_release_hdlr), this);
+    g_signal_connect(G_OBJECT(nbtext), "motion-notify-event",
+        G_CALLBACK(f_motion), this);
+    g_signal_connect_after(G_OBJECT(nbtext), "realize",
+        G_CALLBACK(f_realize_proc), this);
 
-    gtk_signal_connect(GTK_OBJECT(nbtext), "unrealize",
-        GTK_SIGNAL_FUNC(f_unrealize_proc), this);
+    g_signal_connect(G_OBJECT(nbtext), "unrealize",
+        G_CALLBACK(f_unrealize_proc), this);
 
     // Gtk-2 is tricky to overcome internal selection handling.
     // Must remove clipboard (in f_realize_proc), and explicitly
@@ -615,10 +617,10 @@ files_bag::create_page(sDirList *dl)
 
     gtk_selection_add_targets(nbtext, GDK_SELECTION_PRIMARY,
         target_table, n_targets);
-    gtk_signal_connect(GTK_OBJECT(nbtext), "selection-clear-event",
-        GTK_SIGNAL_FUNC(f_selection_clear), 0);
-    gtk_signal_connect(GTK_OBJECT(nbtext), "selection-get",
-        GTK_SIGNAL_FUNC(f_selection_get), 0);
+    g_signal_connect(G_OBJECT(nbtext), "selection-clear-event",
+        G_CALLBACK(f_selection_clear), 0);
+    g_signal_connect(G_OBJECT(nbtext), "selection-get",
+        G_CALLBACK(f_selection_get), 0);
 
     GtkTextBuffer *textbuf =
         gtk_text_view_get_buffer(GTK_TEXT_VIEW(nbtext));
@@ -630,16 +632,16 @@ files_bag::create_page(sDirList *dl)
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 2, 0);
 
     // drag source (starts explicitly)
-    gtk_signal_connect(GTK_OBJECT(nbtext), "drag-data-get",
-        GTK_SIGNAL_FUNC(f_source_drag_data_get), this);
+    g_signal_connect(G_OBJECT(nbtext), "drag-data-get",
+        G_CALLBACK(f_source_drag_data_get), this);
 
     // drop site
     gtk_drag_dest_set(nbtext, GTK_DEST_DEFAULT_ALL, target_table,
         n_targets,
         (GdkDragAction)(GDK_ACTION_COPY | GDK_ACTION_MOVE |
          GDK_ACTION_LINK | GDK_ACTION_ASK));
-    gtk_signal_connect_after(GTK_OBJECT(nbtext), "drag-data-received",
-        GTK_SIGNAL_FUNC(f_drag_data_received), this);
+    g_signal_connect_after(G_OBJECT(nbtext), "drag-data-received",
+        G_CALLBACK(f_drag_data_received), this);
     return (vtab);
 }
 
@@ -648,7 +650,7 @@ files_bag::create_page(sDirList *dl)
 void
 files_bag::f_resize_hdlr(GtkWidget *widget, GtkAllocation *a, void *arg)
 {
-    if (GTK_WIDGET_REALIZED(widget)) {
+    if (gtk_widget_get_realized(widget)) {
         files_bag *f = static_cast<files_bag*>(arg);
         if (f)
             f->resize(a);
@@ -661,19 +663,19 @@ void
 files_bag::f_menu_proc(GtkWidget *caller, void *arg)
 {
     files_bag *f = (files_bag*)arg;
-    GtkWidget *menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(f->f_menu));
-    GList *list = gtk_container_get_children(GTK_CONTAINER(menu));
-    int n = -1;
-    int i = 0;
-    for (GList *g = list; g; g = g->next) {
-        if (g->data == caller) {
-            n = i;
-            break;
-        }
-        i++;
-    }
-    g_list_free(list);
-    gtk_notebook_set_page(GTK_NOTEBOOK(f->f_notebook), n);
+    // GtkWidget *menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(f->f_menu));
+    // GList *list = gtk_container_get_children(GTK_CONTAINER(menu));
+    // int n = -1;
+    // int i = 0;
+    // for (GList *g = list; g; g = g->next) {
+    //     if (g->data == caller) {
+    //         n = i;
+    //         break;
+    //     }
+    //     i++;
+    // }
+    // g_list_free(list);
+    // gtk_notebook_set_current_page(GTK_NOTEBOOK(f->f_notebook), n);
 }
 
 
@@ -762,7 +764,7 @@ files_bag::f_timer(void*)
         }
     }
     if (dirtyone)
-        gtk_idle_add((GtkFunction)f_idle_proc, 0);
+        g_idle_add(f_idle_proc, 0);
 
     return (true);
 }
@@ -783,7 +785,7 @@ files_bag::f_monitor_setup()
             d->set_mtime(st.st_mtime);
     }
     if (!f_timer_tag)
-        f_timer_tag = gtk_timeout_add(1000, (GtkFunction)f_timer, 0);
+        f_timer_tag = g_timeout_add(1000, f_timer, 0);
 }
 
 
@@ -798,7 +800,7 @@ void
 files_bag::f_drag_data_received(GtkWidget*, GdkDragContext *context,
     gint, gint, GtkSelectionData *data, guint, guint time)
 {
-    char *src = (char*)data->data;
+    char *src = (char*)gtk_selection_data_get_data(data);
     if (src && *src && f_instptr->wb_textarea) {
         const char *dst = f_instptr->f_directory;
         if (dst && *dst && strcmp(src, dst)) {
@@ -820,11 +822,11 @@ files_bag::f_source_drag_data_get(GtkWidget *caller, GdkDragContext*,
 {
     if (GTK_IS_TEXT_VIEW(caller))
     // stop text view native handler
-    gtk_signal_emit_stop_by_name(GTK_OBJECT(caller), "drag-data-get");
+    g_signal_stop_emission_by_name(G_OBJECT(caller), "drag-data-get");
 
     (void)caller;
     char *s = f_instptr->get_selection();
-    gtk_selection_data_set(selection_data, selection_data->target,
+    gtk_selection_data_set(selection_data, gtk_selection_data_get_target(selection_data),
         8, (unsigned char*)s, s ? strlen(s) + 1 : 0);
     delete [] s;
 }
@@ -857,7 +859,7 @@ files_bag::f_motion(GtkWidget *widget, GdkEvent *event, void*)
             // Strange voodoo to "turn on" motion events, that are
             // otherwise suppressed since GDK_POINTER_MOTION_HINT_MASK
             // is set.  See GdkEventMask doc.
-            gdk_window_get_pointer(widget->window, 0, 0, 0);
+            gdk_window_get_pointer(gtk_widget_get_window(widget), 0, 0, 0);
 #endif
             if ((abs((int)event->motion.x - f_instptr->f_drag_x) > 4 ||
                     abs((int)event->motion.y - f_instptr->f_drag_y) > 4)) {
@@ -1013,14 +1015,14 @@ void
 files_bag::f_selection_get(GtkWidget *widget,
     GtkSelectionData *selection_data, guint, guint, void*)
 {
-    if (selection_data->selection != GDK_SELECTION_PRIMARY)
+    if (gtk_selection_data_get_selection(selection_data) != GDK_SELECTION_PRIMARY)
         return;  
 
     // stop native handler
-    gtk_signal_emit_stop_by_name(GTK_OBJECT(widget), "selection-get");
+    g_signal_stop_emission_by_name(G_OBJECT(widget), "selection-get");
 
     char *s = f_instptr->get_selection();
-    gtk_selection_data_set(selection_data, selection_data->target,
+    gtk_selection_data_set(selection_data, gtk_selection_data_get_target(selection_data),
         8, (unsigned char*)s, s ? strlen(s) + 1 : 0);
     delete [] s;
 }

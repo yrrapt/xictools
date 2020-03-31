@@ -136,7 +136,7 @@ int sAsm::asm_fmt_type = cConvert::cvGds;
 #define IFINIT(i, a, b, c, d, e) { \
     menu_items[i].path = (char*)a; \
     menu_items[i].accelerator = (char*)b; \
-    menu_items[i].callback = (GtkItemFactoryCallback)c; \
+    menu_items[i].callback = (GtkUIManagerCallback)c; \
     menu_items[i].callback_action = d; \
     menu_items[i].item_type = (char*)e; \
     i++; }
@@ -167,13 +167,14 @@ sAsm::sAsm(GRobject c)
     asm_abort = false;
 
     wb_shell = gtk_NewPopup(0, "Layout File Merge Tool", asm_cancel_proc, 0);
+    wb_window = gtk_widget_get_window(wb_shell);
     if (!wb_shell)
         return;
     gtk_window_set_resizable(GTK_WINDOW(wb_shell), false);
     GRpkgIf()->RegisterMainWbag(this);
 
     // Without this, spin entries sometimes freeze up for some reason.
-    gtk_object_set_data(GTK_OBJECT(wb_shell), "no_prop_key", (void*)1);
+    g_object_set_data(G_OBJECT(wb_shell), "no_prop_key", (void*)1);
 
     GtkWidget *form = gtk_table_new(1, 4, false);
     gtk_widget_show(form);
@@ -181,101 +182,101 @@ sAsm::sAsm(GRobject c)
 
     // menu bar
     //
-    GtkItemFactoryEntry menu_items[30];
-    int nitems = 0;
+    // GtkUIManagerEntry menu_items[30];
+    // int nitems = 0;
 
-    IFINIT(nitems, "/_File", 0, 0, 0, "<Branch>")
-    IFINIT(nitems, "/File/_File Select", "<control>O", asm_action_proc,
-        OpenCode, "<CheckItem>");
-    IFINIT(nitems, "/File/_Save", "<control>S", asm_action_proc,
-        SaveCode, 0);
-    IFINIT(nitems, "/File/_Recall", "<control>R", asm_action_proc,
-        RecallCode, 0);
-    IFINIT(nitems, "/File/sep1", 0, 0, 0, "<Separator>");
-    IFINIT(nitems, "/File/_Quit", "<control>Q", asm_action_proc,
-        CancelCode, 0);
+    // IFINIT(nitems, "/_File", 0, 0, 0, "<Branch>")
+    // IFINIT(nitems, "/File/_File Select", "<control>O", asm_action_proc,
+    //     OpenCode, "<CheckItem>");
+    // IFINIT(nitems, "/File/_Save", "<control>S", asm_action_proc,
+    //     SaveCode, 0);
+    // IFINIT(nitems, "/File/_Recall", "<control>R", asm_action_proc,
+    //     RecallCode, 0);
+    // IFINIT(nitems, "/File/sep1", 0, 0, 0, "<Separator>");
+    // IFINIT(nitems, "/File/_Quit", "<control>Q", asm_action_proc,
+    //     CancelCode, 0);
 
-    IFINIT(nitems, "/_Options", 0, 0, 0, "<Branch>")
-    IFINIT(nitems, "/Options/R_eset", "<control>E", asm_action_proc,
-        ResetCode, 0);
-    IFINIT(nitems, "/Options/_New Source", "<control>N", asm_action_proc,
-        NewCode, 0);
-    IFINIT(nitems, "/Options/Remove Source", 0, asm_action_proc,
-        DelCode, 0);
-    IFINIT(nitems, "/Options/New _Toplevel", "<control>T", asm_action_proc,
-        NewTlCode, 0);
-    IFINIT(nitems, "/Options/Remove Toplevel", 0, asm_action_proc,
-        DelTlCode, 0);
+    // IFINIT(nitems, "/_Options", 0, 0, 0, "<Branch>")
+    // IFINIT(nitems, "/Options/R_eset", "<control>E", asm_action_proc,
+    //     ResetCode, 0);
+    // IFINIT(nitems, "/Options/_New Source", "<control>N", asm_action_proc,
+    //     NewCode, 0);
+    // IFINIT(nitems, "/Options/Remove Source", 0, asm_action_proc,
+    //     DelCode, 0);
+    // IFINIT(nitems, "/Options/New _Toplevel", "<control>T", asm_action_proc,
+    //     NewTlCode, 0);
+    // IFINIT(nitems, "/Options/Remove Toplevel", 0, asm_action_proc,
+    //     DelTlCode, 0);
 
-    IFINIT(nitems, "/_Help", 0, 0, 0, "<LastBranch>");
-    IFINIT(nitems, "/Help/_Help", "<control>H", asm_action_proc,
-        HelpCode, 0);
+    // IFINIT(nitems, "/_Help", 0, 0, 0, "<LastBranch>");
+    // IFINIT(nitems, "/Help/_Help", "<control>H", asm_action_proc,
+    //     HelpCode, 0);
 
-    GtkAccelGroup *accel_group = gtk_accel_group_new();
-    asm_item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<filetool>",
-        accel_group);
-    for (int i = 0; i < nitems; i++)
-        gtk_item_factory_create_item(asm_item_factory, menu_items + i,
-            this, 2);
-    gtk_window_add_accel_group(GTK_WINDOW(wb_shell), accel_group);
+    // GtkAccelGroup *accel_group = gtk_accel_group_new();
+    // asm_item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<filetool>",
+    //     accel_group);
+    // for (int i = 0; i < nitems; i++)
+    //     gtk_item_factory_create_item(asm_item_factory, menu_items + i,
+    //         this, 2);
+    // gtk_window_add_accel_group(GTK_WINDOW(wb_shell), accel_group);
 
-    GtkWidget *menubar = gtk_item_factory_get_widget(asm_item_factory,
-        "<filetool>");
-    gtk_widget_show(menubar);
+    // GtkWidget *menubar = gtk_item_factory_get_widget(asm_item_factory,
+    //     "<filetool>");
+    // gtk_widget_show(menubar);
 
-    int row = 0;
-    gtk_table_attach(GTK_TABLE(form), menubar, 0, 1, row, row+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
-    row++;
+    // int row = 0;
+    // gtk_table_attach(GTK_TABLE(form), menubar, 0, 1, row, row+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
+    // row++;
 
-    //
-    // notebook setup
-    //
-    asm_notebook = gtk_notebook_new();
-    gtk_widget_show(asm_notebook);
-    gtk_signal_connect(GTK_OBJECT(asm_notebook), "switch-page",
-        GTK_SIGNAL_FUNC(asm_page_change_proc), 0);
+    // //
+    // // notebook setup
+    // //
+    // asm_notebook = gtk_notebook_new();
+    // gtk_widget_show(asm_notebook);
+    // g_signal_connect(G_OBJECT(asm_notebook), "switch-page",
+    //     G_CALLBACK(asm_page_change_proc), 0);
 
-    gtk_table_attach(GTK_TABLE(form), asm_notebook, 0, 1, row, row+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL), 2, 2);
-    row++;
+    // gtk_table_attach(GTK_TABLE(form), asm_notebook, 0, 1, row, row+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL), 2, 2);
+    // row++;
 
-    output_page_setup();
-    notebook_append();
+    // output_page_setup();
+    // notebook_append();
 
-    //
-    // button row
-    //
-    GtkWidget *hbox = gtk_hbox_new(false, 2);
-    gtk_widget_show(hbox);
+    // //
+    // // button row
+    // //
+    // GtkWidget *hbox = gtk_hbox_new(false, 2);
+    // gtk_widget_show(hbox);
 
-    GtkWidget *button = gtk_button_new_with_label("Create Layout File");
-    gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(asm_go_proc), this);
-    gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
-    button = gtk_button_new_with_label("Dismiss");
-    gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(asm_cancel_proc), 0);
-    gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
+    // GtkWidget *button = gtk_button_new_with_label("Create Layout File");
+    // gtk_widget_show(button);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     G_CALLBACK(asm_go_proc), this);
+    // gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
+    // button = gtk_button_new_with_label("Dismiss");
+    // gtk_widget_show(button);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     G_CALLBACK(asm_cancel_proc), 0);
+    // gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
-    gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, row, row+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
-    row++;
+    // gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, row, row+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
+    // row++;
 
-    // status message line
-    //
-    asm_status = gtk_label_new(0);
-    gtk_widget_show(asm_status);
-    gtk_label_set_justify(GTK_LABEL(asm_status), GTK_JUSTIFY_LEFT);
+    // // status message line
+    // //
+    // asm_status = gtk_label_new(0);
+    // gtk_widget_show(asm_status);
+    // gtk_label_set_justify(GTK_LABEL(asm_status), GTK_JUSTIFY_LEFT);
 
-    gtk_table_attach(GTK_TABLE(form), asm_status, 0, 1, row, row+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
+    // gtk_table_attach(GTK_TABLE(form), asm_status, 0, 1, row, row+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
 }
 
 
@@ -291,8 +292,8 @@ sAsm::~sAsm()
     delete [] asm_sources;
     delete asm_fmt;
     if (wb_shell)
-        gtk_signal_disconnect_by_func(GTK_OBJECT(wb_shell),
-            GTK_SIGNAL_FUNC(asm_cancel_proc), wb_shell);
+        g_signal_handlers_disconnect_by_func(G_OBJECT(wb_shell),
+            (gpointer)asm_cancel_proc, wb_shell);
 
     if (asm_item_factory)
         g_object_unref(asm_item_factory);
@@ -631,8 +632,9 @@ int
 sAsm::current_page_index()
 {
     // Compensate for the "Output" tab.
-    int ix = gtk_notebook_current_page(GTK_NOTEBOOK(asm_notebook));
-    return (ix - 1);
+    // int ix = gtk_notebook_get_current_page(GTK_NOTEBOOK(asm_notebook));
+    // return (ix - 1);
+    return (0);
 }
 
 
@@ -695,8 +697,8 @@ sAsm::output_page_setup()
         (GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_HIGHLIGHT);
     gtk_drag_dest_set(asm_outfile, DD, target_table, n_targets,
         GDK_ACTION_COPY);
-    gtk_signal_connect_after(GTK_OBJECT(asm_outfile), "drag-data-received",
-        GTK_SIGNAL_FUNC(asm_drag_data_received), 0);
+    g_signal_connect_after(G_OBJECT(asm_outfile), "drag-data-received",
+        G_CALLBACK(asm_drag_data_received), 0);
 
     GtkWidget *frame = gtk_frame_new(0);
     gtk_widget_show(frame);
@@ -765,8 +767,8 @@ sAsm::set_status_message(const char *msg)
 {
     if (Asm) {
         if (Asm->asm_timer_id)
-            gtk_timeout_remove(Asm->asm_timer_id);
-        Asm->asm_timer_id = gtk_timeout_add(10000, asm_timer_callback, 0);
+            g_source_remove(Asm->asm_timer_id);
+        Asm->asm_timer_id = g_timeout_add(10000, asm_timer_callback, 0);
         gtk_label_set_text(GTK_LABEL(Asm->asm_status), msg);
     }
 }
@@ -819,9 +821,9 @@ void
 sAsm::asm_drag_data_received(GtkWidget *entry, GdkDragContext *context,
     gint, gint, GtkSelectionData *data, guint, guint time)
 {
-    if (data->length >= 0 && data->format == 8 && data->data) {
-        char *src = (char*)data->data;
-        if (data->target == gdk_atom_intern("TWOSTRING", true)) {
+    if (gtk_selection_data_get_length(data) >= 0 && gtk_selection_data_get_format(data) == 8 && gtk_selection_data_get_data(data)) {
+        char *src = (char*)gtk_selection_data_get_data(data);
+        if (gtk_selection_data_get_target(data) == gdk_atom_intern("TWOSTRING", true)) {
             // Drops from content lists may be in the form
             // "fname_or_chd\ncellname".  Keep the filename.
             char *t = strchr(src, '\n');
@@ -878,12 +880,12 @@ sAsm::asm_page_change_proc(GtkWidget*, void*, int page, void*)
     if (page > 0) {
         sAsmPage *src = Asm->asm_sources[page-1];
         int n = src->pg_curtlcell;
-        if (n >= 0)
-            gtk_list_select_item(GTK_LIST(src->pg_toplevels), n);
-        else {
-            src->pg_tx->reset();
-            gtk_list_unselect_all(GTK_LIST(src->pg_toplevels));
-        }
+        // if (n >= 0)
+        //     gtk_list_select_item(GTK_LIST(src->pg_toplevels), n);
+        // else {
+        //     src->pg_tx->reset();
+        //     gtk_list_unselect_all(GTK_LIST(src->pg_toplevels));
+        // }
         src->upd_sens();
     }
 }
@@ -952,22 +954,22 @@ sAsm::asm_action_proc(GtkWidget *caller, void*, unsigned int code)
             int n = src->pg_curtlcell;
             if (n >= 0) {
 
-                if (n > 0)
-                    gtk_list_clear_items(GTK_LIST(src->pg_toplevels), n, n+1);
-                else {
-                    // Hideous gtk1 bug in gtk_list_clear_items:
-                    // removing the first element if there is more
-                    // than one causes a seg fault.
-                    // gtklist.c (1.2.10) line 1302:
-                    //   new_focus_child = list->children->prev->data;
-                    // should be
-                    //   new_focus_child = list->children->data;
-                    // Here's a hack-around.
-                    //
-                    GtkList *l = GTK_LIST(src->pg_toplevels);
-                    GList *g = g_list_append(0, l->children->data);
-                    gtk_list_remove_items(GTK_LIST(src->pg_toplevels), g);
-                }
+                // if (n > 0)
+                //     gtk_list_clear_items(GTK_LIST(src->pg_toplevels), n, n+1);
+                // else {
+                //     // Hideous gtk1 bug in gtk_list_clear_items:
+                //     // removing the first element if there is more
+                //     // than one causes a seg fault.
+                //     // gtklist.c (1.2.10) line 1302:
+                //     //   new_focus_child = list->children->prev->data;
+                //     // should be
+                //     //   new_focus_child = list->children->data;
+                //     // Here's a hack-around.
+                //     //
+                //     GtkList *l = GTK_LIST(src->pg_toplevels);
+                //     GList *g = g_list_append(0, l->children->data);
+                //     gtk_list_remove_items(GTK_LIST(src->pg_toplevels), g);
+                // }
 
                 delete src->pg_cellinfo[n];
                 src->pg_numtlcells--;
@@ -976,9 +978,9 @@ sAsm::asm_action_proc(GtkWidget *caller, void*, unsigned int code)
                 src->pg_cellinfo[src->pg_numtlcells] = 0;
                 src->pg_curtlcell = -1;
                 src->upd_sens();
-                if (src->pg_numtlcells > 0)
-                    gtk_list_select_item(GTK_LIST(src->pg_toplevels),
-                        src->pg_numtlcells-1);
+                // if (src->pg_numtlcells > 0)
+                //     gtk_list_select_item(GTK_LIST(src->pg_toplevels),
+                //         src->pg_numtlcells-1);
             }
         }
     }
@@ -1007,8 +1009,8 @@ sAsm::asm_save_cb(const char *fname, void*)
         FILE *fp = fopen(fname, "w");
         if (!fp) {
             const char *msg = "Can't open file, try again";
-            GtkWidget *label = (GtkWidget*)gtk_object_get_data(
-                GTK_OBJECT(Asm->wb_input), "label");
+            GtkWidget *label = (GtkWidget*)g_object_get_data(
+                G_OBJECT(Asm->wb_input), "label");
             if (label)
                 gtk_label_set_text(GTK_LABEL(label), msg);
             else
@@ -1046,8 +1048,8 @@ sAsm::asm_recall_cb(const char *fname, void*)
         FILE *fp = fopen(fname, "r");
         if (!fp) {
             const char *msg = "Can't open file, try again";
-            GtkWidget *label = (GtkWidget*)gtk_object_get_data(
-                GTK_OBJECT(Asm->wb_input), "label");
+            GtkWidget *label = (GtkWidget*)g_object_get_data(
+                G_OBJECT(Asm->wb_input), "label");
             if (label)
                 gtk_label_set_text(GTK_LABEL(label), msg);
             else
@@ -1099,9 +1101,9 @@ sAsm::asm_fsel_cancel(GRfilePopup*, void*)
     if (!Asm)
         return;
     Asm->asm_fsel = 0;
-    GtkWidget *item = gtk_item_factory_get_widget(Asm->asm_item_factory,
-        "/File/File Select");
-    GRX->Deselect(item);
+    // GtkWidget *item = gtk_item_factory_get_widget(Asm->asm_item_factory,
+    //     "/File/File Select");
+    // GRX->Deselect(item);
 }
 
 

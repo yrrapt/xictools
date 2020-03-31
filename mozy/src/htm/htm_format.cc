@@ -1969,7 +1969,7 @@ htmFormatManager::a_A()
                 f_fg = f_html->htm_cm.cm_anchor_visited_fg;
             }
             // maybe it's a target
-            else if (f_anchor_data->target)
+            else if (f_anchor_gtk_selection_data_get_target(data))
                 f_element_data |= ELE_ANCHOR_TARGET;
         }
         f_ignore = true;  // only need anchor data

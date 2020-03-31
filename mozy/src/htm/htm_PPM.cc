@@ -186,7 +186,7 @@ htmImageManager::readPPM(ImageBuffer *ib)
     // Convert to paletted image.  First allocate a buffer which
     // will receive the final image data.
 
-    img_data->data = new unsigned char[width*height];
+    img_gtk_selection_data_get_data(data) = new unsigned char[width*height];
     convert24to8(data, img_data,
         im_html->htm_max_image_colors, im_html->htm_rgb_conv_mode);
     delete [] data;

@@ -1615,7 +1615,7 @@ namespace ginterf
         virtual GRwbag *NewWbag(const char*, GRwbag*)           = 0;
         virtual bool InitColormap(int, int, bool)               = 0;
         virtual int AllocateColor(int*, int, int, int)          = 0;
-        virtual int NameColor(const char*)                      = 0;
+        // virtual GdkRGBA NameColor(const char*)                  = 0;
         virtual bool NameToRGB(const char*, int*)               = 0;
         virtual void RGBofPixel(int, int*, int*, int*)          = 0;
 
@@ -1787,10 +1787,10 @@ namespace ginterf
                  return (0);
              }
 
-        int NameColor(const char *nm)
-            {
-                return (pkg_main_dev ? pkg_main_dev->NameColor(nm) : 0);
-            }
+        // GdkRGBA NameColor(const char *nm)
+        //     {
+        //         return (pkg_main_dev ? pkg_main_dev->NameColor(nm) : 0);
+        //     }
 
         bool NameToRGB(const char *nm, int *p)
             {

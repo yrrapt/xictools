@@ -141,7 +141,7 @@ htmImageManager::quantizeImage(htmRawImageData *img_data, int max_colors)
 {
     // reformat image data into a 2D array of pixel values
     pixel **pixels = new pixel*[img_data->height];
-    unsigned char *ptr = img_data->data;
+    unsigned char *ptr = img_gtk_selection_data_get_data(data);
 
     for (int row = 0; row < img_data->height; row++) {
         pixels[row] = new pixel[img_data->width];
@@ -219,12 +219,12 @@ htmImageManager::pixelizeRGB(unsigned char *rgb, htmRawImageData *img_data)
     }
 
     // destination buffer
-    if (img_data->data == 0)
-        img_data->data = new unsigned char[width*height];
+    if (img_gtk_selection_data_get_data(data) == 0)
+        img_gtk_selection_data_get_data(data) = new unsigned char[width*height];
 
     // Pixelize data: map pixel values of the RGB image in the colormap
     unsigned char *pix;
-    for (i = width*height, p = rgb, pix = img_data->data; i; i--,pix++) {
+    for (i = width*height, p = rgb, pix = img_gtk_selection_data_get_data(data); i; i--,pix++) {
         col  = (((unsigned int)*p++) << 16);
         col += (((unsigned int)*p++) << 8);
         col +=  *p++;
@@ -330,7 +330,7 @@ namespace {
 
         // Pixelize data: map pixel values of the RGB image in the colormap.
         unsigned char *pix;
-        for (i = width*height, p = rgb, pix = img_data->data; i; i--,pix++) {
+        for (i = width*height, p = rgb, pix = img_gtk_selection_data_get_data(data); i; i--,pix++) {
             int col  = (((unsigned int)*p++) << 16);
             col += (((unsigned int)*p++) << 8);
             col +=  *p++;
@@ -377,7 +377,7 @@ namespace {
         int width  = img_data->width;
         int height = img_data->height;
 
-        unsigned char *pp = img_data->data;
+        unsigned char *pp = img_gtk_selection_data_get_data(data);
         int size = width*3;  // a single RGB scanline
         int imax = height-1;
         int jmax = width-1;
@@ -585,7 +585,7 @@ namespace {
         unsigned char maxval = 255;
         int cols = img_data->width;
         int rows = img_data->height;
-        unsigned char *pic8 = img_data->data;
+        unsigned char *pic8 = img_gtk_selection_data_get_data(data);
 
         // reformat RGB image data into a 2D array of pixel values
         pixel **pixels;

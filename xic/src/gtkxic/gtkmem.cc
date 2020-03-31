@@ -136,8 +136,8 @@ cMain::PopUpMemory(ShowMode mode)
 
     GRX->SetPopupLocation(GRloc(), Mem->Shell(), mainBag()->Viewport());
     gtk_widget_show(Mem->Shell());
-    Mem->SetWindow(Mem->Viewport()->window);
-    Mem->SetWindowBackground(GRX->NameColor("white"));
+    Mem->SetWindow(gtk_widget_get_window(Mem->Viewport()));
+    // Mem->SetWindowBackground(GRX->NameColor("white"));
 }
 // End of cMain functions.
 
@@ -149,6 +149,7 @@ sMem::sMem()
 {
     Mem = this;
     wb_shell = gtk_NewPopup(mainBag(), "Memory Monitor", mem_popdown, 0);
+    wb_window = gtk_widget_get_window(wb_shell);
     if (!wb_shell)
         return;
     gtk_window_set_resizable(GTK_WINDOW(wb_shell), false);
@@ -171,7 +172,7 @@ sMem::sMem()
     int ww = 34*fw + 4;
     if (ww < MEM_MINWIDTH)
         ww = MEM_MINWIDTH;
-    gtk_drawing_area_size(GTK_DRAWING_AREA(gd_viewport), ww, 5*fh + 4);
+    gtk_widget_set_size_request(gd_viewport, ww, 5*fh + 4);
 
     GtkWidget *frame = gtk_frame_new(0);
     gtk_widget_show(frame);
@@ -181,10 +182,10 @@ sMem::sMem()
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 4, 2);
 
     gtk_widget_add_events(gd_viewport, GDK_EXPOSURE_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "expose-event",
-        GTK_SIGNAL_FUNC(mem_redraw), 0);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "style-set",
-        GTK_SIGNAL_FUNC(mem_font_change), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "expose-event",
+        G_CALLBACK(mem_redraw), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "style-set",
+        G_CALLBACK(mem_font_change), 0);
 
     //
     // the dismiss button
@@ -192,8 +193,8 @@ sMem::sMem()
     GtkWidget *button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(mem_popdown), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(mem_popdown), 0);
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, 1, 2,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -208,8 +209,8 @@ sMem::~sMem()
     Mem = 0;
     Menu()->MenuButtonSet(0, MenuALLOC, false);
     if (wb_shell)
-        gtk_signal_disconnect_by_func(GTK_OBJECT(wb_shell),
-            GTK_SIGNAL_FUNC(mem_popdown), wb_shell);
+        g_signal_handlers_disconnect_by_func(G_OBJECT(wb_shell),
+            (gpointer)mem_popdown, wb_shell);
 }
 
 
@@ -219,7 +220,7 @@ sMem::update()
     unsigned long c1 = DSP()->Color(PromptTextColor);
     unsigned long c2 = DSP()->Color(PromptEditTextColor);
     int fwid, fhei;
-    SetWindowBackground(GRX->NameColor("white"));
+    // SetWindowBackground(GRX->NameColor("white"));
     TextExtent(0, &fwid, &fhei);
     SetFillpattern(0);
     SetLinestyle(0);
@@ -364,7 +365,7 @@ sMem::mem_font_change(GtkWidget*, void*, void*)
         int ww = 34*fw + 4;
         if (ww < MEM_MINWIDTH)
             ww = MEM_MINWIDTH;
-        gtk_drawing_area_size(GTK_DRAWING_AREA(Mem->gd_viewport), ww, 5*fh + 4);
+        gtk_widget_set_size_request(Mem->gd_viewport, ww, 5*fh + 4);
     }
 }
 

@@ -91,13 +91,13 @@ cCoord::cCoord()
     gd_viewport = gtk_drawing_area_new();
     gtk_widget_show(gd_viewport);
     gtk_widget_add_events(gd_viewport, GDK_BUTTON_PRESS_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "button-press-event",
-        GTK_SIGNAL_FUNC(co_btn), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "button-press-event",
+        G_CALLBACK(co_btn), 0);
     gtk_widget_add_events(gd_viewport, GDK_EXPOSURE_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "expose-event",
-        GTK_SIGNAL_FUNC(co_redraw), 0);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "style-set",
-        GTK_SIGNAL_FUNC(co_font_change), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "expose-event",
+        G_CALLBACK(co_redraw), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "style-set",
+        G_CALLBACK(co_font_change), 0);
 
     GTKfont::setupFont(gd_viewport, FNT_SCREEN, true);
 
@@ -105,7 +105,7 @@ cCoord::cCoord()
     int wid, hei;
     wid = 600;
     hei = GTKfont::stringHeight(gd_viewport, 0) + 2;
-    gtk_drawing_area_size(GTK_DRAWING_AREA(gd_viewport), wid, hei);
+    gtk_widget_set_size_request(gd_viewport, wid, hei);
 }
 
 
@@ -125,12 +125,12 @@ cCoord::print(int xc, int yc, int update)
         return;
     }
     if (co_id) {
-        gtk_idle_remove(co_id);
+        g_source_remove(co_id);
         co_id = 0;
     }
     co_xc = xc;
     co_yc = yc;
-    co_id = gtk_idle_add(print_idle, this);
+    co_id = g_idle_add(print_idle, this);
 #else
     co_xc = xc;
     co_yc = yc;
@@ -154,22 +154,23 @@ cCoord::do_print(int xc, int yc, int update)
 {
     if (!DSP()->MainWdesc() || !EV()->CurrentWin())
         return;
-    gd_window = gd_viewport->window;
+    gd_window = gtk_widget_get_window(gd_viewport);
     if (!gd_window)
         return;
 
     int winw, winh;
-    gdk_window_get_size(gd_window, &winw, &winh);
+    winw = gdk_window_get_width(gd_window);
+    winh = gdk_window_get_height(gd_window);
     if (winw != co_width || winh != co_height) {
         if (co_pm)
-            gdk_pixmap_unref(co_pm);
-        co_pm = gdk_pixmap_new(gd_window, winw, winh, GRX->Visual()->depth);
+            g_object_unref(co_pm);
+        // co_pm = gdk_pixmap_new(gd_window, winw, winh, GRX->Visual()->depth);
         co_width = winw;
         co_height = winh;
     }
     co_win_bak = gd_window;
-    gd_window = co_pm;
-    gd_viewport->window = gd_window;
+    // gd_window = co_pm;
+    // gtk_widget_get_window(gd_viewport) = gd_window;
 
     const char *fmt;
     DisplayMode mode = EV()->CurrentWin()->Mode();
@@ -210,7 +211,7 @@ cCoord::do_print(int xc, int yc, int update)
         if (xc == co_lx && yc == co_ly) {
             gd_window = co_win_bak;
             co_win_bak = 0;
-            gd_viewport->window = gd_window;
+            // gtk_widget_get_window(gd_viewport) = gd_window;
             return;
         }
         co_lx = xc;
@@ -295,11 +296,11 @@ cCoord::do_print(int xc, int yc, int update)
     SetColor(c2);
     Text(buf, x, y, 0);
 
-    gdk_window_copy_area(co_win_bak, CpyGC(), 0, 0, gd_window,
-        0, 0, co_width, co_height);
+    // gdk_window_copy_area(co_win_bak, CpyGC(), 0, 0, gd_window,
+        // 0, 0, co_width, co_height);
     gd_window = co_win_bak;
     co_win_bak = 0;
-    gd_viewport->window = gd_window;
+    // gtk_widget_get_window(gd_viewport) = gd_window;
 }
 
 
@@ -326,31 +327,31 @@ cCoord::co_redraw(GtkWidget*, GdkEvent *ev, void*)
     }
 
     GdkEventExpose *pev = (GdkEventExpose*)ev;
-    if (Coord() && GDK_IS_DRAWABLE(Coord()->gd_window)) {
-        GdkRectangle *rects;
-        int nrects;
-        gdk_region_get_rectangles(pev->region, &rects, &nrects);
-        for (int i = 0; i < nrects; i++) {
-            gdk_window_copy_area(Coord()->gd_window, Coord()->CpyGC(),
-                rects[i].x, rects[i].y, Coord()->co_pm,
-                rects[i].x, rects[i].y, rects[i].width, rects[i].height);
-        }
-        g_free(rects);
-    }
+    // if (Coord() && GDK_IS_DRAWABLE(Coord()->gd_window)) {
+    //     GdkRectangle *rects;
+    //     int nrects;
+    //     gdk_region_get_rectangles(pev->region, &rects, &nrects);
+    //     for (int i = 0; i < nrects; i++) {
+    //         gdk_window_copy_area(Coord()->gd_window, Coord()->CpyGC(),
+    //             rects[i].x, rects[i].y, Coord()->co_pm,
+    //             rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+    //     }
+    //     g_free(rects);
+    // }
 }
 
 
 void
 cCoord::co_font_change(GtkWidget*, void*, void*)
 {
-    if (Coord() && GDK_IS_DRAWABLE(Coord()->gd_window)) {
-        int fw, fh;
-        Coord()->TextExtent(0, &fw, &fh);
-        int winw, winh;
-        gdk_window_get_size(Coord()->gd_window, &winw, &winh);
-        gtk_drawing_area_size(GTK_DRAWING_AREA(Coord()->Viewport()), -1,
-            fh + 2);
-        Coord()->do_print(Coord()->co_xc, Coord()->co_yc, COOR_BEGIN);
-    }
+    // if (Coord() && GDK_IS_DRAWABLE(Coord()->gd_window)) {
+    //     int fw, fh;
+    //     Coord()->TextExtent(0, &fw, &fh);
+    //     int winw, winh;
+    //     gdk_window_get_size(Coord()->gd_window, &winw, &winh);
+    //     gtk_widget_set_size_request(Coord()->Viewport(), -1,
+    //         fh + 2);
+    //     Coord()->do_print(Coord()->co_xc, Coord()->co_yc, COOR_BEGIN);
+    // }
 }
 

@@ -209,7 +209,8 @@ struct sColorTab
                 te_red = r;
                 te_green = g;
                 te_blue = b;
-                te_pixel = GRpkgIf()->NameColor(clr);
+                // te_pixel = GRpkgIf()->NameColor(clr);
+                te_pixel = 0;
                 set_defclr(tab, clr);
                 te_set = true;
             }

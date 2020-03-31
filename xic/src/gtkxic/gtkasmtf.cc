@@ -79,14 +79,14 @@ sAsmTf::sAsmTf(sAsmPage *src)
         (GtkAttachOptions)0, 2, 2);
 
     GtkWidget *sb = sb_placement_x.init(0.0, -1e6, 1e6, ndgt);
-    gtk_widget_set_usize(sb, ASM_NFWP, -1);
+    gtk_widget_set_size_request(sb, ASM_NFWP, -1);
 
     gtk_table_attach(GTK_TABLE(form), sb, 1, 2, row, row+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
 
     sb = sb_placement_y.init(0.0, -1e6, 1e6, ndgt);
-    gtk_widget_set_usize(sb, ASM_NFWP, -1);
+    gtk_widget_set_size_request(sb, ASM_NFWP, -1);
 
     gtk_table_attach(GTK_TABLE(form), sb, 2, 3, row, row+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -104,24 +104,23 @@ sAsmTf::sAsmTf(sAsmPage *src)
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
 
-    tf_angle = gtk_option_menu_new();
-    gtk_widget_set_name(tf_angle, "rotation");
-    gtk_widget_show(tf_angle);
-    GtkWidget *menu = gtk_menu_new();
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(tf_angle), menu);
+    tf_angle = gtk_combo_box_text_new();
+    gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT(tf_angle), 0, "rotation");
+    // GtkWidget *menu = gtk_menu_new();
+    // // gtk_option_menu_set_menu(GTK_OPTION_MENU(tf_angle), menu);
 
-    tf_angle_ix = 0;
-    for (int i = 0; i < 8; i++) {
-        char buf[32];
-        sprintf(buf, "%d", i*45);
-        GtkWidget *mi = gtk_menu_item_new_with_label(buf);
-        gtk_object_set_data(GTK_OBJECT(mi), "angle", (void*)(long)i);
-        gtk_widget_show(mi);
-        gtk_menu_append(GTK_MENU(menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(tf_angle_proc), this);
-    }
-    gtk_option_menu_set_history(GTK_OPTION_MENU(tf_angle), tf_angle_ix);
+    // tf_angle_ix = 0;
+    // for (int i = 0; i < 8; i++) {
+    //     char buf[32];
+    //     sprintf(buf, "%d", i*45);
+    //     GtkWidget *mi = gtk_menu_item_new_with_label(buf);
+    //     g_object_set_data(G_OBJECT(mi), "angle", (void*)(long)i);
+    //     gtk_widget_show(mi);
+    //     gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    //     g_signal_connect(G_OBJECT(mi), "activate",
+    //         G_CALLBACK(tf_angle_proc), this);
+    // }
+    // // gtk_option_menu_set_history(GTK_OPTION_MENU(tf_angle), tf_angle_ix);
 
     gtk_table_attach(GTK_TABLE(form), tf_angle, 1, 2, row, row+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL),
@@ -147,7 +146,7 @@ sAsmTf::sAsmTf(sAsmPage *src)
         (GtkAttachOptions)0, 2, 2);
 
     sb = sb_magnification.init(1.0, CDMAGMIN, CDMAGMAX, ASM_NUMD);
-    gtk_widget_set_usize(sb, ASM_NFWP, -1);
+    gtk_widget_set_size_request(sb, ASM_NFWP, -1);
 
     gtk_table_attach(GTK_TABLE(form), sb, 1, 2, row, row+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -191,8 +190,8 @@ sAsmTf::sAsmTf(sAsmPage *src)
     tf_use_win = gtk_check_button_new_with_label("Use Window");
     gtk_widget_set_name(tf_use_win, "Window");
     gtk_widget_show(tf_use_win);
-    gtk_signal_connect(GTK_OBJECT(tf_use_win), "clicked",
-        GTK_SIGNAL_FUNC(tf_use_win_proc), this);
+    g_signal_connect(G_OBJECT(tf_use_win), "clicked",
+        G_CALLBACK(tf_use_win_proc), this);
     gtk_box_pack_start(GTK_BOX(hbox), tf_use_win, true, true, 0);
 
     tf_do_clip = gtk_check_button_new_with_label("Clip");
@@ -227,14 +226,14 @@ sAsmTf::sAsmTf(sAsmPage *src)
         (GtkAttachOptions)0, 2, 2);
 
     sb = sb_win_l.init(0.0, -1e6, 1e6, ndgt);
-    gtk_widget_set_usize(sb, ASM_NFWP, -1);
+    gtk_widget_set_size_request(sb, ASM_NFWP, -1);
 
     gtk_table_attach(GTK_TABLE(form), sb, 1, 2, row, row+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
 
     sb = sb_win_b.init(0.0, -1e6, 1e6, ndgt);
-    gtk_widget_set_usize(sb, ASM_NFWP, -1);
+    gtk_widget_set_size_request(sb, ASM_NFWP, -1);
 
     gtk_table_attach(GTK_TABLE(form), sb, 2, 3, row, row+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -258,14 +257,14 @@ sAsmTf::sAsmTf(sAsmPage *src)
         (GtkAttachOptions)0, 2, 2);
 
     sb = sb_win_r.init(0.0, -1e6, 1e6, ndgt);
-    gtk_widget_set_usize(sb, ASM_NFWP, -1);
+    gtk_widget_set_size_request(sb, ASM_NFWP, -1);
 
     gtk_table_attach(GTK_TABLE(form), sb, 1, 2, row, row+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
 
     sb = sb_win_t.init(0.0, -1e6, 1e6, ndgt);
-    gtk_widget_set_usize(sb, ASM_NFWP, -1);
+    gtk_widget_set_size_request(sb, ASM_NFWP, -1);
 
     gtk_table_attach(GTK_TABLE(form), sb, 2, 3, row, row+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -292,7 +291,7 @@ sAsmTf::sAsmTf(sAsmPage *src)
         (GtkAttachOptions)0, 2, 2);
 
     sb = sb_scale.init(1.0, CDSCALEMIN, CDSCALEMAX, ASM_NUMD);
-    gtk_widget_set_usize(sb, ASM_NFWP, -1);
+    gtk_widget_set_size_request(sb, ASM_NFWP, -1);
 
     gtk_table_attach(GTK_TABLE(form), sb, 1, 2, row, row+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -358,21 +357,21 @@ sAsmTf::reset()
 {
     sb_placement_x.set_value(0.0);
     sb_placement_y.set_value(0.0);
-    gtk_option_menu_set_history(GTK_OPTION_MENU(tf_angle), 0);
-    GRX->Deselect(tf_mirror);
-    sb_magnification.set_value(1.0);
-    GRX->Deselect(tf_ecf_pre);
-    GRX->Deselect(tf_ecf_post);
-    GRX->Deselect(tf_use_win);
-    GRX->Deselect(tf_do_clip);
-    GRX->Deselect(tf_do_flatn);
-    GRX->Deselect(tf_no_hier);
-    sb_win_l.set_value(0.0);
-    sb_win_b.set_value(0.0);
-    sb_win_r.set_value(0.0);
-    sb_win_t.set_value(0.0);
-    sb_scale.set_value(1.0);
-    gtk_entry_set_text(GTK_ENTRY(tf_name), "");
+    // // gtk_option_menu_set_history(GTK_OPTION_MENU(tf_angle), 0);
+    // GRX->Deselect(tf_mirror);
+    // sb_magnification.set_value(1.0);
+    // GRX->Deselect(tf_ecf_pre);
+    // GRX->Deselect(tf_ecf_post);
+    // GRX->Deselect(tf_use_win);
+    // GRX->Deselect(tf_do_clip);
+    // GRX->Deselect(tf_do_flatn);
+    // GRX->Deselect(tf_no_hier);
+    // sb_win_l.set_value(0.0);
+    // sb_win_b.set_value(0.0);
+    // sb_win_r.set_value(0.0);
+    // sb_win_t.set_value(0.0);
+    // sb_scale.set_value(1.0);
+    // gtk_entry_set_text(GTK_ENTRY(tf_name), "");
 }
 
 
@@ -436,27 +435,27 @@ sAsmTf::set_tx_params(tlinfo *tl)
     sb_placement_y.set_digits(ndgt);
     sb_placement_y.set_value(MICRONS(tl->y));
     tf_angle_ix = tl->angle/45;
-    gtk_option_menu_set_history(GTK_OPTION_MENU(tf_angle), tf_angle_ix);
-    sb_magnification.set_value(tl->magn);
-    sb_scale.set_value(tl->scale);
-    GRX->SetStatus(tf_mirror, tl->mirror_y);
-    GRX->SetStatus(tf_ecf_pre, tl->ecf_level == ECFall ||
-        tl->ecf_level == ECFpre);
-    GRX->SetStatus(tf_ecf_post, tl->ecf_level == ECFall ||
-        tl->ecf_level == ECFpost);
-    GRX->SetStatus(tf_use_win, tl->use_win);
-    GRX->SetStatus(tf_do_clip, tl->clip);
-    GRX->SetStatus(tf_do_flatn, tl->flatten);
-    GRX->SetStatus(tf_no_hier, tl->no_hier);
-    sb_win_l.set_digits(ndgt);
-    sb_win_l.set_value(MICRONS(tl->winBB.left));
-    sb_win_b.set_digits(ndgt);
-    sb_win_b.set_value(MICRONS(tl->winBB.bottom));
-    sb_win_r.set_digits(ndgt);
-    sb_win_r.set_value(MICRONS(tl->winBB.right));
-    sb_win_t.set_digits(ndgt);
-    sb_win_t.set_value(MICRONS(tl->winBB.top));
-    gtk_entry_set_text(GTK_ENTRY(tf_name), tl->placename ? tl->placename : "");
+    // // gtk_option_menu_set_history(GTK_OPTION_MENU(tf_angle), tf_angle_ix);
+    // sb_magnification.set_value(tl->magn);
+    // sb_scale.set_value(tl->scale);
+    // GRX->SetStatus(tf_mirror, tl->mirror_y);
+    // GRX->SetStatus(tf_ecf_pre, tl->ecf_level == ECFall ||
+    //     tl->ecf_level == ECFpre);
+    // GRX->SetStatus(tf_ecf_post, tl->ecf_level == ECFall ||
+    //     tl->ecf_level == ECFpost);
+    // GRX->SetStatus(tf_use_win, tl->use_win);
+    // GRX->SetStatus(tf_do_clip, tl->clip);
+    // GRX->SetStatus(tf_do_flatn, tl->flatten);
+    // GRX->SetStatus(tf_no_hier, tl->no_hier);
+    // sb_win_l.set_digits(ndgt);
+    // sb_win_l.set_value(MICRONS(tl->winBB.left));
+    // sb_win_b.set_digits(ndgt);
+    // sb_win_b.set_value(MICRONS(tl->winBB.bottom));
+    // sb_win_r.set_digits(ndgt);
+    // sb_win_r.set_value(MICRONS(tl->winBB.right));
+    // sb_win_t.set_digits(ndgt);
+    // sb_win_t.set_value(MICRONS(tl->winBB.top));
+    // gtk_entry_set_text(GTK_ENTRY(tf_name), tl->placename ? tl->placename : "");
 }
 
 
@@ -467,7 +466,7 @@ void
 sAsmTf::tf_angle_proc(GtkWidget *widget, void *mtxp)
 {
     sAsmTf *tx = static_cast<sAsmTf*>(mtxp);
-    tx->tf_angle_ix = (long)gtk_object_get_data(GTK_OBJECT(widget), "angle");
+    tx->tf_angle_ix = (long)g_object_get_data(G_OBJECT(widget), "angle");
 }
 
 

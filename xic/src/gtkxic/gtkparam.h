@@ -182,7 +182,7 @@ private:
         guint, gpointer);
 
     GdkWindow *p_win_bak;
-    GdkPixmap *p_pm;
+    cairo_surface_t *p_pm;
 
     int p_drag_x;
     int p_drag_y;

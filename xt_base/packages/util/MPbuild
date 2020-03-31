@@ -2,8 +2,8 @@
 
 #### Apple OS X setup script
 #
-# Create the gtk2 libraries and applications for building xictools
-# with gtk2 support.
+# Create the gtk3 libraries and applications for building xictools
+# with gtk3 support.
 #
 # See README at the top of the xictools source tree for info.
 
@@ -20,14 +20,14 @@ mpbase=Macports-2.4.2
 # Stand by to give your password, and respond to prompts when asked. 
 # After answering 'y' to the long list of ports to install, you can
 # take a break.  The script will take a long time, maybe hours, to
-# complete, as it builds from source gtk2 and all dependent programs.
+# complete, as it builds from source gtk3 and all dependent programs.
  
 # Once complete, it will have installed everything into
-#   /use/local/gtk2-bundle-x11  (standard x11 version)
-#   /use/local/gtk2-bundle      (experimental native version)
+#   /use/local/gtk3-bundle-x11  (standard x11 version)
+#   /use/local/gtk3-bundle      (experimental native version)
 # Whichever you have, add its bin subdirectory to your search path.
 # You should then be able to build and run xictools and other programs
-# that use the gtk2 user interface.
+# that use the gtk3 user interface.
 
 for_x11=yes
 echo "The quartz version is experimental and doesn't really work last I checked."
@@ -38,9 +38,9 @@ if [ x$foo = xy -o x$foo = xyes ]; then
 fi
 
 if [ $for_x11 = yes ]; then
-    MP_PREFIX=/usr/local/gtk2-bundle-x11
+    MP_PREFIX=/usr/local/gtk3-bundle-x11
 else
-    MP_PREFIX=/usr/local/gtk2-bundle
+    MP_PREFIX=/usr/local/gtk3-bundle
 fi
 if [ -d $MP_PREFIX ]; then
     echo Error: $MP_PREFIX exists and is in the way, move or delete it.
@@ -80,9 +80,9 @@ sudo make install
 sudo port -v selfupdate
 
 if [ $for_x11 = yes ]; then
-    sudo port install gtk2
+    sudo port install gtk3
 else
-    sudo port install gtk2 +no_x11 +quartz
+    sudo port install gtk3 +no_x11 +quartz
 fi
 
 # Set the default widget font, otherwise too small.

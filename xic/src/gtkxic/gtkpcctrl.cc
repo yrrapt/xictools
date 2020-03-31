@@ -162,8 +162,8 @@ sPCc::sPCc(GRobject c)
     GtkWidget *button = gtk_button_new_with_label("Help");
     gtk_widget_set_name(button, "Help");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(pcc_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(pcc_action), 0);
     gtk_box_pack_end(GTK_BOX(row), button, false, false, 0);
     gtk_table_attach(GTK_TABLE(form), row, 0, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -178,7 +178,7 @@ sPCc::sPCc(GRobject c)
     gtk_misc_set_padding(GTK_MISC(label), 2, 2);
     gtk_box_pack_start(GTK_BOX(row), label, true, true, 0);
 
-    GtkWidget *entry = gtk_option_menu_new();
+    GtkWidget *entry = gtk_combo_box_text_new();
     gtk_widget_set_name(entry, "abutmenu");
     gtk_widget_show(entry);
     GtkWidget *menu = gtk_menu_new();
@@ -187,11 +187,11 @@ sPCc::sPCc(GRobject c)
         GtkWidget *mi = gtk_menu_item_new_with_label(abutvals[i]);
         gtk_widget_set_name(mi, abutvals[i]);
         gtk_widget_show(mi);
-        gtk_menu_append(GTK_MENU(menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(pcc_abut_menu_proc), (void*)abutvals[i]);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(pcc_abut_menu_proc), (void*)abutvals[i]);
     }
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
+    // gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
     gtk_box_pack_start(GTK_BOX(row), entry, true, true, 0);
     pcc_abut = entry;
 
@@ -204,8 +204,8 @@ sPCc::sPCc(GRobject c)
         "Hide and disable stretch handles");
     gtk_widget_set_name(button, "hidestr");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(pcc_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(pcc_action), 0);
     gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -221,8 +221,8 @@ sPCc::sPCc(GRobject c)
     gtk_box_pack_start(GTK_BOX(row), label, true, true, 0);
 
     GtkWidget *sb = sb_psz.init(DSP_MIN_FENCE_INST_PIXELS, 0, 1000, 0);
-    sb_psz.connect_changed(GTK_SIGNAL_FUNC(pcc_val_changed), 0, 0);
-    gtk_widget_set_usize(sb, 60, -1);
+    // (pcc_val_changed, 0, 0);
+    gtk_widget_set_size_request(sb, 60, -1);
     gtk_box_pack_end(GTK_BOX(row), sb, false, false, 0);
 
     gtk_table_attach(GTK_TABLE(form), row, 0, 2, rowcnt, rowcnt+1,
@@ -234,8 +234,8 @@ sPCc::sPCc(GRobject c)
         "List sub-masters as modified cells");
     gtk_widget_set_name(button, "listsm");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(pcc_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(pcc_action), 0);
     gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -246,8 +246,8 @@ sPCc::sPCc(GRobject c)
         "Show all evaluation warnings");
     gtk_widget_set_name(button, "allwarn");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(pcc_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(pcc_action), 0);
     gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -260,8 +260,8 @@ sPCc::sPCc(GRobject c)
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(pcc_cancel_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(pcc_cancel_proc), 0);
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -286,12 +286,12 @@ void
 sPCc::update()
 {
     const char *s = CDvdb()->getVariable(VA_PCellAbutMode);
-    if (s && atoi(s) == 2)
-        gtk_option_menu_set_history(GTK_OPTION_MENU(pcc_abut), 2);
-    else if (s && atoi(s) == 0)
-        gtk_option_menu_set_history(GTK_OPTION_MENU(pcc_abut), 0);
-    else
-        gtk_option_menu_set_history(GTK_OPTION_MENU(pcc_abut), 1);
+    // if (s && atoi(s) == 2)
+    //     // gtk_option_menu_set_history(GTK_OPTION_MENU(pcc_abut), 2);
+    // else if (s && atoi(s) == 0)
+    //     // gtk_option_menu_set_history(GTK_OPTION_MENU(pcc_abut), 0);
+    // else
+    //     // gtk_option_menu_set_history(GTK_OPTION_MENU(pcc_abut), 1);
     GRX->SetStatus(pcc_hidestr, CDvdb()->getVariable(VA_PCellHideGrips));
     GRX->SetStatus(pcc_listsm, CDvdb()->getVariable(VA_PCellListSubMasters));
     GRX->SetStatus(pcc_allwarn, CDvdb()->getVariable(VA_PCellShowAllWarnings));

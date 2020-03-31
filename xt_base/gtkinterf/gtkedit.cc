@@ -134,7 +134,7 @@ gtk_bag::PopUpTextEditor(const char *fname,
             GTK_WINDOW(we->transient_for()));
     }
     gtk_widget_show(we->wb_shell);
-    if (!GTK_WIDGET_HAS_FOCUS(we->wb_textarea))
+    if (!gtk_widget_has_focus(we->wb_textarea))
         gtk_widget_grab_focus(we->wb_textarea);
     return (we);
 }
@@ -206,7 +206,7 @@ gtk_bag::PopUpStringEditor(const char *string,
     GRX->SetPopupLocation(GRloc(), we->wb_shell, wb_shell);
 
     gtk_widget_show(we->wb_shell);
-    if (!GTK_WIDGET_HAS_FOCUS(we->wb_textarea))
+    if (!gtk_widget_has_focus(we->wb_textarea))
         gtk_widget_grab_focus(we->wb_textarea);
     return (we);
 }
@@ -232,11 +232,11 @@ gtk_bag::PopUpMail(const char *subject, const char *mailaddr,
     }
     we->register_quit_callback(downproc);
 
-    GtkWidget *entry = (GtkWidget*)gtk_object_get_data(
-        GTK_OBJECT(we->wb_shell), "subject");
+    GtkWidget *entry = (GtkWidget*)g_object_get_data(
+        G_OBJECT(we->wb_shell), "subject");
     if (entry)
         gtk_entry_set_text(GTK_ENTRY(entry), subject);
-    entry = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(we->wb_shell),
+    entry = (GtkWidget*)g_object_get_data(G_OBJECT(we->wb_shell),
         "mailaddr");
     if (entry)
         gtk_entry_set_text(GTK_ENTRY(entry), mailaddr);
@@ -246,7 +246,7 @@ gtk_bag::PopUpMail(const char *subject, const char *mailaddr,
     GRX->SetPopupLocation(loc, we->wb_shell, wb_shell);
 
     gtk_widget_show(we->wb_shell);
-    if (!GTK_WIDGET_HAS_FOCUS(we->wb_textarea))
+    if (!gtk_widget_has_focus(we->wb_textarea))
         gtk_widget_grab_focus(we->wb_textarea);
     return (we);
 }
@@ -267,7 +267,7 @@ GtkWindow *GTKeditPopup::ed_transient_for = 0;
 #define IFINIT(i, a, b, c, d, e) { \
     menu_items[i].path = (char*)a; \
     menu_items[i].accelerator = (char*)b; \
-    menu_items[i].callback = (GtkItemFactoryCallback)c; \
+    menu_items[i].callback = (GtkUIManagerCallback)c; \
     menu_items[i].callback_action = d; \
     menu_items[i].item_type = (char*)e; \
     i++; }
@@ -329,142 +329,144 @@ GTKeditPopup::GTKeditPopup(gtk_bag *owner, GTKeditPopup::WidgetType type,
     }
     else
         return;
+    wb_window = gtk_widget_get_window(wb_shell);
 
     if (owner)
         owner->MonitorAdd(this);
 
-    GtkWidget *form = gtk_table_new(1, 3, false);
-    gtk_widget_show(form);
-    gtk_container_add(GTK_CONTAINER(wb_shell), form);
+    // GtkWidget *form = gtk_table_new(1, 3, false);
+    // TODO - GtkWidget *form = gtk_grid_new();
+    // gtk_widget_show(form);
+    // gtk_container_add(GTK_CONTAINER(wb_shell), form);
 
     // Menu bar.
     //
     int row = 0;
-    GtkItemFactoryEntry menu_items[30];
-    int nitems = 0;
+    // TODO - Needs to be changed to UI manager GtkUIManagerEntry menu_items[30];
+//     int nitems = 0;
 
-    IFINIT(nitems, "/_File", 0, 0, 0, "<Branch>")
-    if (ed_widget_type == Editor || ed_widget_type == Browser) {
-        IFINIT(nitems, "/File/_Open", "<control>O", ed_open_proc, 0, 0);
-        IFINIT(nitems, "/File/_Load", "<control>L", ed_load_proc, 0, 0);
-    }
-    if (ed_widget_type != Browser)
-        IFINIT(nitems, "/File/_Read", "<control>R", ed_read_proc, 0, 0);
-    if (ed_widget_type != Browser && ed_widget_type != Mailer)
-        IFINIT(nitems, "/File/_Save", "<control>S", ed_save_proc, 0, 0);
-    if (ed_widget_type != StringEditor) {
-        IFINIT(nitems, "/File/Save _As", "<alt>A", ed_save_as_proc, 0, 0);
-        IFINIT(nitems, "/File/_Print", "<alt>N", ed_print_proc, 0,
-            "<CheckItem>");
-    }
-#ifdef WIN32
-    if (ed_widget_type == Editor)
-        IFINIT(nitems, "/File/_Write CRLF", 0, crlf_proc, 0,
-            "<CheckItem>");
-#endif
-    IFINIT(nitems, "/File/sep1", 0, 0, 0, "<Separator>");
-    if (ed_widget_type == Mailer)
-        IFINIT(nitems, "/File/_Send Mail", "<control>S", ed_mail_proc, 0, 0);
-    IFINIT(nitems, "/File/_Quit", "<control>Q", ed_quit_proc, 0, 0);
+//     IFINIT(nitems, "/_File", 0, 0, 0, "<Branch>")
+//     if (ed_widget_type == Editor || ed_widget_type == Browser) {
+//         IFINIT(nitems, "/File/_Open", "<control>O", ed_open_proc, 0, 0);
+//         IFINIT(nitems, "/File/_Load", "<control>L", ed_load_proc, 0, 0);
+//     }
+//     if (ed_widget_type != Browser)
+//         IFINIT(nitems, "/File/_Read", "<control>R", ed_read_proc, 0, 0);
+//     if (ed_widget_type != Browser && ed_widget_type != Mailer)
+//         IFINIT(nitems, "/File/_Save", "<control>S", ed_save_proc, 0, 0);
+//     if (ed_widget_type != StringEditor) {
+//         IFINIT(nitems, "/File/Save _As", "<alt>A", ed_save_as_proc, 0, 0);
+//         IFINIT(nitems, "/File/_Print", "<alt>N", ed_print_proc, 0,
+//             "<CheckItem>");
+//     }
+// #ifdef WIN32
+//     if (ed_widget_type == Editor)
+//         IFINIT(nitems, "/File/_Write CRLF", 0, crlf_proc, 0,
+//             "<CheckItem>");
+// #endif
+//     IFINIT(nitems, "/File/sep1", 0, 0, 0, "<Separator>");
+//     if (ed_widget_type == Mailer)
+//         IFINIT(nitems, "/File/_Send Mail", "<control>S", ed_mail_proc, 0, 0);
+//     IFINIT(nitems, "/File/_Quit", "<control>Q", ed_quit_proc, 0, 0);
 
-    IFINIT(nitems, "/_Edit", 0, 0, 0, "<Branch>");
-    if (ed_widget_type != Browser) {
-        IFINIT(nitems, "/Edit/Undo", "<Alt>U", ed_undo_proc, 0, 0);
-        IFINIT(nitems, "/Edit/Redo", "<Alt>R", ed_redo_proc, 0, 0);
-        IFINIT(nitems, "/Edit/Cut to Clipboard", "<control>X", ed_cut_proc,
-            0, 0);
-    }
-    IFINIT(nitems, "/Edit/Copy to Clipboard", "<control>C", ed_copy_proc,
-        0, 0);
-    if (ed_widget_type != Browser) {
-        IFINIT(nitems, "/Edit/Paste from Clipboard", "<control>V",
-            ed_paste_proc, 0, 0);
-        IFINIT(nitems, "/Edit/Paste Primary", "<alt>P", ed_paste_prim_proc,
-            0, 0);
-    }
+//     IFINIT(nitems, "/_Edit", 0, 0, 0, "<Branch>");
+//     if (ed_widget_type != Browser) {
+//         IFINIT(nitems, "/Edit/Undo", "<Alt>U", ed_undo_proc, 0, 0);
+//         IFINIT(nitems, "/Edit/Redo", "<Alt>R", ed_redo_proc, 0, 0);
+//         IFINIT(nitems, "/Edit/Cut to Clipboard", "<control>X", ed_cut_proc,
+//             0, 0);
+//     }
+//     IFINIT(nitems, "/Edit/Copy to Clipboard", "<control>C", ed_copy_proc,
+//         0, 0);
+//     if (ed_widget_type != Browser) {
+//         IFINIT(nitems, "/Edit/Paste from Clipboard", "<control>V",
+//             ed_paste_proc, 0, 0);
+//         IFINIT(nitems, "/Edit/Paste Primary", "<alt>P", ed_paste_prim_proc,
+//             0, 0);
+//     }
 
-    IFINIT(nitems, "/_Options", 0, 0, 0, "<Branch>");
-    IFINIT(nitems, "/Options/_Search", 0, ed_search_proc, 0, "<CheckItem>");
-    if (ed_widget_type != Browser && ed_widget_type != Mailer && ed_havesource)
-        IFINIT(nitems, "/Options/_Source", 0, ed_source_proc, 0, 0);
-    if (ed_widget_type == Mailer)
-        IFINIT(nitems, "/Options/_Attach", 0, ed_attach_proc, 0, 0);
-    IFINIT(nitems, "/Options/_Font", 0, ed_font_proc, 0, "<CheckItem>");
+//     IFINIT(nitems, "/_Options", 0, 0, 0, "<Branch>");
+//     IFINIT(nitems, "/Options/_Search", 0, ed_search_proc, 0, "<CheckItem>");
+//     if (ed_widget_type != Browser && ed_widget_type != Mailer && ed_havesource)
+//         IFINIT(nitems, "/Options/_Source", 0, ed_source_proc, 0, 0);
+//     if (ed_widget_type == Mailer)
+//         IFINIT(nitems, "/Options/_Attach", 0, ed_attach_proc, 0, 0);
+//     IFINIT(nitems, "/Options/_Font", 0, ed_font_proc, 0, "<CheckItem>");
 
-    IFINIT(nitems, "/_Help", 0, 0, 0, "<LastBranch>");
-    IFINIT(nitems, "/Help/_Help", "<alt>H", ed_help_proc, 0, 0);
+//     IFINIT(nitems, "/_Help", 0, 0, 0, "<LastBranch>");
+//     IFINIT(nitems, "/Help/_Help", "<alt>H", ed_help_proc, 0, 0);
 
-    GtkAccelGroup *accel_group = gtk_accel_group_new();
-    ed_item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<edit>",
-        accel_group);
-    for (int i = 0; i < nitems; i++)
-        gtk_item_factory_create_item(ed_item_factory, menu_items + i, this, 2);
-    gtk_window_add_accel_group(GTK_WINDOW(wb_shell), accel_group);
+//     GtkAccelGroup *accel_group = gtk_accel_group_new();
+//     ed_item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<edit>",
+//         accel_group);
+//     for (int i = 0; i < nitems; i++)
+//         gtk_item_factory_create_item(ed_item_factory, menu_items + i, this, 2);
+//     gtk_window_add_accel_group(GTK_WINDOW(wb_shell), accel_group);
 
-    GtkWidget *menubar =
-        gtk_item_factory_get_widget(ed_item_factory, "<edit>");
-    gtk_widget_show(menubar);
-    gtk_object_set_data(GTK_OBJECT(wb_shell), "menubar", menubar);
+//     GtkWidget *menubar =
+//         gtk_item_factory_get_widget(ed_item_factory, "<edit>");
+//     gtk_widget_show(menubar);
+//     g_object_set_data(G_OBJECT(wb_shell), "menubar", menubar);
 
-    GtkWidget *save =
-        gtk_item_factory_get_widget(ed_item_factory, "/File/Save");
-    if (save && ed_widget_type != StringEditor)
-        // don't desensitize in string edit mode
-        gtk_widget_set_sensitive(save, false);
+//     GtkWidget *save =
+//         gtk_item_factory_get_widget(ed_item_factory, "/File/Save");
+//     if (save && ed_widget_type != StringEditor)
+//         // don't desensitize in string edit mode
+//         gtk_widget_set_sensitive(save, false);
 
-    // name the menubar objects
-    GtkWidget *widget = gtk_item_factory_get_item(ed_item_factory, "/File");
-    if (widget)
-        gtk_widget_set_name(widget, "File");
-    widget = gtk_item_factory_get_item(ed_item_factory, "/Edit");
-    if (widget)
-        gtk_widget_set_name(widget, "Edit");
-    widget = gtk_item_factory_get_item(ed_item_factory, "/Options");
-    if (widget)
-        gtk_widget_set_name(widget, "Options");
-    widget = gtk_item_factory_get_item(ed_item_factory, "/Help");
-    if (widget)
-        gtk_widget_set_name(widget, "Help");
-#ifdef WIN32
-    widget = gtk_item_factory_get_item(ed_item_factory, "/File/Write CRLF");
-    if (widget)
-        GRX->SetStatus(widget, GRX->GetCRLFtermination());
-#endif
+//     // name the menubar objects
+//     GtkWidget *widget = gtk_item_factory_get_item(ed_item_factory, "/File");
+//     if (widget)
+//         gtk_widget_set_name(widget, "File");
+//     widget = gtk_item_factory_get_item(ed_item_factory, "/Edit");
+//     if (widget)
+//         gtk_widget_set_name(widget, "Edit");
+//     widget = gtk_item_factory_get_item(ed_item_factory, "/Options");
+//     if (widget)
+//         gtk_widget_set_name(widget, "Options");
+//     widget = gtk_item_factory_get_item(ed_item_factory, "/Help");
+//     if (widget)
+//         gtk_widget_set_name(widget, "Help");
+// #ifdef WIN32
+//     widget = gtk_item_factory_get_item(ed_item_factory, "/File/Write CRLF");
+//     if (widget)
+//         GRX->SetStatus(widget, GRX->GetCRLFtermination());
+// #endif
 
-    gtk_table_attach(GTK_TABLE(form), menubar, 0, 1, row, row+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
-    row++;
+//     gtk_table_attach(GTK_TABLE(form), menubar, 0, 1, row, row+1,
+//         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+//         (GtkAttachOptions)0, 2, 2);
+//     row++;
 
-    if (ed_widget_type == Mailer) {
-        GtkWidget *entry = gtk_entry_new();
-        gtk_widget_set_name(entry, "To");
-        gtk_widget_show(entry);
-        GtkWidget *frame = gtk_frame_new("To:");
-        gtk_widget_show(frame);
-        gtk_container_add(GTK_CONTAINER(frame), entry);
-        gtk_object_set_data(GTK_OBJECT(wb_shell), "mailaddr", entry);
-        gtk_entry_set_editable(GTK_ENTRY(entry), true);
+//     if (ed_widget_type == Mailer) {
+//         GtkWidget *entry = gtk_entry_new();
+//         gtk_widget_set_name(entry, "To");
+//         gtk_widget_show(entry);
+//         GtkWidget *frame = gtk_frame_new("To:");
+//         gtk_widget_show(frame);
+//         gtk_container_add(GTK_CONTAINER(frame), entry);
+//         g_object_set_data(G_OBJECT(wb_shell), "mailaddr", entry);
+//         gtk_editable_set_editable(GTK_EDITABLE(entry), true);
 
-        gtk_table_attach(GTK_TABLE(form), frame, 0, 1, row, row+1,
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-            (GtkAttachOptions)0, 2, 2);
-        row++;
+//         gtk_table_attach(GTK_TABLE(form), frame, 0, 1, row, row+1,
+//             (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+//             (GtkAttachOptions)0, 2, 2);
+//         row++;
 
-        entry = gtk_entry_new();
-        gtk_widget_set_name(entry, "Subject");
-        gtk_widget_show(entry);
-        frame = gtk_frame_new("Subject:");
-        gtk_widget_show(frame);
-        gtk_container_add(GTK_CONTAINER(frame), entry);
-        gtk_object_set_data(GTK_OBJECT(wb_shell), "subject", entry);
-        gtk_entry_set_editable(GTK_ENTRY(entry), true);
+//         entry = gtk_entry_new();
+//         gtk_widget_set_name(entry, "Subject");
+//         gtk_widget_show(entry);
+//         frame = gtk_frame_new("Subject:");
+//         gtk_widget_show(frame);
+//         gtk_container_add(GTK_CONTAINER(frame), entry);
+//         g_object_set_data(G_OBJECT(wb_shell), "subject", entry);
+//         gtk_editable_set_editable(GTK_EDITABLE(entry), true);
 
-        gtk_table_attach(GTK_TABLE(form), frame, 0, 1, row, row+1,
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-            (GtkAttachOptions)0, 2, 2);
-        row++;
-    }
+//         gtk_table_attach(GTK_TABLE(form), frame, 0, 1, row, row+1,
+//             (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+//             (GtkAttachOptions)0, 2, 2);
+//         row++;
+//     }
 
     // Scrolled text area, title label.
     //
@@ -481,14 +483,15 @@ GTKeditPopup::GTKeditPopup(gtk_bag *owner, GTKeditPopup::WidgetType type,
     }
     else {
         // drop site
-        gtk_drag_dest_set(wb_textarea, GTK_DEST_DEFAULT_ALL, target_table,
-            n_targets, GDK_ACTION_COPY);
-        gtk_signal_connect(GTK_OBJECT(wb_textarea),
-            "drag-data-received", GTK_SIGNAL_FUNC(ed_drag_data_received),
-            this);
-        if (ed_widget_type == Browser)
-            gtk_signal_connect_after(GTK_OBJECT(wb_textarea), "realize",
-                GTK_SIGNAL_FUNC(text_realize_proc), this);
+        //TODO
+        // gtk_drag_dest_set(wb_textarea, GTK_DEST_DEFAULT_ALL, target_table,
+        //     n_targets, GDK_ACTION_COPY);
+        // g_signal_connect(G_OBJECT(wb_textarea),
+        //     "drag-data-received", ed_drag_data_received,
+        //     this);
+        // if (ed_widget_type == Browser)
+        //     g_signal_connect_after(G_OBJECT(wb_textarea), "realize",
+        //         text_realize_proc, this);
     }
 
     // Default window size, 80 cols, 12 or 24 rows.
@@ -497,14 +500,15 @@ GTKeditPopup::GTKeditPopup(gtk_bag *owner, GTKeditPopup::WidgetType type,
     int defw = 80*fw + 4;
     int defh = ed_widget_type == Mailer || ed_widget_type == StringEditor ?
         12*fh : 24*fh;
-    gtk_widget_set_usize(wb_textarea, defw, defh);
+    gtk_widget_set_size_request(wb_textarea, defw, defh);
 
-    gtk_signal_connect_after(GTK_OBJECT(wb_textarea), "button-press-event",
-        GTK_SIGNAL_FUNC(ed_btn_hdlr), this);
+    // TODO
+    // g_signal_connect_after(G_OBJECT(wb_textarea), "button-press-event",
+    //     ed_btn_hdlr, this);
 
-    gtk_table_attach(GTK_TABLE(form), ed_title, 0, 1, row, row+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 2, 2);
+    // gtk_table_attach(GTK_TABLE(form), ed_title, 0, 1, row, row+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 2, 2);
     row++;
 
     // Message label.
@@ -516,9 +520,9 @@ GTKeditPopup::GTKeditPopup(gtk_bag *owner, GTKeditPopup::WidgetType type,
     gtk_widget_show(frame);
     gtk_container_add(GTK_CONTAINER(frame), ed_msg);
 
-    gtk_table_attach(GTK_TABLE(form), frame, 0, 1, row, row+1,
-        (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-        (GtkAttachOptions)0, 2, 2);
+    // gtk_table_attach(GTK_TABLE(form), frame, 0, 1, row, row+1,
+    //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+    //     (GtkAttachOptions)0, 2, 2);
     row++;
 
     bool readonly = (ed_widget_type == Browser);
@@ -567,12 +571,13 @@ GTKeditPopup::GTKeditPopup(gtk_bag *owner, GTKeditPopup::WidgetType type,
     }
 
     if (!readonly) {
-        GtkTextBuffer *tbf =
-            gtk_text_view_get_buffer(GTK_TEXT_VIEW(wb_textarea));
-        g_signal_connect(G_OBJECT(tbf), "insert-text",
-            GTK_SIGNAL_FUNC(ed_insert_text_proc), this);
-        g_signal_connect(G_OBJECT(tbf), "delete-range",
-            GTK_SIGNAL_FUNC(ed_delete_range_proc), this);
+        // TODO
+        // GtkTextBuffer *tbf =
+        //     gtk_text_view_get_buffer(GTK_TEXT_VIEW(wb_textarea));
+        // g_signal_connect(G_OBJECT(tbf), "insert-text",
+        //     ed_insert_text_proc, this);
+        // g_signal_connect(G_OBJECT(tbf), "delete-range",
+        //     ed_delete_range_proc, this);
         ed_in_undo = false;
     }
 
@@ -604,9 +609,10 @@ GTKeditPopup::~GTKeditPopup()
     if (wb_fontsel)
         wb_fontsel->popdown();
     register_edit(false);
-    if (wb_shell)
-        gtk_signal_disconnect_by_func(GTK_OBJECT(wb_shell),
-            GTK_SIGNAL_FUNC(ed_quit_proc), this);
+    // TODO
+    // if (wb_shell)
+    //     gtk_signal_disconnect_by_func(G_OBJECT(wb_shell),
+    //         ed_quit_proc, this);
     delete ed_search_pop;
     for (int k = 0; k < 4; k++) {
         if (ed_fsels[k])
@@ -681,12 +687,13 @@ GTKeditPopup::register_edit(bool mode)
 void
 GTKeditPopup::check_sens()
 {
-    GtkWidget *w = gtk_item_factory_get_widget(ed_item_factory, "/Edit/Undo");
-    if (w)
-        gtk_widget_set_sensitive(w, (ed_undo_list != 0));
-    w = gtk_item_factory_get_widget(ed_item_factory, "/Edit/Redo");
-    if (w)
-        gtk_widget_set_sensitive(w, (ed_redo_list != 0));
+    // TODO
+    // GtkWidget *w = gtk_item_factory_get_widget(ed_item_factory, "/Edit/Undo");
+    // if (w)
+    //     gtk_widget_set_sensitive(w, (ed_undo_list != 0));
+    // w = gtk_item_factory_get_widget(ed_item_factory, "/Edit/Redo");
+    // if (w)
+    //     gtk_widget_set_sensitive(w, (ed_redo_list != 0));
 }
 
 
@@ -796,7 +803,7 @@ GTKeditPopup::ed_quit_proc(GtkWidget*, void *client_data)
 {
     GTKeditPopup *w = static_cast<GTKeditPopup*>(client_data);
     if (w && w->ed_widget_type != GTKeditPopup::Browser &&
-            w->ed_text_changed && w->wb_shell->window) {
+            w->ed_text_changed && w->wb_window) {
 
         // If there is no window, "delete window" was received, and we
         // can't pop up the confirmation.  Changes will be lost.  Too
@@ -1143,12 +1150,12 @@ GTKeditPopup::ed_mail_proc(GtkWidget*, void *client_data)
     GRloc loc(LW_XYR, 50, 100);
 
     const char *mailaddr = mail_addr;
-    GtkWidget *entry = (GtkWidget*)gtk_object_get_data(
-        GTK_OBJECT(w->wb_shell), "mailaddr");
+    GtkWidget *entry = (GtkWidget*)g_object_get_data(
+        G_OBJECT(w->wb_shell), "mailaddr");
     if (entry)
         mailaddr = gtk_entry_get_text(GTK_ENTRY(entry));
     const char *subject = mail_subject;
-    entry = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(w->wb_shell),
+    entry = (GtkWidget*)g_object_get_data(G_OBJECT(w->wb_shell),
         "subject");
     if (entry)
         subject = gtk_entry_get_text(GTK_ENTRY(entry));
@@ -1159,12 +1166,12 @@ GTKeditPopup::ed_mail_proc(GtkWidget*, void *client_data)
     int anum = 0;
     const char **attach_ary = 0;
     GtkWidget *menubar =
-        (GtkWidget*)gtk_object_get_data(GTK_OBJECT(w->wb_shell), "menubar");
+        (GtkWidget*)g_object_get_data(G_OBJECT(w->wb_shell), "menubar");
     if (menubar) {
-        GList *list = gtk_container_children(GTK_CONTAINER(menubar));
+        GList *list = gtk_container_get_children(GTK_CONTAINER(menubar));
         for (GList *g = list; g; g = g->next) {
             GtkWidget *item = GTK_WIDGET(g->data);
-            char *fname = (char*)gtk_object_get_data(GTK_OBJECT(item),
+            char *fname = (char*)g_object_get_data(G_OBJECT(item),
                 "attach");
             if (fname && *fname)
                 anum++;
@@ -1174,7 +1181,7 @@ GTKeditPopup::ed_mail_proc(GtkWidget*, void *client_data)
             int cnt = 0;
             for (GList *g = list; g; g = g->next) {
                 GtkWidget *item = GTK_WIDGET(g->data);
-                char *fname = (char*)gtk_object_get_data(GTK_OBJECT(item),
+                char *fname = (char*)g_object_get_data(G_OBJECT(item),
                     "attach");
                 if (fname && *fname)
                     attach_ary[cnt++] = lstring::copy(fname);
@@ -1228,40 +1235,41 @@ GTKeditPopup::ed_mail_proc(GtkWidget*, void *client_data)
 
     bool err = false;
     GtkWidget *menubar =
-        (GtkWidget*)gtk_object_get_data(GTK_OBJECT(w->wb_shell),
+        (GtkWidget*)g_object_get_data(G_OBJECT(w->wb_shell),
             "menubar");
     if (menubar) {
-        GList *list = gtk_container_children(GTK_CONTAINER(menubar));
-        for (GList *g = list; g; g = g->next) {
-            GtkWidget *item = GTK_WIDGET(g->data);
-            char *fname = (char*)gtk_object_get_data(GTK_OBJECT(item),
-                "attach");
-            if (fname && *fname) {
-                FILE *ifp = fopen(fname, "r");
-                if (ifp) {
-                    descfp = state.nfiles ? 0 : fopen(descname, "r");
-                    if (encode(&state, ifp, fname, descfp, subject,
-                            header, MAIL_MAXSIZE, 0)) {
-                        w->PopUpMessage(
-                            "Error: can't open temporary file.", true,
-                            false, false, loc);
-                        err = true;
-                    }
-                    if (descfp)
-                        fclose(descfp);
-                }
-                else {
-                    sprintf(buf, "Error: can't open attachment file %s.",
-                        fname);
-                    w->PopUpMessage(buf, true, false, false, loc);
-                    err = true;
-                }
-                fclose (ifp);
-            }
-            if (err)
-                break;
-        }
-        g_list_free(list);
+        // TODO
+        // GList *list = gtk_container_child_get(GTK_CONTAINER(menubar));
+        // for (GList *g = list; g; g = g->next) {
+        //     GtkWidget *item = GTK_WIDGET(g->data);
+        //     char *fname = (char*)g_object_get_data(G_OBJECT(item),
+        //         "attach");
+        //     if (fname && *fname) {
+        //         FILE *ifp = fopen(fname, "r");
+        //         if (ifp) {
+        //             descfp = state.nfiles ? 0 : fopen(descname, "r");
+        //             if (encode(&state, ifp, fname, descfp, subject,
+        //                     header, MAIL_MAXSIZE, 0)) {
+        //                 w->PopUpMessage(
+        //                     "Error: can't open temporary file.", true,
+        //                     false, false, loc);
+        //                 err = true;
+        //             }
+        //             if (descfp)
+        //                 fclose(descfp);
+        //         }
+        //         else {
+        //             sprintf(buf, "Error: can't open attachment file %s.",
+        //                 fname);
+        //             w->PopUpMessage(buf, true, false, false, loc);
+        //             err = true;
+        //         }
+        //         fclose (ifp);
+        //     }
+        //     if (err)
+        //         break;
+        // }
+        // g_list_free(list);
         if (state.outfile)
             fclose(state.outfile);
     }
@@ -1405,10 +1413,10 @@ GTKeditPopup::ed_change_proc(GtkWidget*, void *client_data)
         if (w->ed_text_changed)
             return;
         w->ed_text_changed = true;
-        GtkWidget *save =
-            gtk_item_factory_get_widget(w->ed_item_factory, "/File/Save");
-        if (save)
-            gtk_widget_set_sensitive(save, true);
+        // GtkWidget *save =
+        //     gtk_item_factory_get_widget(w->ed_item_factory, "/File/Save");
+        // if (save)
+        //     gtk_widget_set_sensitive(save, true);
     }
 }
 
@@ -1440,12 +1448,12 @@ GTKeditPopup::ed_drag_data_received(GtkWidget *caller, GdkDragContext *context,
 {
     if (GTK_IS_TEXT_VIEW(caller)) {
         // stop text view native handler
-        gtk_signal_emit_stop_by_name(GTK_OBJECT(caller), "drag-data-received");
+        // TODO g_signal_stop_emission_by_name(G_OBJECT(caller), "drag-data-received");
     }
-    if (data->length > 0 && data->format == 8) {
-        char *src = (char*)data->data;
+    if (gtk_selection_data_get_length(data) > 0 && gtk_selection_data_get_format (data) == 8) {
+        char *src = (char*)gtk_selection_data_get_data (data);
         GdkModifierType mask;
-        gdk_window_get_pointer(0, 0, 0, &mask);
+        //  TODO gdk_window_get_pointer(0, 0, 0, &mask);
         if (mask & GDK_CONTROL_MASK) {
             // If we're pressing Ctrl, insert text at cursor.
             int n = text_get_insertion_point(caller);
@@ -1466,17 +1474,18 @@ GTKeditPopup::ed_drag_data_received(GtkWidget *caller, GdkDragContext *context,
                 if (w->wb_input)
                     w->wb_input->popdown();
             }
-            GtkWidget *item = gtk_item_factory_get_widget(w->ed_item_factory,
-                "/File/Load");
-            if (!item)
-                item = gtk_item_factory_get_widget(w->ed_item_factory,
-                    "/Options/Attach");
-            if (item) {
-                w->ed_dropfile = lstring::copy(src);
-                gtk_menu_item_activate(GTK_MENU_ITEM(item));
-                gtk_drag_finish(context, true, false, time);
-                return;
-            }
+            // TODO
+            // GtkWidget *item = gtk_item_factory_get_widget(w->ed_item_factory,
+            //     "/File/Load");
+            // if (!item)
+            //     item = gtk_item_factory_get_widget(w->ed_item_factory,
+            //         "/Options/Attach");
+            // if (item) {
+            //     w->ed_dropfile = lstring::copy(src);
+            //     gtk_menu_item_activate(GTK_MENU_ITEM(item));
+            //     gtk_drag_finish(context, true, false, time);
+            //     return;
+            // }
         }
     }
     gtk_drag_finish(context, false, false, time);
@@ -1587,28 +1596,28 @@ GTKeditPopup::ed_do_attach_proc(const char *fnamein, void *client_data)
     gtk_widget_show(img);
     gtk_container_add(GTK_CONTAINER(item), img);
 
-    GtkWidget *menubar = gtk_item_factory_get_widget(w->ed_item_factory,
-        "<edit>");
-    gtk_menu_bar_insert(GTK_MENU_BAR(menubar), item, 3);
+    // GtkWidget *menubar = gtk_item_factory_get_widget(w->ed_item_factory,
+    //     "<edit>");
+    // gtk_menu_bar_insert(GTK_MENU_BAR(menubar), item, 3);
 
     GtkWidget *menu = gtk_menu_new();
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(item), menu);
 
-    gtk_object_set_data_full(GTK_OBJECT(item), "attach", lstring::copy(fname),
+    g_object_set_data_full(G_OBJECT(item), "attach", lstring::copy(fname),
         ed_data_destr);
 
     if (strlen(fname) > 20)
         strcpy(fname + 20, "...");
     GtkWidget *mitem = gtk_menu_item_new_with_label(fname);
     gtk_widget_show(mitem);
-    gtk_menu_append(GTK_MENU(menu), mitem);
+    // TODO gtk_menu_shell_append(GTK_MENU(menu), mitem);
     gtk_widget_set_sensitive(mitem, false);
 
     mitem = gtk_menu_item_new_with_label("Unattach");
     gtk_widget_show(mitem);
-    gtk_signal_connect(GTK_OBJECT(mitem), "activate",
-        GTK_SIGNAL_FUNC(ed_unattach_proc), item);
-    gtk_menu_append(GTK_MENU(menu), mitem);
+    // TODO g_signal_connect(G_OBJECT(mitem), "activate",
+    //     ed_unattach_proc, item);
+    // gtk_menu_shell_append(GTK_MENU_SHELL(menu), mitem);
 
     delete [] fname;
     if (w->wb_input)
@@ -1631,10 +1640,10 @@ GTKeditPopup::ed_fsel_callback(const char *fname, void *client_data)
         w->ed_dropfile = lstring::copy(fname);
         if (w->wb_input)
             w->wb_input->popdown();
-        GtkWidget *item = gtk_item_factory_get_widget(w->ed_item_factory,
-            "/File/Load");
-        if (item)
-            gtk_menu_item_activate(GTK_MENU_ITEM(item));
+        // TODO GtkWidget *item = gtk_item_factory_get_widget(w->ed_item_factory,
+        //     "/File/Load");
+        // if (item)
+        //     gtk_menu_item_activate(GTK_MENU_ITEM(item));
     }
 }
 
@@ -1695,10 +1704,10 @@ GTKeditPopup::ed_do_saveas_proc(const char *fnamein, void *client_data)
                     w->ed_saved_as = 0;
                 }
                 w->ed_text_changed = false;
-                GtkWidget *save = gtk_item_factory_get_widget(
-                    w->ed_item_factory, "/File/Save");
-                if (save)
-                    gtk_widget_set_sensitive(save, false);
+                // TODO GtkWidget *save = gtk_item_factory_get_widget(
+                //     w->ed_item_factory, "/File/Save");
+                // if (save)
+                //     gtk_widget_set_sensitive(save, false);
             }
             else {
                 if (!w->write_file(fname, 0 , -1)) {
@@ -1776,10 +1785,10 @@ GTKeditPopup::ed_do_load_proc(const char *fnamein, void *client_data)
         gtk_frame_set_label(GTK_FRAME(w->ed_title), fname);
         if (w->ed_text_changed) {
             w->ed_text_changed = false;
-            GtkWidget *save =
-                gtk_item_factory_get_widget(w->ed_item_factory, "/File/Save");
-            if (save)
-                gtk_widget_set_sensitive(save, false);
+            // TODO GtkWidget *save =
+            //     gtk_item_factory_get_widget(w->ed_item_factory, "/File/Save");
+            // if (save)
+            //     gtk_widget_set_sensitive(save, false);
         }
         if (w->ed_saved_as) {
             delete [] w->ed_saved_as;
@@ -1843,27 +1852,27 @@ GTKeditPopup::ed_set_sens(gtk_bag *wb, bool set, int)
     GTKeditPopup *w = dynamic_cast<GTKeditPopup*>(wb);
     if (!w)
         return;
-    GtkWidget *load = gtk_item_factory_get_widget(w->ed_item_factory,
-        "/File/Load");
-    GtkWidget *read = gtk_item_factory_get_widget(w->ed_item_factory,
-        "/File/Read");
-    GtkWidget *saveas = gtk_item_factory_get_widget(w->ed_item_factory,
-        "/File/Save As");
+    // GtkWidget *load = gtk_item_factory_get_widget(w->ed_item_factory,
+    //     "/File/Load");
+    // GtkWidget *read = gtk_item_factory_get_widget(w->ed_item_factory,
+    //     "/File/Read");
+    // GtkWidget *saveas = gtk_item_factory_get_widget(w->ed_item_factory,
+    //     "/File/Save As");
     if (set) {
-        if (load)
-            gtk_widget_set_sensitive(load, true);
-        if (read)
-            gtk_widget_set_sensitive(read, true);
-        if (saveas)
-            gtk_widget_set_sensitive(saveas, true);
-    }
-    else {
-        if (load)
-            gtk_widget_set_sensitive(load, false);
-        if (read)
-            gtk_widget_set_sensitive(read, false);
-        if (saveas)
-            gtk_widget_set_sensitive(saveas, false);
+    //     if (load)
+    //         gtk_widget_set_sensitive(load, true);
+    //     if (read)
+    //         gtk_widget_set_sensitive(read, true);
+    //     if (saveas)
+    //         gtk_widget_set_sensitive(saveas, true);
+    // }
+    // else {
+    //     if (load)
+    //         gtk_widget_set_sensitive(load, false);
+    //     if (read)
+    //         gtk_widget_set_sensitive(read, false);
+    //     if (saveas)
+    //         gtk_widget_set_sensitive(saveas, false);
     }
 }
 

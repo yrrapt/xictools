@@ -73,6 +73,9 @@ using namespace gtkinterf;
 // Default background for HTML windows
 #define HTML_BG_COLOR "#e8e8f0"
 
+#define GDK_c 0x00E7
+#define GDK_C 0x00C7
+
 #define NUMITEMS(x)  sizeof(x)/sizeof(x[0])
 
 namespace gtkinterf {
@@ -93,7 +96,7 @@ namespace gtkinterf {
         bool InitColormap(int, int, bool);
         void RGBofPixel(int, int*, int*, int*);
         int AllocateColor(int*, int, int, int);
-        int NameColor(const char*);
+        GdkRGBA NameColor(const char*);
         bool NameToRGB(const char*, int*);
         GRdraw *NewDraw(int);
         GRwbag *NewWbag(const char*, GRwbag*);
@@ -132,7 +135,7 @@ namespace gtkinterf {
         void CallCallback(GRobject);
         void Location(GRobject, int*, int*);
         void PointerRootLoc(int*, int*);
-        char *GetLabel(GRobject);
+        const char *GetLabel(GRobject);
         void SetLabel(GRobject, const char*);
         void SetSensitive(GRobject, bool);
         bool IsSensitive(GRobject);
@@ -149,7 +152,7 @@ namespace gtkinterf {
         void RegisterBigWindow(GtkWidget *window);
         void RegisterBigForeignWindow(unsigned int);
 
-        GdkColormap *Colormap()     { return (dv_cmap); }
+        GdkVisual *Colormap()     { return (dv_cmap); }
         GdkVisual *Visual()         { return (dv_visual); }
         bool IsTrueColor()          { return (dv_true_color); }
         int  LowerWinOffset()       { return (dv_lower_win_offset); }
@@ -182,7 +185,7 @@ namespace gtkinterf {
         int dv_loop_level;
         gtk_bag *dv_main_wbag;
         GdkWindow *dv_default_focus_win;
-        GdkColormap *dv_cmap;
+        GdkVisual *dv_cmap;
         GdkVisual *dv_visual;
         int dv_lower_win_offset;
         bool dv_dual_plane;  // color map has separate highlighting plane
@@ -268,7 +271,7 @@ namespace gtkinterf {
                     gb_gc = gb_gcbak;
             }
 
-        GdkGC *main_gc()
+        cairo_t *main_gc()
             {
                 return (gb_gc != gb_xorgc ? gb_gc : gb_gcbak);
             }
@@ -321,10 +324,10 @@ namespace gtkinterf {
                 gb_gdraw.set_ghost_func(f);
             }
 
-        void set_gc(GdkGC *gc)                  { gb_gc = gc; }
-        GdkGC *get_gc()                         { return (gb_gc); }
-        void set_xorgc(GdkGC *gc)               { gb_xorgc = gc; }
-        GdkGC *get_xorgc()                      { return (gb_xorgc); }
+        void set_gc(cairo_t *gc)                  { gb_gc = gc; }
+        cairo_t *get_gc()                         { return (gb_gc); }
+        void set_xorgc(cairo_t *gc)               { gb_xorgc = gc; }
+        cairo_t *get_xorgc()                      { return (gb_xorgc); }
         void set_cursor_type(unsigned int t)    { gb_cursor_type = t; }
         unsigned int get_cursor_type()          { return (gb_cursor_type); }
         GRlineDb *linedb()                      { return (gb_gdraw.linedb()); }
@@ -337,9 +340,9 @@ namespace gtkinterf {
         static sGbag *default_gbag(int = 0);
 
     private:
-        GdkGC *gb_gc;
-        GdkGC *gb_xorgc;
-        GdkGC *gb_gcbak;
+        cairo_t *gb_gc;
+        cairo_t *gb_xorgc;
+        cairo_t *gb_gcbak;
 #ifdef WIN32
         const GRfillType *gb_fillpattern;
 #endif
@@ -402,9 +405,9 @@ namespace gtkinterf {
         double Resolution()     { return (1.0); }
 
         // non-overrides
-        GdkGC *GC()             { return (gd_gbag ? gd_gbag->get_gc() : 0); }
-        GdkGC *XorGC()          { return (gd_gbag ? gd_gbag->get_xorgc() : 0); }
-        GdkGC *CpyGC()          { return (gd_gbag ? gd_gbag->main_gc() : 0); }
+        cairo_t *GC()             { return (gd_gbag ? gd_gbag->get_gc() : 0); }
+        cairo_t *XorGC()          { return (gd_gbag ? gd_gbag->get_xorgc() : 0); }
+        cairo_t *CpyGC()          { return (gd_gbag ? gd_gbag->main_gc() : 0); }
 
         GRlineDb *XorLineDb()   { return (gd_gbag ? gd_gbag->linedb() : 0); }
 
@@ -477,8 +480,8 @@ namespace gtkinterf {
             {
                 if (wb_shell) {
                     gtk_window_set_title(GTK_WINDOW(wb_shell), title);
-                    if (wb_shell->window)
-                        gdk_window_set_icon_name(wb_shell->window, icontitle);
+                    if (wb_window)
+                        gdk_window_set_icon_name(wb_window, icontitle);
                 }
             }
 
@@ -569,6 +572,7 @@ namespace gtkinterf {
 
     protected:
         GtkWidget *wb_shell;        // top level widget
+        GdkWindow *wb_window;       // top level window
         GtkWidget *wb_textarea;     // text widget
         GTKledPopup *wb_input;      // dialog input popup
         GTKmsgPopup *wb_message;    // message popup
@@ -626,7 +630,6 @@ namespace gtkinterf {
     GtkWidget *gtk_NewPopup(gtk_bag*, const char*,
         void(*)(GtkWidget*, void*), void*);
     void gtk_QueryColor(GdkColor*);
-    GtkTooltips *gtk_NewTooltip();
     bool gtk_ColorSet(GdkColor*, const char*);
     GdkColor *gtk_PopupColor(GRattrColor);
 

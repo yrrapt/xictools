@@ -64,7 +64,7 @@ namespace gtkinterf {
     inline Window
     gr_x_window(GdkWindow *window)
     {
-        return (GDK_WINDOW_XWINDOW(window));
+        return (GDK_WINDOW_XID(window));
     }
 
     inline Visual *
@@ -74,16 +74,16 @@ namespace gtkinterf {
     }
 
     inline GC
-    gr_x_gc(GdkGC *gc)
+    gr_x_gc(cairo_t *gc)
     {
-        return (gdk_x11_gc_get_xgc(gc));
+        // return (gdk_x11_gc_get_xgc(gc));
     }
 
 
-    inline Colormap
-    gr_x_colormap(GdkColormap *cmap)
+    inline Visual*
+    gr_x_colormap(GdkVisual *cmap)
     {
-        return (gdk_x11_colormap_get_xcolormap(cmap));
+        return (gdk_x11_visual_get_xvisual (cmap));
     }
 
 

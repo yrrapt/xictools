@@ -162,6 +162,7 @@ sLgo::sLgo(GRobject c)
     lgo_sav_pop = 0;
 
     wb_shell = gtk_NewPopup(0, "Logo Font Setup", lgo_cancel_proc, 0);
+    wb_window = gtk_widget_get_window(wb_shell);
     if (!wb_shell)
         return;
     gtk_window_set_resizable(GTK_WINDOW(wb_shell), false);
@@ -185,26 +186,26 @@ sLgo::sLgo(GRobject c)
     GtkWidget *button = gtk_radio_button_new_with_label(0, "Vector");
     gtk_widget_set_name(button, "Vector");
     gtk_widget_show(button);
-    GSList *group = gtk_radio_button_group(GTK_RADIO_BUTTON(button));
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(lgo_action), 0);
+    GSList *group = gtk_radio_button_get_group(GTK_RADIO_BUTTON(button));
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(lgo_action), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
     lgo_vector = button;
 
     button = gtk_radio_button_new_with_label(group, "Manhattan");
     gtk_widget_set_name(button, "Manhattan");
     gtk_widget_show(button);
-    group = gtk_radio_button_group(GTK_RADIO_BUTTON(button));
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(lgo_action), 0);
+    group = gtk_radio_button_get_group(GTK_RADIO_BUTTON(button));
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(lgo_action), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
     lgo_manh = button;
 
     button = gtk_radio_button_new_with_label(group, "Pretty");
     gtk_widget_set_name(button, "Pretty");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(lgo_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(lgo_action), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
     lgo_pretty = button;
 
@@ -216,8 +217,8 @@ sLgo::sLgo(GRobject c)
     button = gtk_check_button_new_with_label("Define \"pixel\" size");
     gtk_widget_set_name(button, "pixsz");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(lgo_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(lgo_action), 0);
     lgo_setpix = button;
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, rowcnt, rowcnt+1,
@@ -226,7 +227,7 @@ sLgo::sLgo(GRobject c)
 
     int ndgt = CD()->numDigits();
     GtkWidget *sb = lgo_sb_pix.init(lgo_defpixsz, MICRONS(1), 100.0, ndgt);
-    lgo_sb_pix.connect_changed(GTK_SIGNAL_FUNC(lgo_val_changed), 0, 0);
+    // (lgo_val_changed, 0, 0);
 
     gtk_table_attach(GTK_TABLE(form), sb, 1, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -241,7 +242,7 @@ sLgo::sLgo(GRobject c)
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
 
-    GtkWidget *entry = gtk_option_menu_new();
+    GtkWidget *entry = gtk_combo_box_text_new();
     gtk_widget_set_name(entry, "endstyle");
     gtk_widget_show(entry);
     GtkWidget *menu = gtk_menu_new();
@@ -251,11 +252,11 @@ sLgo::sLgo(GRobject c)
         GtkWidget *mi = gtk_menu_item_new_with_label(endstyles[i]);
         gtk_widget_set_name(mi, endstyles[i]);
         gtk_widget_show(mi);
-        gtk_menu_append(GTK_MENU(menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(lgo_es_menu_proc), (void*)(long)i);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(lgo_es_menu_proc), (void*)(long)i);
     }
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
+    // gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
     lgo_endstyle = entry;
 
     gtk_table_attach(GTK_TABLE(form), entry, 1, 2, rowcnt, rowcnt+1,
@@ -271,7 +272,7 @@ sLgo::sLgo(GRobject c)
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
 
-    entry = gtk_option_menu_new();
+    entry = gtk_combo_box_text_new();
     gtk_widget_set_name(entry, "pathwidth");
     gtk_widget_show(entry);
     menu = gtk_menu_new();
@@ -281,11 +282,11 @@ sLgo::sLgo(GRobject c)
         GtkWidget *mi = gtk_menu_item_new_with_label(pathwidth[i]);
         gtk_widget_set_name(mi, pathwidth[i]);
         gtk_widget_show(mi);
-        gtk_menu_append(GTK_MENU(menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(lgo_pw_menu_proc), (void*)(long)(i+1));
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(lgo_pw_menu_proc), (void*)(long)(i+1));
     }
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
+    // gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
     lgo_pwidth = entry;
 
     gtk_table_attach(GTK_TABLE(form), entry, 1, 2, rowcnt, rowcnt+1,
@@ -296,8 +297,8 @@ sLgo::sLgo(GRobject c)
     button = gtk_check_button_new_with_label("Create cell for text");
     gtk_widget_set_name(button, "crcell");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(lgo_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(lgo_action), 0);
     lgo_create = button;
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, rowcnt, rowcnt+1,
@@ -307,8 +308,8 @@ sLgo::sLgo(GRobject c)
     button = gtk_toggle_button_new_with_label("Dump Vector Font ");
     gtk_widget_set_name(button, "Dump");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(lgo_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(lgo_action), 0);
     lgo_dump = button;
 
     gtk_table_attach(GTK_TABLE(form), button, 1, 2, rowcnt, rowcnt+1,
@@ -319,8 +320,8 @@ sLgo::sLgo(GRobject c)
     button = gtk_toggle_button_new_with_label("Select Pretty Font");
     gtk_widget_set_name(button, "Select");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(lgo_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(lgo_action), 0);
     lgo_sel = button;
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, rowcnt, rowcnt+1,
@@ -330,8 +331,8 @@ sLgo::sLgo(GRobject c)
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(lgo_cancel_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(lgo_cancel_proc), 0);
 
     gtk_table_attach(GTK_TABLE(form), button, 1, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -351,8 +352,8 @@ sLgo::~sLgo()
     if (lgo_sav_pop)
         lgo_sav_pop->popdown();
     if (wb_shell)
-        gtk_signal_disconnect_by_func(GTK_OBJECT(wb_shell),
-            GTK_SIGNAL_FUNC(lgo_cancel_proc), wb_shell);
+        g_signal_handlers_disconnect_by_func(G_OBJECT(wb_shell),
+            (gpointer)lgo_cancel_proc, wb_shell);
 }
 
 
@@ -387,17 +388,17 @@ sLgo::update()
 
     if (str_to_int(&dd, CDvdb()->getVariable(VA_LogoPathWidth)) &&
             dd >= 1 && dd <= 5)
-        gtk_option_menu_set_history(GTK_OPTION_MENU(lgo_pwidth), dd - 1);
-    else
-        gtk_option_menu_set_history(GTK_OPTION_MENU(lgo_pwidth),
-            DEF_LOGO_PATH_WIDTH - 1);
+        // gtk_option_menu_set_history(GTK_OPTION_MENU(lgo_pwidth), dd - 1);
+    // else
+        // gtk_option_menu_set_history(GTK_OPTION_MENU(lgo_pwidth),
+        //    DEF_LOGO_PATH_WIDTH - 1);
 
     if (str_to_int(&dd, CDvdb()->getVariable(VA_LogoEndStyle)) &&
             dd >= 0 && dd <= 2)
-        gtk_option_menu_set_history(GTK_OPTION_MENU(lgo_endstyle), dd);
-    else
-        gtk_option_menu_set_history(GTK_OPTION_MENU(lgo_endstyle),
-            DEF_LOGO_END_STYLE);
+        // gtk_option_menu_set_history(GTK_OPTION_MENU(lgo_endstyle), dd);
+    // else
+        // gtk_option_menu_set_history(GTK_OPTION_MENU(lgo_endstyle),
+        //    DEF_LOGO_END_STYLE);
 
     if (CDvdb()->getVariable(VA_LogoToFile))
         GRX->SetStatus(lgo_create, true);

@@ -77,7 +77,7 @@ namespace {
             static void co_info_proc(GtkWidget*, void*);
             static void co_drag_data_received(GtkWidget*, GdkDragContext*,
                 gint, gint, GtkSelectionData*, guint, guint);
-            static void co_page_proc(GtkNotebook*, GtkNotebookPage*, int,
+            static void co_page_proc(GtkNotebook*, GtkWidget*, int,
                 void*);
 
             GRobject co_caller;
@@ -133,13 +133,15 @@ cConvert::PopUpChdOpen(GRobject caller, ShowMode mode,
 
     int mwid;
     MonitorGeom(mainBag()->Shell(), 0, 0, &mwid, 0);
-    if (x + Co->Shell()->requisition.width > mwid)
-        x = mwid - Co->Shell()->requisition.width;
-    gtk_widget_set_uposition(Co->Shell(), x, y);
+    GtkRequisition requisition;
+    gtk_widget_get_requisition(GTK_WIDGET(Co->Shell()), &requisition);
+    if (x + requisition.width > mwid)
+        x = mwid - requisition.width;
+    gtk_widget_set_size_request(Co->Shell(), x, y);
     gtk_widget_show(Co->Shell());
 
     // OpenSuse-13.1 gtk-2.24.23 bug
-    gtk_widget_set_uposition(Co->Shell(), x, y);
+    gtk_widget_set_size_request(Co->Shell(), x, y);
 }
 
 namespace {
@@ -174,6 +176,7 @@ sCo::sCo(GRobject caller, bool(*callback)(const char*, const char*, int, void*),
 
     wb_shell = gtk_NewPopup(0, "Open Cell Hierarchy Digest",
         co_cancel_proc, 0);
+    wb_window = gtk_widget_get_window(wb_shell);
     if (!wb_shell)
         return;
 
@@ -198,8 +201,8 @@ sCo::sCo(GRobject caller, bool(*callback)(const char*, const char*, int, void*),
     GtkWidget *button = gtk_button_new_with_label("Help");
     gtk_widget_set_name(button, "Help");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(co_action), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(co_action), 0);
     gtk_box_pack_end(GTK_BOX(hbox), button, false, false, 0);
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -207,7 +210,7 @@ sCo::sCo(GRobject caller, bool(*callback)(const char*, const char*, int, void*),
     rowcnt++;
 
     // This allows user to change label text.
-    gtk_object_set_data(GTK_OBJECT(wb_shell), "label", label);
+    g_object_set_data(G_OBJECT(wb_shell), "label", label);
 
     co_nbook = gtk_notebook_new();
     gtk_widget_show(co_nbook);
@@ -227,7 +230,7 @@ sCo::sCo(GRobject caller, bool(*callback)(const char*, const char*, int, void*),
 
     co_p1_text = gtk_entry_new();
     gtk_widget_show(co_p1_text);
-    gtk_entry_set_editable(GTK_ENTRY(co_p1_text), true);
+    gtk_editable_set_editable(GTK_EDITABLE(co_p1_text), true);
     gtk_table_attach(GTK_TABLE(tab_form), co_p1_text, 0, 2, rcnt, rcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 0);
@@ -238,8 +241,8 @@ sCo::sCo(GRobject caller, bool(*callback)(const char*, const char*, int, void*),
         (GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_HIGHLIGHT);
     gtk_drag_dest_set(co_p1_text, DD, target_table, n_targets,
         GDK_ACTION_COPY);
-    gtk_signal_connect_after(GTK_OBJECT(co_p1_text), "drag-data-received",
-        GTK_SIGNAL_FUNC(co_drag_data_received), 0);
+    g_signal_connect_after(G_OBJECT(co_p1_text), "drag-data-received",
+        G_CALLBACK(co_drag_data_received), 0);
 
     GtkWidget *sep = gtk_hseparator_new();
     gtk_widget_show(sep);
@@ -269,38 +272,38 @@ sCo::sCo(GRobject caller, bool(*callback)(const char*, const char*, int, void*),
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 2, 2);
 
-    co_p1_info = gtk_option_menu_new();
+    co_p1_info = gtk_combo_box_text_new();
     gtk_widget_show(co_p1_info);
 
     GtkWidget *menu = gtk_menu_new();
     gtk_widget_show(menu);
     GtkWidget *mi = gtk_menu_item_new_with_label("no geometry info saved");
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(co_info_proc), (void*)cvINFOnone);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(co_info_proc), (void*)cvINFOnone);
     mi = gtk_menu_item_new_with_label("totals only");
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(co_info_proc), (void*)cvINFOtotals);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(co_info_proc), (void*)cvINFOtotals);
     mi = gtk_menu_item_new_with_label("per-layer counts");
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(co_info_proc), (void*)cvINFOpl);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(co_info_proc), (void*)cvINFOpl);
     mi = gtk_menu_item_new_with_label("per-cell counts");
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(co_info_proc), (void*)cvINFOpc);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(co_info_proc), (void*)cvINFOpc);
     mi = gtk_menu_item_new_with_label("per-cell and per-layer counts");
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(co_info_proc), (void*)cvINFOplpc);
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(co_p1_info), menu);
-    gtk_option_menu_set_history(GTK_OPTION_MENU(co_p1_info), FIO()->CvtInfo());
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(co_info_proc), (void*)cvINFOplpc);
+    // gtk_option_menu_set_menu(GTK_OPTION_MENU(co_p1_info), menu);
+    // gtk_option_menu_set_history(GTK_OPTION_MENU(co_p1_info), FIO()->CvtInfo());
 
     gtk_table_attach(GTK_TABLE(tab_form), co_p1_info, 1, 2, rcnt, rcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -320,7 +323,7 @@ sCo::sCo(GRobject caller, bool(*callback)(const char*, const char*, int, void*),
 
     co_p2_text = gtk_entry_new();
     gtk_widget_show(co_p2_text);
-    gtk_entry_set_editable(GTK_ENTRY(co_p2_text), true);
+    gtk_editable_set_editable(GTK_EDITABLE(co_p2_text), true);
     gtk_table_attach(GTK_TABLE(tab_form), co_p2_text, 0, 2, rcnt, rcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 0);
@@ -353,7 +356,7 @@ sCo::sCo(GRobject caller, bool(*callback)(const char*, const char*, int, void*),
         "Read geometry records into new MEMORY CGD");
     gtk_widget_set_name(co_p2_mem, "mem");
     gtk_widget_show(co_p2_mem);
-    GSList *group = gtk_radio_button_group(GTK_RADIO_BUTTON(co_p2_mem));
+    GSList *group = gtk_radio_button_get_group(GTK_RADIO_BUTTON(co_p2_mem));
     gtk_table_attach(GTK_TABLE(tab_form), co_p2_mem, 0, 2, rcnt, rcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 0);
@@ -363,7 +366,7 @@ sCo::sCo(GRobject caller, bool(*callback)(const char*, const char*, int, void*),
         "Read geometry records into new FILE CGD");
     gtk_widget_set_name(co_p2_file, "file");
     gtk_widget_show(co_p2_file);
-    group = gtk_radio_button_group(GTK_RADIO_BUTTON(co_p2_file));
+    group = gtk_radio_button_get_group(GTK_RADIO_BUTTON(co_p2_file));
     gtk_table_attach(GTK_TABLE(tab_form), co_p2_file, 0, 2, rcnt, rcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 0);
@@ -427,10 +430,10 @@ sCo::sCo(GRobject caller, bool(*callback)(const char*, const char*, int, void*),
     rowcnt++;
 
 
-    gtk_signal_connect(GTK_OBJECT(wb_shell), "key-press-event",
-        GTK_SIGNAL_FUNC(co_key_hdlr), 0);
-    gtk_signal_connect(GTK_OBJECT(co_nbook), "switch-page",
-        GTK_SIGNAL_FUNC(co_page_proc), 0);
+    g_signal_connect(G_OBJECT(wb_shell), "key-press-event",
+        G_CALLBACK(co_key_hdlr), 0);
+    g_signal_connect(G_OBJECT(co_nbook), "switch-page",
+        G_CALLBACK(co_page_proc), 0);
 
     //
     // Apply/Dismiss buttons
@@ -438,8 +441,8 @@ sCo::sCo(GRobject caller, bool(*callback)(const char*, const char*, int, void*),
     co_apply = gtk_button_new_with_label("Apply");
     gtk_widget_set_name(co_apply, "Apply");
     gtk_widget_show(co_apply);
-    gtk_signal_connect(GTK_OBJECT(co_apply), "clicked",
-        GTK_SIGNAL_FUNC(co_action), 0);
+    g_signal_connect(G_OBJECT(co_apply), "clicked",
+        G_CALLBACK(co_action), 0);
     gtk_table_attach(GTK_TABLE(form), co_apply, 0, 1, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 2, 2);
@@ -447,8 +450,8 @@ sCo::sCo(GRobject caller, bool(*callback)(const char*, const char*, int, void*),
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(co_cancel_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(co_cancel_proc), 0);
 
     gtk_table_attach(GTK_TABLE(form), button, 1, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -456,7 +459,7 @@ sCo::sCo(GRobject caller, bool(*callback)(const char*, const char*, int, void*),
     gtk_window_set_focus(GTK_WINDOW(wb_shell), co_p1_text);
 
     // Constrain overall widget width so title text isn't truncated.
-    gtk_widget_set_usize(wb_shell, 360, -1);
+    gtk_widget_set_size_request(wb_shell, 360, -1);
     update(init_idname, init_str);
 }
 
@@ -482,8 +485,8 @@ sCo::update(const char *init_idname, const char *init_str)
     }
     if (init_idname)
         gtk_entry_set_text(GTK_ENTRY(co_idname), init_idname);
-    gtk_option_menu_set_history(GTK_OPTION_MENU(co_p1_info),
-        FIO()->CvtInfo());
+    // gtk_option_menu_set_history(GTK_OPTION_MENU(co_p1_info),
+        // FIO()->CvtInfo());
     co_p1_cnmap->update();
 }
 
@@ -556,7 +559,7 @@ sCo::co_action(GtkWidget *caller, void*)
 int
 sCo::co_key_hdlr(GtkWidget*, GdkEvent *ev, void*)
 {
-    if (Co && ev->key.keyval == GDK_Return) {
+    if (Co && ev->key.keyval == GDK_KEY_Return) {
         const char *string;
         int pg = gtk_notebook_get_current_page(GTK_NOTEBOOK(Co->co_nbook));
         if (pg == 0)
@@ -611,9 +614,9 @@ sCo::co_drag_data_received(GtkWidget *entry,
     GdkDragContext *context, gint, gint, GtkSelectionData *data,
     guint, guint time)
 {
-    if (data->length >= 0 && data->format == 8 && data->data) {
-        char *src = (char*)data->data;
-        if (data->target == gdk_atom_intern("TWOSTRING", true)) {
+    if (gtk_selection_data_get_length(data) >= 0 && gtk_selection_data_get_format(data) == 8 && gtk_selection_data_get_data(data)) {
+        char *src = (char*)gtk_selection_data_get_data(data);
+        if (gtk_selection_data_get_target(data) == gdk_atom_intern("TWOSTRING", true)) {
             // Drops from content lists may be in the form
             // "fname_or_chd\ncellname".  Keep the filename.
             char *t = strchr(src, '\n');
@@ -632,7 +635,7 @@ sCo::co_drag_data_received(GtkWidget *entry,
 // Handle page change, set focus to text entry.
 //
 void
-sCo::co_page_proc(GtkNotebook*, GtkNotebookPage*, int num, void*)
+sCo::co_page_proc(GtkNotebook*, GtkWidget*, int num, void*)
 {
     if (!Co)
         return;

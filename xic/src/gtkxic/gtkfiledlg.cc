@@ -209,8 +209,8 @@ sSFD::path_set(const char *path)
 void
 sSFD::go_cb(const char*, void*)
 {
-    XM()->SendKeyEvent(0, GDK_Return, 0, false);
-    XM()->SendKeyEvent(0, GDK_Return, 0, true);
+    XM()->SendKeyEvent(0, GDK_KEY_Return, 0, false);
+    XM()->SendKeyEvent(0, GDK_KEY_Return, 0, true);
 }
 // End of sSFD functions.
 
@@ -265,10 +265,10 @@ cMain::PopUpFileSel(const char *root, void(*cb)(const char*, void*), void *arg)
         posn_cnt++;
 
         int x, y;
-        gdk_window_get_origin(mainBag()->Viewport()->window, &x, &y);
+        gdk_window_get_origin(gtk_widget_get_window(mainBag()->Viewport()), &x, &y);
         x += cnt*200 + xcnt*50;
         y += cnt*100;
-        gtk_widget_set_uposition(fsel, x, y);
+        gtk_widget_set_size_request(fsel, x, y);
         gtk_widget_show(fsel);
 
         gtk_window_set_focus(GTK_WINDOW(mainBag()->Shell()),

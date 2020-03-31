@@ -66,11 +66,11 @@ namespace gtkinterf {
                 real_id = 0;
             }
 
-        ~gtk_timer()
-            {
-                if (real_id > 0)
-                    gtk_timeout_remove(real_id);
-            }
+        // ~gtk_timer()
+        //     {
+        //         if (real_id > 0)
+        //             g_source_remove(real_id);
+        //     }
 
         int(*callback)(void*);
         void *arg;
@@ -289,9 +289,9 @@ namespace gtkinterf {
         GtkAdjustment *v_vsba;
         GtkWidget *v_hsb;
         GtkWidget *v_vsb;
-        GdkPixmap *v_pixmap;
-        GdkPixmap *v_pixmap_bak;
-        GdkGC *v_gc;
+        cairo_surface_t *v_pixmap;
+        cairo_surface_t *v_pixmap_bak;
+        cairo_t *v_gc;
         void *v_font;
             // This is a GdkFont when using X fonts (GTK-1.2), or a
             // PangoFontDescription when using Pango in GTK-2

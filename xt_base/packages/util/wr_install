@@ -493,7 +493,7 @@ do_update()
         nmok=no
         case $osname in
         Darwin*|Win*)
-        if [ x$xt = xgtk2 -a x$progname = xbundle ]; then
+        if [ x$xt = xgtk3 -a x$progname = xbundle ]; then
             nmok=yes
         fi
         ;;

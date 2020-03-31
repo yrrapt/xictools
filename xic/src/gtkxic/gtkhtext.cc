@@ -121,8 +121,8 @@ GTKedit::GTKedit(bool nogr)
     GtkWidget *ebox = gtk_event_box_new();
     gtk_widget_show(ebox);
     gtk_widget_add_events(ebox, GDK_BUTTON_PRESS_MASK);
-    gtk_signal_connect(GTK_OBJECT(ebox), "button-press-event",
-        GTK_SIGNAL_FUNC(pe_keys_hdlr), 0);
+    g_signal_connect(G_OBJECT(ebox), "button-press-event",
+        G_CALLBACK(pe_keys_hdlr), 0);
     gtk_container_add(GTK_CONTAINER(ebox), pe_keys);
 
     pe_keyframe = gtk_frame_new(0);
@@ -142,19 +142,17 @@ GTKedit::GTKedit(bool nogr)
         GtkWidget *mi = gtk_menu_item_new_with_label(buf);
         gtk_widget_set_name(mi, buf);
         gtk_widget_show(mi);
-        gtk_menu_append(GTK_MENU(pe_r_menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(pe_r_menu_proc), this);
+        gtk_menu_shell_append(GTK_MENU_SHELL(pe_r_menu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(pe_r_menu_proc), this);
     }
     pe_r_button = gtk_button_new_with_label("R");
-    gtk_widget_set_usize(pe_r_button, -1, 20);
+    gtk_widget_set_size_request(pe_r_button, -1, 20);
     gtk_widget_hide(pe_r_button);
     gtk_widget_set_name(pe_r_button, "Recall");
-    GtkTooltips *tt = gtk_NewTooltip();
-    gtk_tooltips_set_tip(tt, pe_r_button,
-        "Recall edit string from a register.", "");
-    gtk_signal_connect(GTK_OBJECT(pe_r_button), "button-press-event",
-        GTK_SIGNAL_FUNC(pe_popup_btn_proc), this);
+    gtk_widget_set_tooltip_text(pe_r_button, "Recall edit string from a register.");
+    g_signal_connect(G_OBJECT(pe_r_button), "button-press-event",
+        G_CALLBACK(pe_popup_btn_proc), this);
     gtk_box_pack_start(GTK_BOX(pe_container), pe_r_button, false, false, 0);
 
     // S (save) button
@@ -165,31 +163,27 @@ GTKedit::GTKedit(bool nogr)
         GtkWidget *mi = gtk_menu_item_new_with_label(buf);
         gtk_widget_set_name(mi, buf);
         gtk_widget_show(mi);
-        gtk_menu_append(GTK_MENU(pe_s_menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(pe_s_menu_proc), this);
+        gtk_menu_shell_append(GTK_MENU_SHELL(pe_s_menu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(pe_s_menu_proc), this);
     }
     pe_s_button = gtk_button_new_with_label("S");
-    gtk_widget_set_usize(pe_s_button, -1, 20);
+    gtk_widget_set_size_request(pe_s_button, -1, 20);
     gtk_widget_hide(pe_s_button);
     gtk_widget_set_name(pe_s_button, "Save");
-    tt = gtk_NewTooltip();
-    gtk_tooltips_set_tip(tt, pe_s_button,
-        "Save edit string to a register.", "");
-    gtk_signal_connect(GTK_OBJECT(pe_s_button), "button-press-event",
-        GTK_SIGNAL_FUNC(pe_popup_btn_proc), this);
+    gtk_widget_set_tooltip_text(pe_s_button, "Save edit string to a register.");
+    g_signal_connect(G_OBJECT(pe_s_button), "button-press-event",
+        G_CALLBACK(pe_popup_btn_proc), this);
     gtk_box_pack_start(GTK_BOX(pe_container), pe_s_button, false, false, 0);
 
     // L (long text) button
     pe_l_button = gtk_button_new_with_label("L");
-    gtk_widget_set_usize(pe_l_button, -1, 20);
+    gtk_widget_set_size_request(pe_l_button, -1, 20);
     gtk_widget_hide(pe_l_button);
     gtk_widget_set_name(pe_l_button, "LongText");
-    tt = gtk_NewTooltip();
-    gtk_tooltips_set_tip(tt, pe_l_button,
-        "Associate a block of text with the label - pop up an editor.", "");
-    gtk_signal_connect(GTK_OBJECT(pe_l_button), "clicked",
-        GTK_SIGNAL_FUNC(pe_l_btn_hdlr), this);
+    gtk_widget_set_tooltip_text(pe_l_button, "Associate a block of text with the label - pop up an editor.");
+    g_signal_connect(G_OBJECT(pe_l_button), "clicked",
+        G_CALLBACK(pe_l_btn_hdlr), this);
     gtk_box_pack_start(GTK_BOX(pe_container), pe_l_button, false, false, 0);
 
     // the prompt line
@@ -205,44 +199,44 @@ GTKedit::GTKedit(bool nogr)
     gtk_box_pack_start(GTK_BOX(pe_container), frame, true, true, 0);
 
     gtk_widget_add_events(gd_viewport, GDK_EXPOSURE_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "expose-event",
-        GTK_SIGNAL_FUNC(pe_redraw_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "expose-event",
+        G_CALLBACK(pe_redraw_hdlr), this);
     gtk_widget_add_events(gd_viewport, GDK_BUTTON_PRESS_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "button-press-event",
-        GTK_SIGNAL_FUNC(pe_btn_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "button-press-event",
+        G_CALLBACK(pe_btn_hdlr), this);
     gtk_widget_add_events(gd_viewport, GDK_BUTTON_RELEASE_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "button-release-event",
-        GTK_SIGNAL_FUNC(pe_btn_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "button-release-event",
+        G_CALLBACK(pe_btn_hdlr), this);
     gtk_widget_add_events(gd_viewport, GDK_POINTER_MOTION_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "motion-notify-event",
-        GTK_SIGNAL_FUNC(pe_motion_hdlr), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "motion-notify-event",
+        G_CALLBACK(pe_motion_hdlr), 0);
 
     gtk_widget_add_events(gd_viewport, GDK_ENTER_NOTIFY_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "enter-notify-event",
-        GTK_SIGNAL_FUNC(pe_enter_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "enter-notify-event",
+        G_CALLBACK(pe_enter_hdlr), this);
     gtk_widget_add_events(gd_viewport, GDK_LEAVE_NOTIFY_MASK);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "leave-notify-event",
-        GTK_SIGNAL_FUNC(pe_leave_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "leave-notify-event",
+        G_CALLBACK(pe_leave_hdlr), this);
 
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "selection-received",
-        GTK_SIGNAL_FUNC(pe_selection_proc), this);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "style-set",
-        GTK_SIGNAL_FUNC(pe_font_change_hdlr), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "selection-received",
+        G_CALLBACK(pe_selection_proc), this);
+    g_signal_connect(G_OBJECT(gd_viewport), "style-set",
+        G_CALLBACK(pe_font_change_hdlr), this);
 
     // prompt line drop site
     gtk_drag_dest_set(frame, GTK_DEST_DEFAULT_ALL, pl_targets,
         n_pl_targets, GDK_ACTION_COPY);
-    gtk_signal_connect_after(GTK_OBJECT(frame), "drag-data-received",
-        GTK_SIGNAL_FUNC(pe_drag_data_received), this);
+    g_signal_connect_after(G_OBJECT(frame), "drag-data-received",
+        G_CALLBACK(pe_drag_data_received), this);
 
     // selections
     gtk_selection_add_targets(gd_viewport, GDK_SELECTION_PRIMARY, sel_targets,
         n_sel_targets);
 #ifndef WIN32
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "selection-clear-event",
-        GTK_SIGNAL_FUNC(pe_selection_clear), 0);
-    gtk_signal_connect(GTK_OBJECT(gd_viewport), "selection-get",
-        GTK_SIGNAL_FUNC(pe_selection_get), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "selection-clear-event",
+        G_CALLBACK(pe_selection_clear), 0);
+    g_signal_connect(G_OBJECT(gd_viewport), "selection-get",
+        G_CALLBACK(pe_selection_get), 0);
 #endif
 
     // Set sizes
@@ -259,7 +253,7 @@ GTKedit::GTKedit(bool nogr)
     a.x = 0;
     a.y = 0;
     gtk_widget_size_allocate(pe_keys, &a);
-    gtk_drawing_area_size(GTK_DRAWING_AREA(gd_viewport), prm_wid, height);
+    gtk_widget_set_size_request(gd_viewport, prm_wid, height);
 }
 
 
@@ -325,11 +319,13 @@ GTKedit::flash_msg_here(int x, int y, const char *msg, ...)
 
     int mwid, mhei;
     MonitorGeom(mainBag()->Shell(), 0, 0, &mwid, &mhei);
-    if (x + popup->requisition.width > mwid)
-        x = mwid - popup->requisition.width;
-    if (y + popup->requisition.height > mhei)
-        y = mhei - popup->requisition.height;
-    gtk_widget_set_uposition(popup, x, y);
+    GtkRequisition requisition;
+    gtk_widget_get_requisition(GTK_WIDGET(popup), &requisition);
+    if (x + requisition.width > mwid)
+        x = mwid - requisition.width;
+    if (y + requisition.height > mhei)
+        y = mhei - requisition.height;
+    gtk_widget_set_size_request(popup, x, y);
     gtk_window_set_transient_for(GTK_WINDOW(popup),
         GTK_WINDOW(mainBag()->Shell()));
 
@@ -423,10 +419,10 @@ void *
 GTKedit::setup_backing(bool clear)
 {
     GdkWindow *tmp_window = 0;
-    if (pe_pixmap && clear) {
-        tmp_window = gd_window;
-        gd_window = pe_pixmap;
-    }
+    // if (pe_pixmap && clear) {
+    //     tmp_window = gd_window;
+    //     gd_window = pe_pixmap;
+    // }
     return (tmp_window);
 }
 
@@ -436,8 +432,8 @@ GTKedit::restore_backing(void *tw)
 {
     GdkWindow *tmp_window = (GdkWindow*)tw;
     if (tmp_window) {
-        gdk_window_copy_area(tmp_window, GC(), 0, 0, pe_pixmap,
-            0, 0, pe_wid, pe_hei);
+        // gdk_window_copy_area(tmp_window, GC(), 0, 0, pe_pixmap,
+        //     0, 0, pe_wid, pe_hei);
         gd_window = tmp_window;
     }
 }
@@ -447,7 +443,7 @@ void
 GTKedit::init_window()
 {
     if (!gd_window)
-        gd_window = gd_viewport->window;
+        gd_window = gtk_widget_get_window(gd_viewport);
     if (gd_window) {
         SetWindowBackground(bg_pixel());
         Clear();
@@ -461,13 +457,14 @@ bool
 GTKedit::check_pixmap()
 {
     if (!gd_window)
-        gd_window = gd_viewport->window;
+        gd_window = gtk_widget_get_window(gd_viewport);
     int w, h;
-    gdk_window_get_size(gd_window, &w, &h);
+    w = gdk_window_get_width(gd_window);
+    h = gdk_window_get_height(gd_window);
     if (!pe_pixmap || w != pe_wid || h != pe_hei) {
         if (pe_pixmap)
-            gdk_pixmap_unref(pe_pixmap);
-        pe_pixmap = gdk_pixmap_new(gd_window, w, h, GRX->Visual()->depth);
+            g_object_unref(pe_pixmap);
+        // pe_pixmap = gdk_pixmap_new(gd_window, w, h, GRX->Visual()->depth);
         pe_wid = w;
         pe_hei = h;
     }
@@ -537,7 +534,7 @@ namespace {
     {
         GTKedit *ed = (GTKedit*)arg;
         int x, y;
-        gdk_window_get_origin(ed->Viewport()->window, &x, &y);
+        gdk_window_get_origin(gtk_widget_get_window(ed->Viewport()), &x, &y);
         GdkDisplay *display = gdk_display_get_default();
         GdkScreen *screen = gdk_display_get_default_screen(display);
         int h;
@@ -561,7 +558,7 @@ GTKedit::warp_pointer()
     // The pointer move must be in an idle proc, so it runs after
     // prompt line reconfiguration.
 
-    gtk_idle_add(warp_ptr, this);
+    g_idle_add(warp_ptr, this);
 }
 
 
@@ -721,8 +718,8 @@ GTKedit::pe_redraw_hdlr(GtkWidget*, GdkEvent*, void*)
 {
     if (ptr()) {
         if (ptr()->pe_id)
-            gtk_idle_remove(ptr()->pe_id);
-        ptr()->pe_id = gtk_idle_add(pe_redraw_idle, ptr());
+            g_source_remove(ptr()->pe_id);
+        ptr()->pe_id = g_idle_add(pe_redraw_idle, ptr());
     }
     return (true);
 }
@@ -833,11 +830,11 @@ namespace {
 void
 GTKedit::pe_selection_proc(GtkWidget*, GtkSelectionData *sdata, guint, void*)
 {
-    if (sdata->length < 0) {
+    if (gtk_selection_data_get_length(sdata) < 0) {
         ptr()->draw_cursor(DRAW);
         return;
     }
-    if (sdata->type != GDK_SELECTION_TYPE_STRING) {
+    if (gtk_selection_data_get_data_type(sdata) != GDK_SELECTION_TYPE_STRING) {
         Log()->ErrorLog(mh::Internal,
             "Selection conversion failed. not string data.");
         ptr()->draw_cursor(DRAW);
@@ -850,10 +847,11 @@ GTKedit::pe_selection_proc(GtkWidget*, GtkSelectionData *sdata, guint, void*)
         GtkWidget *widget;
         gdk_window_get_user_data(wnd, (void**)&widget);
         if (widget) {
-            int code = (long)gtk_object_get_data(GTK_OBJECT(widget),
+            int code = (long)g_object_get_data(G_OBJECT(widget),
                 "hyexport");
             if (code) {
-                int start = GTK_OLD_EDITABLE(widget)->selection_start_pos;
+                // int start = GTK_OLD_EDITABLE(widget)->selection_start_pos;
+                int start = 0;
                 // The text is coming from the Property Editor or
                 // Property Info pop-up, fetch the original
                 // hypertext to insert.
@@ -869,9 +867,9 @@ GTKedit::pe_selection_proc(GtkWidget*, GtkSelectionData *sdata, guint, void*)
     }
     if (!hpl) {
         // Might not be 0-terminated?
-        char *s = new char[sdata->length + 1];
-        memcpy(s, sdata->data, sdata->length);
-        s[sdata->length] = 0;
+        char *s = new char[gtk_selection_data_get_length(sdata) + 1];
+        memcpy(s, gtk_selection_data_get_data(sdata), gtk_selection_data_get_length(sdata));
+        s[gtk_selection_data_get_length(sdata)] = 0;
         char *d = uni_decode(s);
         delete [] s;
         ptr()->insert(d);
@@ -897,7 +895,7 @@ GTKedit::pe_font_change_hdlr(GtkWidget*, void*, void*)
             int ht = fh + 4;
             if (ht < r.height)
                 ht = r.height;
-            gtk_drawing_area_size(GTK_DRAWING_AREA(ptr()->gd_viewport), -1,
+            gtk_widget_set_size_request(ptr()->gd_viewport, -1,
                 ht);
         }
         ptr()->init();
@@ -913,11 +911,11 @@ GTKedit::pe_drag_data_received(GtkWidget*, GdkDragContext *context,
     gint, gint, GtkSelectionData *data, guint, guint time, void*)
 {
     bool success = false;
-    if (!ptr() || !data->data)
+    if (!ptr() || !gtk_selection_data_get_data(data))
         ;
-    else if (data->target == gdk_atom_intern("property", true)) {
+    else if (gtk_selection_data_get_target(data) == gdk_atom_intern("property", true)) {
         if (ptr()->is_active()) {
-            unsigned char *val = data->data + sizeof(int);
+            const guchar *val = gtk_selection_data_get_data(data) + sizeof(int);
             CDs *cursd = CurCell(true);
             hyList *hp = new hyList(cursd, (char*)val, HYcvAscii);
             ptr()->insert(hp);
@@ -926,10 +924,10 @@ GTKedit::pe_drag_data_received(GtkWidget*, GdkDragContext *context,
         }
     }
     else {
-        if (data->length >= 0 && data->format == 8) {
-            char *src = (char*)data->data;
+        if (gtk_selection_data_get_length(data) >= 0 && gtk_selection_data_get_format(data) == 8) {
+            char *src = (char*)gtk_selection_data_get_data(data);
             char *t = 0;
-            if (data->target == gdk_atom_intern("TWOSTRING", true)) {
+            if (gtk_selection_data_get_target(data) == gdk_atom_intern("TWOSTRING", true)) {
                 // Drops from content lists may be in the form
                 // "fname_or_chd\ncellname".
                 t = strchr(src, '\n');
@@ -989,7 +987,7 @@ void
 GTKedit::pe_selection_get(GtkWidget*, GtkSelectionData *selection_data,
     guint, guint, void*)
 {
-    if (selection_data->selection != GDK_SELECTION_PRIMARY)
+    if (gtk_selection_data_get_selection(selection_data) != GDK_SELECTION_PRIMARY)
         return;
     if (!ptr())
         return;

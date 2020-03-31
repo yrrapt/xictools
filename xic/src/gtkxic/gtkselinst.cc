@@ -207,6 +207,7 @@ sCI::sCI(CDol *l, bool filtmode)
 
     wb_shell = gtk_NewPopup(0,
         ci_filt ? "Choose Instances" : "Select Instances", ci_cancel_proc, 0);
+    wb_window = gtk_widget_get_window(wb_shell);
     if (!wb_shell)
         return;
     GtkWidget *form = gtk_table_new(2, 4, false);
@@ -217,8 +218,8 @@ sCI::sCI(CDol *l, bool filtmode)
         ci_filt ? "Choose All" : "Select All");
     gtk_widget_set_name(button, "SelectAll");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(ci_btn_proc), (void*)CI_select);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(ci_btn_proc), (void*)CI_select);
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, 0, 1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -228,8 +229,8 @@ sCI::sCI(CDol *l, bool filtmode)
         ci_filt ? "Ignore All" : "Desel All");
     gtk_widget_set_name(button, "DeselAll");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(ci_btn_proc), (void*)CI_desel);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(ci_btn_proc), (void*)CI_desel);
 
     gtk_table_attach(GTK_TABLE(form), button, 1, 2, 0, 1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -257,13 +258,13 @@ sCI::sCI(CDol *l, bool filtmode)
     text_scrollable_new(&contr, &wb_textarea, FNT_FIXED);
 
     gtk_widget_add_events(wb_textarea, GDK_BUTTON_PRESS_MASK);
-    gtk_signal_connect(GTK_OBJECT(wb_textarea), "button-press-event",
-        GTK_SIGNAL_FUNC(ci_btn_hdlr), 0);
-    gtk_signal_connect_after(GTK_OBJECT(wb_textarea), "realize",
-        GTK_SIGNAL_FUNC(text_realize_proc), 0);
+    g_signal_connect(G_OBJECT(wb_textarea), "button-press-event",
+        G_CALLBACK(ci_btn_hdlr), 0);
+    g_signal_connect_after(G_OBJECT(wb_textarea), "realize",
+        G_CALLBACK(text_realize_proc), 0);
 
     // The font change pop-up uses this to redraw the widget
-    gtk_object_set_data(GTK_OBJECT(wb_textarea), "font_changed",
+    g_object_set_data(G_OBJECT(wb_textarea), "font_changed",
         (void*)ci_font_changed);
 
     gtk_table_attach(GTK_TABLE(form), contr, 0, 2, 2, 3,
@@ -274,8 +275,8 @@ sCI::sCI(CDol *l, bool filtmode)
         ci_filt ? "Continue" : "Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(ci_cancel_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(ci_cancel_proc), 0);
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 2, 3, 4,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -288,7 +289,7 @@ sCI::sCI(CDol *l, bool filtmode)
     else if (ww > 600)
         ww = 600;
     ww += 15;  // scrollbar
-    gtk_widget_set_usize(GTK_WIDGET(wb_textarea), ww, -1);
+    gtk_widget_set_size_request(GTK_WIDGET(wb_textarea), ww, -1);
 }
 
 
@@ -311,8 +312,8 @@ sCI::~sCI()
     }
     delete [] ci_list;
     if (wb_shell) {
-        gtk_signal_disconnect_by_func(GTK_OBJECT(wb_shell),
-            GTK_SIGNAL_FUNC(ci_cancel_proc), wb_shell);
+        g_signal_handlers_disconnect_by_func(G_OBJECT(wb_shell),
+            (gpointer)ci_cancel_proc, wb_shell);
     }
     if (GRX->LoopLevel() > 1)
         GRX->BreakLoop();

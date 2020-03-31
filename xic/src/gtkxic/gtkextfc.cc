@@ -249,6 +249,7 @@ sFc::sFc(GRobject c)
     fc_line_selected = -1;
 
     wb_shell = gtk_NewPopup(0, "Cap. Extraction", fc_cancel_proc, 0);
+    wb_window = gtk_widget_get_window(wb_shell);
     if (!wb_shell)
         return;
 
@@ -272,8 +273,8 @@ sFc::sFc(GRobject c)
     GtkWidget *button = gtk_button_new_with_label("Help");
     gtk_widget_set_name(button, "Help");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_help_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_help_proc), 0);
     gtk_box_pack_end(GTK_BOX(hbox), button, false, false, 0);
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -282,8 +283,8 @@ sFc::sFc(GRobject c)
 
     GtkWidget *nbook = gtk_notebook_new();
     gtk_widget_show(nbook);
-    gtk_signal_connect(GTK_OBJECT(nbook), "switch-page",
-        GTK_SIGNAL_FUNC(fc_page_change_proc), 0);
+    g_signal_connect(G_OBJECT(nbook), "switch-page",
+        G_CALLBACK(fc_page_change_proc), 0);
     gtk_table_attach(GTK_TABLE(form), nbook, 0, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -302,16 +303,16 @@ sFc::sFc(GRobject c)
     button = gtk_check_button_new_with_label("Run in foreground");
     gtk_widget_set_name(button, "FcForeg");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_btn_proc), (void*)Foreg);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_btn_proc), (void*)Foreg);
     gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
     fc_foreg = button;
 
     button = gtk_check_button_new_with_label("Out to console");
     gtk_widget_set_name(button, "FcCons");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_btn_proc), (void*)ToCons);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_btn_proc), (void*)ToCons);
     gtk_box_pack_end(GTK_BOX(hbox), button, false, false, 0);
     fc_out = button;
 
@@ -323,8 +324,8 @@ sFc::sFc(GRobject c)
     button = gtk_check_button_new_with_label("Show Numbers");
     gtk_widget_set_name(button, "ShowNums");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_btn_proc), (void*)ShowNums);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_btn_proc), (void*)ShowNums);
     fc_shownum = button;
 
     gtk_table_attach(GTK_TABLE(table), button, 0, 1, row, row+1,
@@ -345,8 +346,8 @@ sFc::sFc(GRobject c)
     button = gtk_button_new_with_label("Run File");
     gtk_widget_set_name(button, "FcRunFile");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_btn_proc), (void*)FcRunFile);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_btn_proc), (void*)FcRunFile);
     gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
 
     GtkWidget *entry = gtk_entry_new();
@@ -362,8 +363,8 @@ sFc::sFc(GRobject c)
     button = gtk_button_new_with_label("Run Extraction");
     gtk_widget_set_name(button, "FcRun");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_btn_proc), (void*)FcRun);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_btn_proc), (void*)FcRun);
 
     gtk_table_attach(GTK_TABLE(table), button, 0, 1, row, row+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -372,8 +373,8 @@ sFc::sFc(GRobject c)
     button = gtk_button_new_with_label("Dump Unified List File");
     gtk_widget_set_name(button, "FcDump");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_btn_proc), (void*)FcDump);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_btn_proc), (void*)FcDump);
 
     gtk_table_attach(GTK_TABLE(table), button, 1, 2, row, row+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -386,8 +387,8 @@ sFc::sFc(GRobject c)
     gtk_widget_show(entry);
     gtk_container_add(GTK_CONTAINER(frame), entry);
     gtk_entry_set_text(GTK_ENTRY(entry), fc_def_string(FcArgs));
-    gtk_signal_connect(GTK_OBJECT(entry), "changed",
-        GTK_SIGNAL_FUNC(fc_change_proc), (void*)FcArgs);
+    g_signal_connect(G_OBJECT(entry), "changed",
+        G_CALLBACK(fc_change_proc), (void*)FcArgs);
     fc_args = entry;
 
     gtk_table_attach(GTK_TABLE(table), frame, 0, 2, row, row+1,
@@ -401,8 +402,8 @@ sFc::sFc(GRobject c)
     gtk_widget_show(entry);
     gtk_container_add(GTK_CONTAINER(frame), entry);
     gtk_entry_set_text(GTK_ENTRY(entry), fc_def_string(FcPath));
-    gtk_signal_connect(GTK_OBJECT(entry), "changed",
-        GTK_SIGNAL_FUNC(fc_change_proc), (void*)FcPath);
+    g_signal_connect(G_OBJECT(entry), "changed",
+        G_CALLBACK(fc_change_proc), (void*)FcPath);
     fc_path = entry;
 
     gtk_table_attach(GTK_TABLE(table), frame, 0, 2, row, row+1,
@@ -425,9 +426,9 @@ sFc::sFc(GRobject c)
 
     GtkWidget *sb = sb_fc_plane_bloat.init(FC_PLANE_BLOAT_DEF,
         FC_PLANE_BLOAT_MIN, FC_PLANE_BLOAT_MAX, ndgt);
-    gtk_widget_set_usize(sb, 100, -1);
-    sb_fc_plane_bloat.connect_changed(GTK_SIGNAL_FUNC(fc_change_proc),
-        (void*)FcPlaneBloat, "FcPlaneBloat");
+    gtk_widget_set_size_request(sb, 100, -1);
+    // (fc_change_proc,
+    //    (void*)FcPlaneBloat, "FcPlaneBloat");
     frame = gtk_frame_new("FcPlaneBloat");
     gtk_widget_show(frame);
     gtk_container_add(GTK_CONTAINER(frame), sb);
@@ -438,9 +439,9 @@ sFc::sFc(GRobject c)
 
     sb = sb_substrate_thickness.init(SUBSTRATE_THICKNESS,
         SUBSTRATE_THICKNESS_MIN, SUBSTRATE_THICKNESS_MAX, ndgt);
-    gtk_widget_set_usize(sb, 100, -1);
-    sb_substrate_thickness.connect_changed(GTK_SIGNAL_FUNC(fc_change_proc),
-        (void*)SubstrateThickness, "SubstrateThickness");
+    gtk_widget_set_size_request(sb, 100, -1);
+    // (fc_change_proc,
+    //    (void*)SubstrateThickness, "SubstrateThickness");
     frame = gtk_frame_new("SubstrateThickness");
     gtk_widget_show(frame);
     gtk_container_add(GTK_CONTAINER(frame), sb);
@@ -452,7 +453,7 @@ sFc::sFc(GRobject c)
 
     frame = gtk_frame_new("FcUnits");
     gtk_widget_show(frame);
-    entry = gtk_option_menu_new();
+    entry = gtk_combo_box_text_new();
     gtk_widget_set_name(entry, "FcUnits");
     gtk_widget_show(entry);
     GtkWidget *menu = gtk_menu_new();
@@ -461,13 +462,13 @@ sFc::sFc(GRobject c)
         GtkWidget *mi = gtk_menu_item_new_with_label(units_strings[i]);
         gtk_widget_set_name(mi, units_strings[i]);
         gtk_widget_show(mi);
-        gtk_menu_append(GTK_MENU(menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(fc_units_proc), (void*)units_strings[i]);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(fc_units_proc), (void*)units_strings[i]);
     }
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
-    gtk_option_menu_set_history(GTK_OPTION_MENU(entry),
-        FC()->getUnitsIndex(0));
+    // gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
+    // gtk_option_menu_set_history(GTK_OPTION_MENU(entry),
+    //    FC()->getUnitsIndex(0));
     gtk_container_add(GTK_CONTAINER(frame), entry);
     fc_units = entry;
 
@@ -477,9 +478,9 @@ sFc::sFc(GRobject c)
 
     sb = sb_substrate_eps.init(SUBSTRATE_EPS, SUBSTRATE_EPS_MIN,
         SUBSTRATE_EPS_MAX, 3);
-    gtk_widget_set_usize(sb, 100, -1);
-    sb_substrate_eps.connect_changed(GTK_SIGNAL_FUNC(fc_change_proc),
-        (void*)SubstrateEps, "SubstrateEps");
+    gtk_widget_set_size_request(sb, 100, -1);
+    // (fc_change_proc,
+    //    (void*)SubstrateEps, "SubstrateEps");
     frame = gtk_frame_new("SubstrateEps");
     gtk_widget_show(frame);
     gtk_container_add(GTK_CONTAINER(frame), sb);
@@ -512,8 +513,8 @@ sFc::sFc(GRobject c)
     button = gtk_check_button_new_with_label("Enable");
     gtk_widget_set_name(button, "Enable");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_btn_proc), (void*)Enable);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_btn_proc), (void*)Enable);
     fc_enab = button;
 
     gtk_table_attach(GTK_TABLE(table), button, 0, 1, row, row+1,
@@ -522,9 +523,9 @@ sFc::sFc(GRobject c)
 
     sb = sb_fc_panel_target.init(FC_DEF_TARG_PANELS, FC_MIN_TARG_PANELS,
         FC_MAX_TARG_PANELS, 1);
-    gtk_widget_set_usize(sb, 100, -1);
-    sb_fc_panel_target.connect_changed(GTK_SIGNAL_FUNC(fc_change_proc),
-        (void*)FcPanelTarget, "FcPanelTarget");
+    gtk_widget_set_size_request(sb, 100, -1);
+    // (fc_change_proc,
+    //    (void*)FcPanelTarget, "FcPanelTarget");
     frame = gtk_frame_new("FcPanelTarget");
     gtk_widget_show(frame);
     gtk_container_add(GTK_CONTAINER(frame), sb);
@@ -547,8 +548,8 @@ sFc::sFc(GRobject c)
     button = gtk_check_button_new_with_label("Zoids");
     gtk_widget_set_name(button, "Zoids");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_dbg_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_dbg_btn_proc), 0);
     fc_dbg_zoids = button;
 
     gtk_table_attach(GTK_TABLE(table), button, 0, 1, row, row+1,
@@ -558,8 +559,8 @@ sFc::sFc(GRobject c)
     button = gtk_check_button_new_with_label("Verbose Out");
     gtk_widget_set_name(button, "VrbO");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_dbg_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_dbg_btn_proc), 0);
     fc_dbg_vrbo = button;
 
     gtk_table_attach(GTK_TABLE(table), button, 1, 2, row, row+1,
@@ -570,8 +571,8 @@ sFc::sFc(GRobject c)
     button = gtk_check_button_new_with_label("No Merge");
     gtk_widget_set_name(button, "NoMerge");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_dbg_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_dbg_btn_proc), 0);
     fc_dbg_nm = button;
 
     gtk_table_attach(GTK_TABLE(table), button, 0, 1, row, row+1,
@@ -582,8 +583,8 @@ sFc::sFc(GRobject c)
     button = gtk_check_button_new_with_label("C zbot");
     gtk_widget_set_name(button, "czbot");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_dbg_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_dbg_btn_proc), 0);
     fc_dbg_czbot = button;
 
     gtk_table_attach(GTK_TABLE(table), button, 0, 1, row, row+1,
@@ -593,8 +594,8 @@ sFc::sFc(GRobject c)
     button = gtk_check_button_new_with_label("D zbot");
     gtk_widget_set_name(button, "dzbot");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_dbg_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_dbg_btn_proc), 0);
     fc_dbg_dzbot = button;
 
     gtk_table_attach(GTK_TABLE(table), button, 1, 2, row, row+1,
@@ -605,8 +606,8 @@ sFc::sFc(GRobject c)
     button = gtk_check_button_new_with_label("C ztop");
     gtk_widget_set_name(button, "cztop");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_dbg_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_dbg_btn_proc), 0);
     fc_dbg_cztop = button;
 
     gtk_table_attach(GTK_TABLE(table), button, 0, 1, row, row+1,
@@ -616,8 +617,8 @@ sFc::sFc(GRobject c)
     button = gtk_check_button_new_with_label("D ztop");
     gtk_widget_set_name(button, "dztop");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_dbg_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_dbg_btn_proc), 0);
     fc_dbg_dztop = button;
 
     gtk_table_attach(GTK_TABLE(table), button, 1, 2, row, row+1,
@@ -628,8 +629,8 @@ sFc::sFc(GRobject c)
     button = gtk_check_button_new_with_label("C yl");
     gtk_widget_set_name(button, "cyl");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_dbg_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_dbg_btn_proc), 0);
     fc_dbg_cyl = button;
 
     gtk_table_attach(GTK_TABLE(table), button, 0, 1, row, row+1,
@@ -639,8 +640,8 @@ sFc::sFc(GRobject c)
     button = gtk_check_button_new_with_label("D yl");
     gtk_widget_set_name(button, "dyl");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_dbg_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_dbg_btn_proc), 0);
     fc_dbg_dyl = button;
 
     gtk_table_attach(GTK_TABLE(table), button, 1, 2, row, row+1,
@@ -651,8 +652,8 @@ sFc::sFc(GRobject c)
     button = gtk_check_button_new_with_label("C yu");
     gtk_widget_set_name(button, "cyu");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_dbg_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_dbg_btn_proc), 0);
     fc_dbg_cyu = button;
 
     gtk_table_attach(GTK_TABLE(table), button, 0, 1, row, row+1,
@@ -662,8 +663,8 @@ sFc::sFc(GRobject c)
     button = gtk_check_button_new_with_label("D yu");
     gtk_widget_set_name(button, "dyu");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_dbg_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_dbg_btn_proc), 0);
     fc_dbg_dyu = button;
 
     gtk_table_attach(GTK_TABLE(table), button, 1, 2, row, row+1,
@@ -674,8 +675,8 @@ sFc::sFc(GRobject c)
     button = gtk_check_button_new_with_label("C left");
     gtk_widget_set_name(button, "cleft");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_dbg_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_dbg_btn_proc), 0);
     fc_dbg_cleft = button;
 
     gtk_table_attach(GTK_TABLE(table), button, 0, 1, row, row+1,
@@ -685,8 +686,8 @@ sFc::sFc(GRobject c)
     button = gtk_check_button_new_with_label("D left");
     gtk_widget_set_name(button, "dleft");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_dbg_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_dbg_btn_proc), 0);
     fc_dbg_dleft = button;
 
     gtk_table_attach(GTK_TABLE(table), button, 1, 2, row, row+1,
@@ -697,8 +698,8 @@ sFc::sFc(GRobject c)
     button = gtk_check_button_new_with_label("C right");
     gtk_widget_set_name(button, "cright");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_dbg_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_dbg_btn_proc), 0);
     fc_dbg_cright = button;
 
     gtk_table_attach(GTK_TABLE(table), button, 0, 1, row, row+1,
@@ -708,8 +709,8 @@ sFc::sFc(GRobject c)
     button = gtk_check_button_new_with_label("D right");
     gtk_widget_set_name(button, "dright");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_dbg_btn_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_dbg_btn_proc), 0);
     fc_dbg_dright = button;
 
     gtk_table_attach(GTK_TABLE(table), button, 1, 2, row, row+1,
@@ -735,11 +736,11 @@ sFc::sFc(GRobject c)
     text_scrollable_new(&contr, &fc_jobs, FNT_FIXED);
 
     gtk_widget_add_events(fc_jobs, GDK_BUTTON_PRESS_MASK);
-    gtk_signal_connect(GTK_OBJECT(fc_jobs), "button-press-event",
-        GTK_SIGNAL_FUNC(fc_button_dn), 0);
+    g_signal_connect(G_OBJECT(fc_jobs), "button-press-event",
+        G_CALLBACK(fc_button_dn), 0);
 
     // The font change pop-up uses this to redraw the widget
-    gtk_object_set_data(GTK_OBJECT(fc_jobs), "font_changed",
+    g_object_set_data(G_OBJECT(fc_jobs), "font_changed",
         (void*)fc_font_changed);
 
     GtkTextBuffer *textbuf =
@@ -751,7 +752,7 @@ sFc::sFc(GRobject c)
 #endif
         NULL);
 
-    gtk_widget_set_usize(fc_jobs, 200, 200);
+    gtk_widget_set_size_request(fc_jobs, 200, 200);
 
     gtk_table_attach(GTK_TABLE(table), contr, 1, 2, row, row+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -761,8 +762,8 @@ sFc::sFc(GRobject c)
     button = gtk_button_new_with_label("Abort job");
     gtk_widget_set_name(button, "Abort");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_btn_proc), (void*)Kill);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_btn_proc), (void*)Kill);
     fc_kill = button;
 
     gtk_table_attach(GTK_TABLE(table), button, 1, 2, row, row+1,
@@ -795,8 +796,8 @@ sFc::sFc(GRobject c)
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(fc_cancel_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(fc_cancel_proc), 0);
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -815,8 +816,8 @@ sFc::~sFc()
         GRX->Deselect(fc_caller);
     FC()->setPopUpVisible(false);
     if (wb_shell)
-        gtk_signal_disconnect_by_func(GTK_OBJECT(wb_shell),
-            GTK_SIGNAL_FUNC(sFc::fc_cancel_proc), wb_shell);
+        g_signal_handlers_disconnect_by_func(G_OBJECT(wb_shell),
+            (gpointer)sFc::fc_cancel_proc, wb_shell);
 }
 
 
@@ -881,8 +882,8 @@ sFc::update()
         var = "";
     int uoff = FC()->getUnitsIndex(var);
     int ucur = fc_option_history(fc_units);
-    if (uoff != ucur)
-        gtk_option_menu_set_history(GTK_OPTION_MENU(fc_units), uoff);
+    // if (uoff != ucur)
+        // gtk_option_menu_set_history(GTK_OPTION_MENU(fc_units), uoff);
 
     static double fcpt_bak;
     var = CDvdb()->getVariable(VA_FcPanelTarget);
@@ -961,7 +962,7 @@ sFc::update_jobs_list()
 void
 sFc::update_label(const char *s)
 {
-    gtk_label_set(GTK_LABEL(fc_label), s);
+    gtk_label_set_text(GTK_LABEL(fc_label), s);
 }
 
 
@@ -1105,7 +1106,7 @@ sFc::fc_def_string(int id)
 int
 sFc::fc_option_history(GtkWidget *opt)
 {
-    return (gtk_option_menu_get_history(GTK_OPTION_MENU(opt)));
+    // return (gtk_option_menu_get_history(GTK_OPTION_MENU(opt)));
 }
 
 

@@ -3108,7 +3108,7 @@ sGraph::dv_initdata()
         v->set_color(curcolor);
         // change the color to that of the trace, if given
         if (v->defcolor()) {
-            gr_colors[curcolor].pixel = GRpkgIf()->NameColor(v->defcolor());
+            // gr_colors[curcolor].pixel = GRpkgIf()->NameColor(v->defcolor());
             int r, g, b;
             GRpkgIf()->RGBofPixel(gr_colors[curcolor].pixel, &r, &g, &b);
             gr_colors[curcolor].red = r;

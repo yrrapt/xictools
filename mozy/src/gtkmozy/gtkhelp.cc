@@ -341,7 +341,7 @@ namespace gtkinterf {
     gtkQueueLoop::start()
     {
         if (!id)
-            id = gtk_idle_add((GtkFunction)queue_idle, this);
+            id = g_idle_add(queue_idle, this);
     }
 
 
@@ -349,7 +349,7 @@ namespace gtkinterf {
     gtkQueueLoop::suspend()
     {
         if (id) {
-            gtk_idle_remove(id);
+            // g_idle_remove_by_data(id);
             id = 0;
         }
     }
@@ -359,7 +359,7 @@ namespace gtkinterf {
     gtkQueueLoop::resume()
     {
         if (!id)
-            id = gtk_idle_add((GtkFunction)queue_idle, this);
+            id = g_idle_add(queue_idle, this);
     }
 }
 
@@ -394,98 +394,98 @@ enum { HA_NIL, HA_CANCEL, HA_QUIT, HA_OPEN, HA_FILE, HA_BACK,
     HA_NOIMG, HA_SYIMG, HA_DLIMG, HA_PGIMG, HA_APLN, HA_ABUT, HA_AUND,
     HA_HLITE, HA_WARN, HA_FREEZ, HA_COMM, HA_BMADD, HA_BMDEL, HA_HELP };
 
-#define GIFC(x) (GtkItemFactoryCallback)x
+#define GIFC(x) (GtkUIManagerCallback)x
 
 #define IFD(a, b, c, d, e) { (char*)a, (char*)b, c, d, (char*)e, 0 }
 
 GtkWindow *GTKhelpPopup::h_transient_for = 0;
 
-GtkItemFactoryEntry GTKhelpPopup::h_help_menu_items[] = {
-  IFD("/_File",                     0,               0, 0,
-      "<Branch>"),
-  IFD("/File/_Open",     "<control>O", GIFC(h_menu_hdlr), HA_OPEN,
-      0),
-  IFD("/File/Open _File","<control>F", GIFC(h_menu_hdlr), HA_FILE,
-      0),
-  IFD("/File/_Save",     "<control>S", GIFC(h_menu_hdlr), HA_SAVE,
-      0),
-  IFD("/File/_Print",    "<control>P", GIFC(h_menu_hdlr), HA_PRINT,
-      0),
-  IFD("/File/_Reload",   "<control>R", GIFC(h_menu_hdlr), HA_RELOAD,
-      0),
-  IFD("/File/Old _Charset",         0, GIFC(h_menu_hdlr), HA_ISO8859,
-      "<CheckItem>"),
-  IFD("/File/_Make FIFO","<control>M", GIFC(h_menu_hdlr), HA_MKFIFO,
-      "<CheckItem>"),
-  IFD("/File/sep1",                 0,               0, 0,
-      "<Separator>"),
-  IFD("/File/_Quit",     "<control>Q", GIFC(h_menu_hdlr), HA_QUIT,
-      0),
-  IFD("/_Options",                  0,               0, 0,
-      "<Branch>"),
-  IFD("/Options/Save Config",       0, GIFC(h_menu_hdlr), HA_DUMPCFG,
-      0),
-  IFD("/Options/Set Proxy",         0, GIFC(h_menu_hdlr), HA_PROXY,
-      0),
-#if defined(HAVE_REGEX_H) || defined(HAVE_REGEXP_H) || defined(HAVE_RE_COMP)
-  IFD("/Options/_Search Database", "<Alt>S", GIFC(h_menu_hdlr), HA_SEARCH,
-      0),
-  IFD("/Options/Find _Text", "<Alt>T", GIFC(h_menu_hdlr), HA_FIND,
-      "<CheckItem>"),
-#endif
-  IFD("/Options/Default Colors",    0, GIFC(h_menu_hdlr), HA_COLORS,
-      "<CheckItem>"),
-  IFD("/Options/Set _Font",         0, GIFC(h_menu_hdlr), HA_FONT,
-      "<CheckItem>"),
-  IFD("/Options/_Don't Cache",      0, GIFC(h_menu_hdlr), HA_NOCACHE,
-      "<CheckItem>"),
-  IFD("/Options/_Clear Cache",      0, GIFC(h_menu_hdlr), HA_CLRCACHE,
-      0),
-  IFD("/Options/_Reload Cache",     0, GIFC(h_menu_hdlr), HA_LDCACHE,
-      0),
-  IFD("/Options/Show Cache",        0, GIFC(h_menu_hdlr), HA_SHCACHE,
-      0),
-  IFD("/Options/sep1",              0,               0, 0,
-      "<Separator>"),
-  IFD("/Options/No Cookies",        0, GIFC(h_menu_hdlr), HA_NOCKS,
-      "<CheckItem>"),
-  IFD("/Options/No Images",         0, GIFC(h_menu_hdlr), HA_NOIMG,
-      "<RadioItem>"),
-  IFD("/Options/Sync Images",       0, GIFC(h_menu_hdlr), HA_SYIMG,
-      "/Options/No Images"),
-  IFD("/Options/Delayed Images",    0, GIFC(h_menu_hdlr), HA_DLIMG,
-      "/Options/Sync Images"),
-  IFD("/Options/Progressive Images",0, GIFC(h_menu_hdlr), HA_PGIMG,
-      "/Options/Delayed Images"),
-  IFD("/Options/sep2",              0,               0, 0,
-      "<Separator>"),
-  IFD("/Options/Anchor Plain",      0, GIFC(h_menu_hdlr), HA_APLN,
-      "<RadioItem>"),
-  IFD("/Options/Anchor Buttons",    0, GIFC(h_menu_hdlr), HA_ABUT,
-      "/Options/Anchor Plain"),
-  IFD("/Options/Anchor Underline",  0, GIFC(h_menu_hdlr), HA_AUND,
-      "/Options/Anchor Buttons"),
-  IFD("/Options/Anchor Highlight",  0, GIFC(h_menu_hdlr), HA_HLITE,
-      "<CheckItem>"),
-  IFD("/Options/Bad HTML Warnings", 0, GIFC(h_menu_hdlr), HA_WARN,
-      "<CheckItem>"),
-  IFD("/Options/Freeze Animations", 0, GIFC(h_menu_hdlr), HA_FREEZ,
-      "<CheckItem>"),
-  IFD("/Options/Log Transactions",  0, GIFC(h_menu_hdlr), HA_COMM,
-      "<CheckItem>"),
-  IFD("/_Bookmarks",                0,               0, 0,
-      "<Branch>"),
-  IFD("/Bookmarks/Add",             0, GIFC(h_menu_hdlr), HA_BMADD,
-      0),
-  IFD("/Bookmarks/Delete",          0, GIFC(h_menu_hdlr), HA_BMDEL,
-      "<CheckItem>"),
-  IFD("/Bookmarks/sep1",            0,               0, 0,
-      "<Separator>"),
-  IFD("/_Help",                     0,               0, 0,
-      "<LastBranch>"),
-  IFD("/Help/_Help",     "<control>H", GIFC(h_menu_hdlr), HA_HELP,
-      0)
-};
+// GtkUIManagerEntry GTKhelpPopup::h_help_menu_items[] = {
+//   IFD("/_File",                     0,               0, 0,
+//       "<Branch>"),
+//   IFD("/File/_Open",     "<control>O", GIFC(h_menu_hdlr), HA_OPEN,
+//       0),
+//   IFD("/File/Open _File","<control>F", GIFC(h_menu_hdlr), HA_FILE,
+//       0),
+//   IFD("/File/_Save",     "<control>S", GIFC(h_menu_hdlr), HA_SAVE,
+//       0),
+//   IFD("/File/_Print",    "<control>P", GIFC(h_menu_hdlr), HA_PRINT,
+//       0),
+//   IFD("/File/_Reload",   "<control>R", GIFC(h_menu_hdlr), HA_RELOAD,
+//       0),
+//   IFD("/File/Old _Charset",         0, GIFC(h_menu_hdlr), HA_ISO8859,
+//       "<CheckItem>"),
+//   IFD("/File/_Make FIFO","<control>M", GIFC(h_menu_hdlr), HA_MKFIFO,
+//       "<CheckItem>"),
+//   IFD("/File/sep1",                 0,               0, 0,
+//       "<Separator>"),
+//   IFD("/File/_Quit",     "<control>Q", GIFC(h_menu_hdlr), HA_QUIT,
+//       0),
+//   IFD("/_Options",                  0,               0, 0,
+//       "<Branch>"),
+//   IFD("/Options/Save Config",       0, GIFC(h_menu_hdlr), HA_DUMPCFG,
+//       0),
+//   IFD("/Options/Set Proxy",         0, GIFC(h_menu_hdlr), HA_PROXY,
+//       0),
+// #if defined(HAVE_REGEX_H) || defined(HAVE_REGEXP_H) || defined(HAVE_RE_COMP)
+//   IFD("/Options/_Search Database", "<Alt>S", GIFC(h_menu_hdlr), HA_SEARCH,
+//       0),
+//   IFD("/Options/Find _Text", "<Alt>T", GIFC(h_menu_hdlr), HA_FIND,
+//       "<CheckItem>"),
+// #endif
+//   IFD("/Options/Default Colors",    0, GIFC(h_menu_hdlr), HA_COLORS,
+//       "<CheckItem>"),
+//   IFD("/Options/Set _Font",         0, GIFC(h_menu_hdlr), HA_FONT,
+//       "<CheckItem>"),
+//   IFD("/Options/_Don't Cache",      0, GIFC(h_menu_hdlr), HA_NOCACHE,
+//       "<CheckItem>"),
+//   IFD("/Options/_Clear Cache",      0, GIFC(h_menu_hdlr), HA_CLRCACHE,
+//       0),
+//   IFD("/Options/_Reload Cache",     0, GIFC(h_menu_hdlr), HA_LDCACHE,
+//       0),
+//   IFD("/Options/Show Cache",        0, GIFC(h_menu_hdlr), HA_SHCACHE,
+//       0),
+//   IFD("/Options/sep1",              0,               0, 0,
+//       "<Separator>"),
+//   IFD("/Options/No Cookies",        0, GIFC(h_menu_hdlr), HA_NOCKS,
+//       "<CheckItem>"),
+//   IFD("/Options/No Images",         0, GIFC(h_menu_hdlr), HA_NOIMG,
+//       "<RadioItem>"),
+//   IFD("/Options/Sync Images",       0, GIFC(h_menu_hdlr), HA_SYIMG,
+//       "/Options/No Images"),
+//   IFD("/Options/Delayed Images",    0, GIFC(h_menu_hdlr), HA_DLIMG,
+//       "/Options/Sync Images"),
+//   IFD("/Options/Progressive Images",0, GIFC(h_menu_hdlr), HA_PGIMG,
+//       "/Options/Delayed Images"),
+//   IFD("/Options/sep2",              0,               0, 0,
+//       "<Separator>"),
+//   IFD("/Options/Anchor Plain",      0, GIFC(h_menu_hdlr), HA_APLN,
+//       "<RadioItem>"),
+//   IFD("/Options/Anchor Buttons",    0, GIFC(h_menu_hdlr), HA_ABUT,
+//       "/Options/Anchor Plain"),
+//   IFD("/Options/Anchor Underline",  0, GIFC(h_menu_hdlr), HA_AUND,
+//       "/Options/Anchor Buttons"),
+//   IFD("/Options/Anchor Highlight",  0, GIFC(h_menu_hdlr), HA_HLITE,
+//       "<CheckItem>"),
+//   IFD("/Options/Bad HTML Warnings", 0, GIFC(h_menu_hdlr), HA_WARN,
+//       "<CheckItem>"),
+//   IFD("/Options/Freeze Animations", 0, GIFC(h_menu_hdlr), HA_FREEZ,
+//       "<CheckItem>"),
+//   IFD("/Options/Log Transactions",  0, GIFC(h_menu_hdlr), HA_COMM,
+//       "<CheckItem>"),
+//   IFD("/_Bookmarks",                0,               0, 0,
+//       "<Branch>"),
+//   IFD("/Bookmarks/Add",             0, GIFC(h_menu_hdlr), HA_BMADD,
+//       0),
+//   IFD("/Bookmarks/Delete",          0, GIFC(h_menu_hdlr), HA_BMDEL,
+//       "<CheckItem>"),
+//   IFD("/Bookmarks/sep1",            0,               0, 0,
+//       "<Separator>"),
+//   IFD("/_Help",                     0,               0, 0,
+//       "<LastBranch>"),
+//   IFD("/Help/_Help",     "<control>H", GIFC(h_menu_hdlr), HA_HELP,
+//       0)
+// };
 
 
 //-----------------------------------------------------------------------------
@@ -523,8 +523,9 @@ GTKhelpPopup::GTKhelpPopup(bool has_menu, int xpos, int ypos,
     if (!h_is_frame) {
         h_params = new HLPparams(HLP()->no_file_fonts());
         wb_shell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-        gtk_window_set_policy(GTK_WINDOW(wb_shell), true, true, false);
-        gtk_window_set_wmclass(GTK_WINDOW(wb_shell), "Mozy", "mozy");
+        wb_window = gtk_widget_get_window (wb_shell);
+        // gtk_window_set_policy(GTK_WINDOW(wb_shell), true, true, false);
+        // gtk_window_set_wmclass(GTK_WINDOW(wb_shell), "Mozy", "mozy");
 
         char buf[128];
         sprintf(buf, "%s -- Whiteley Research Inc.",  HLP()->get_name());
@@ -544,7 +545,7 @@ GTKhelpPopup::GTKhelpPopup(bool has_menu, int xpos, int ypos,
         if (xpos > 0 && ypos > 0) {
             int x, y;
             MonitorGeom(topw, &x, &y);
-            gtk_widget_set_uposition(wb_shell, xpos + x, ypos + y);
+            gtk_window_move(GTK_WINDOW(wb_shell), xpos + x, ypos + y);
         }
 
         gtk_window_set_default_size(GTK_WINDOW(wb_shell), HLP_DEF_WIDTH,
@@ -553,17 +554,17 @@ GTKhelpPopup::GTKhelpPopup(bool has_menu, int xpos, int ypos,
         wb_sens_set = h_sens_set;
 
         gtk_widget_add_events(wb_shell, GDK_VISIBILITY_NOTIFY_MASK);
-        gtk_signal_connect(GTK_OBJECT(wb_shell), "visibility-notify-event",
-            GTK_SIGNAL_FUNC(ToTop), 0);
-        gtk_widget_add_events(wb_shell, GDK_BUTTON_PRESS_MASK);
-        gtk_signal_connect_after(GTK_OBJECT(wb_shell), "button-press-event",
-            GTK_SIGNAL_FUNC(Btn1MoveHdlr), 0);
-        gtk_signal_connect(GTK_OBJECT(wb_shell), "destroy",
-            GTK_SIGNAL_FUNC(h_cancel_proc), this);
+        // g_signal_connect(G_OBJECT(wb_shell), "visibility-notify-event",
+        //     ToTop, 0);
+        // gtk_widget_add_events(wb_shell, GDK_BUTTON_PRESS_MASK);
+        // g_signal_connect_after(G_OBJECT(wb_shell), "button-press-event",
+        //     Btn1MoveHdlr, 0);
+        // g_signal_connect(G_OBJECT(wb_shell), "destroy",
+        //     h_cancel_proc, this);
 
         // Redirect WM_DESTROY
-        gtk_signal_connect(GTK_OBJECT(wb_shell), "delete-event",
-            GTK_SIGNAL_FUNC(h_destroy_hdlr), this);
+        // g_signal_connect(G_OBJECT(wb_shell), "delete-event",
+        //     h_destroy_hdlr, this);
 
         form = gtk_table_new(1, 4, false);
         gtk_widget_show(form);
@@ -575,74 +576,74 @@ GTKhelpPopup::GTKhelpPopup(bool has_menu, int xpos, int ypos,
         GtkWidget *button = new_pixmap_button(backward_xpm, 0, false);
         gtk_widget_set_name(button, "Back");
         gtk_widget_show(button);
-        gtk_signal_connect(GTK_OBJECT(button), "clicked",
-            GTK_SIGNAL_FUNC(h_back_proc), this);
+        // g_signal_connect(G_OBJECT(button), "clicked",
+        //     h_back_proc, this);
         gtk_widget_set_sensitive(button, false);
-        gtk_object_set_data(GTK_OBJECT(wb_shell), "back", button);
+        g_object_set_data(G_OBJECT(wb_shell), "back", button);
         gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
 
         button = new_pixmap_button(forward_xpm, 0, false);
         gtk_widget_set_name(button, "Forward");
         gtk_widget_show(button);
-        gtk_signal_connect(GTK_OBJECT(button), "clicked",
-            GTK_SIGNAL_FUNC(h_forw_proc), this);
+        // g_signal_connect(G_OBJECT(button), "clicked",
+        //     h_forw_proc, this);
         gtk_widget_set_sensitive(button, false);
-        gtk_object_set_data(GTK_OBJECT(wb_shell), "forward", button);
+        g_object_set_data(G_OBJECT(wb_shell), "forward", button);
         gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
 
         //
         // menu
         //
         GtkAccelGroup *accel_group = gtk_accel_group_new();
-        h_item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR,
-            "<help>", accel_group);
-        int nitems = NUMITEMS(h_help_menu_items);
-        for (int i = 0; i < nitems; i++)
-            gtk_item_factory_create_item(h_item_factory, h_help_menu_items + i,
-                this, 2);
-        gtk_window_add_accel_group(GTK_WINDOW(wb_shell), accel_group);
+        // h_item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR,
+        //     "<help>", accel_group);
+        // int nitems = NUMITEMS(h_help_menu_items);
+        // for (int i = 0; i < nitems; i++)
+        //     gtk_item_factory_create_item(h_item_factory, h_help_menu_items + i,
+        //         this, 2);
+        // gtk_window_add_accel_group(GTK_WINDOW(wb_shell), accel_group);
 
-        GtkWidget *menubar = gtk_item_factory_get_widget(h_item_factory,
-             "<help>");
-        gtk_widget_show(menubar);
-        gtk_box_pack_start(GTK_BOX(hbox), menubar, true, true, 0);
+        // GtkWidget *menubar = gtk_item_factory_get_widget(h_item_factory,
+        //      "<help>");
+        // gtk_widget_show(menubar);
+        // gtk_box_pack_start(GTK_BOX(hbox), menubar, true, true, 0);
 
-        button = new_pixmap_button(stop_xpm, 0, false);
-        gtk_widget_set_name(button, "Stop");
-        gtk_widget_show(button);
-        gtk_signal_connect(GTK_OBJECT(button), "clicked",
-            GTK_SIGNAL_FUNC(h_stop_proc), this);
-        gtk_widget_set_sensitive(button, false);
-        gtk_object_set_data(GTK_OBJECT(wb_shell), "stopbtn", button);
-        gtk_box_pack_end(GTK_BOX(hbox), button, false, false, 0);
+        // button = new_pixmap_button(stop_xpm, 0, false);
+        // gtk_widget_set_name(button, "Stop");
+        // gtk_widget_show(button);
+        // g_signal_connect(G_OBJECT(button), "clicked",
+        //     h_stop_proc, this);
+        // gtk_widget_set_sensitive(button, false);
+        // g_object_set_data(G_OBJECT(wb_shell), "stopbtn", button);
+        // gtk_box_pack_end(GTK_BOX(hbox), button, false, false, 0);
 
-        gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 0, 1,
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-            (GtkAttachOptions)0, 2, 2);
+        // gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 0, 1,
+        //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+        //     (GtkAttachOptions)0, 2, 2);
 
-        GtkWidget *widget = gtk_item_factory_get_widget(h_item_factory,
-            "/File/Save");
-        gtk_object_set_data(GTK_OBJECT(wb_shell), "save", widget);
-        widget = gtk_item_factory_get_widget(h_item_factory,
-            "/File/Open");
-        gtk_object_set_data(GTK_OBJECT(wb_shell), "open", widget);
-        widget = gtk_item_factory_get_widget(h_item_factory,
-            "/Options/Search");
-        gtk_object_set_data(GTK_OBJECT(wb_shell), "search", widget);
+        // GtkWidget *widget = gtk_item_factory_get_widget(h_item_factory,
+        //     "/File/Save");
+        // g_object_set_data(G_OBJECT(wb_shell), "save", widget);
+        // widget = gtk_item_factory_get_widget(h_item_factory,
+        //     "/File/Open");
+        // g_object_set_data(G_OBJECT(wb_shell), "open", widget);
+        // widget = gtk_item_factory_get_widget(h_item_factory,
+        //     "/Options/Search");
+        // g_object_set_data(G_OBJECT(wb_shell), "search", widget);
 
-        // name the menubar objects
-        widget = gtk_item_factory_get_item(h_item_factory, "/File");
-        if (widget)
-            gtk_widget_set_name(widget, "File");
-        widget = gtk_item_factory_get_item(h_item_factory, "/Options");
-        if (widget)
-            gtk_widget_set_name(widget, "Options");
-        widget = gtk_item_factory_get_item(h_item_factory, "/Bookmarks");
-        if (widget)
-            gtk_widget_set_name(widget, "Bookmarks");
-        widget = gtk_item_factory_get_item(h_item_factory, "/Help");
-        if (widget)
-            gtk_widget_set_name(widget, "Help");
+        // // name the menubar objects
+        // widget = gtk_item_factory_get_item(h_item_factory, "/File");
+        // if (widget)
+        //     gtk_widget_set_name(widget, "File");
+        // widget = gtk_item_factory_get_item(h_item_factory, "/Options");
+        // if (widget)
+        //     gtk_widget_set_name(widget, "Options");
+        // widget = gtk_item_factory_get_item(h_item_factory, "/Bookmarks");
+        // if (widget)
+        //     gtk_widget_set_name(widget, "Bookmarks");
+        // widget = gtk_item_factory_get_item(h_item_factory, "/Help");
+        // if (widget)
+        //     gtk_widget_set_name(widget, "Help");
     }
 
     GtkWidget *frame = gtk_frame_new(0);
@@ -658,62 +659,62 @@ GTKhelpPopup::GTKhelpPopup(bool has_menu, int xpos, int ypos,
 
         // Read bookmarks
         HLP()->context()->readBookmarks();
-        GtkWidget *item = gtk_item_factory_get_item(h_item_factory,
-            "/Bookmarks");
-        GtkWidget *menu = GTK_MENU_ITEM(item)->submenu;
-        for (HLPbookMark *b = HLP()->context()->bookmarks(); b; b = b->next) {
-            char title[36];
-            strncpy(title, b->title, 32);
-            GtkWidget *menu_item = gtk_menu_item_new_with_label(title);
-            gtk_menu_append(GTK_MENU(menu), menu_item);
-            gtk_object_set_data_full(GTK_OBJECT(menu_item), "data",
-                lstring::copy(b->url), h_bm_dest);
-            gtk_signal_connect(GTK_OBJECT(menu_item), "activate",
-                GTK_SIGNAL_FUNC(h_bm_handler), this);
-            gtk_widget_show(menu_item);
-        }
+        // GtkWidget *item = gtk_item_factory_get_item(h_item_factory,
+        //     "/Bookmarks");
+        // GtkWidget *menu = GTK_MENU_ITEM(item)->submenu;
+        // for (HLPbookMark *b = HLP()->context()->bookmarks(); b; b = b->next) {
+        //     char title[36];
+        //     strncpy(title, b->title, 32);
+        //     GtkWidget *menu_item = gtk_menu_item_new_with_label(title);
+        //     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
+        //     g_object_set_data_full(G_OBJECT(menu_item), "data",
+        //         lstring::copy(b->url), h_bm_dest);
+        //     g_signal_connect(G_OBJECT(menu_item), "activate",
+        //         h_bm_handler, this);
+        //     gtk_widget_show(menu_item);
+        // }
 
-        gtk_table_attach(GTK_TABLE(form), frame, 0, 1, 1, 2,
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 2, 2);
+        // gtk_table_attach(GTK_TABLE(form), frame, 0, 1, 1, 2,
+        //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+        //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK), 2, 2);
 
-        GtkWidget *sep = gtk_hseparator_new();
-        gtk_widget_show(sep);
-        gtk_table_attach(GTK_TABLE(form), sep, 0, 1, 2, 3,
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-            (GtkAttachOptions)0, 2, 2);
+        // GtkWidget *sep = gtk_hseparator_new();
+        // gtk_widget_show(sep);
+        // gtk_table_attach(GTK_TABLE(form), sep, 0, 1, 2, 3,
+        //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+        //     (GtkAttachOptions)0, 2, 2);
 
-        GtkWidget *hbox = gtk_hbox_new(false, 2);
-        gtk_widget_show(hbox);
+        // GtkWidget *hbox = gtk_hbox_new(false, 2);
+        // gtk_widget_show(hbox);
 
-        frame = gtk_frame_new(0);
-        gtk_widget_show(frame);
+        // frame = gtk_frame_new(0);
+        // gtk_widget_show(frame);
 
-        GtkWidget *label = gtk_label_new(0);
-        gtk_widget_show(label);
-        gtk_container_add(GTK_CONTAINER(frame), label);
-        gtk_box_pack_start(GTK_BOX(hbox), frame, true, true, 0);
-        gtk_object_set_data(GTK_OBJECT(wb_shell), "label", label);
+        // GtkWidget *label = gtk_label_new(0);
+        // gtk_widget_show(label);
+        // gtk_container_add(GTK_CONTAINER(frame), label);
+        // gtk_box_pack_start(GTK_BOX(hbox), frame, true, true, 0);
+        // g_object_set_data(G_OBJECT(wb_shell), "label", label);
 
-        gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 3, 4,
-            (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
-            (GtkAttachOptions)0, 2, 2);
+        // gtk_table_attach(GTK_TABLE(form), hbox, 0, 1, 3, 4,
+        //     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+        //     (GtkAttachOptions)0, 2, 2);
     }
 
     // drop site
     gtk_drag_dest_set(h_viewer->top_widget(),
         GTK_DEST_DEFAULT_ALL, target_table, n_targets, GDK_ACTION_COPY);
-    gtk_signal_connect_after(GTK_OBJECT(h_viewer->top_widget()),
-        "drag-data-received", GTK_SIGNAL_FUNC(h_drag_data_received), this);
+    // g_signal_connect_after(G_OBJECT(h_viewer->top_widget()),
+    //     "drag-data-received", h_drag_data_received, this);
 
     gtk_widget_show(wb_shell);
 
-    if (HLP()->fifo_start()) {
-        GtkWidget *widget = gtk_item_factory_get_widget(h_item_factory,
-            "/File/Make FIFO");
-        GRX->SetStatus(widget, true);
-        register_fifo(0);
-    }
+    // if (HLP()->fifo_start()) {
+    //     GtkWidget *widget = gtk_item_factory_get_widget(h_item_factory,
+    //         "/File/Make FIFO");
+    //     GRX->SetStatus(widget, true);
+    //     register_fifo(0);
+    // }
 }
 
 
@@ -832,16 +833,16 @@ GTKhelpPopup::check_halt_processing(bool run_events)
     if (run_events) {
         gtk_DoEvents(100);
         GtkWidget *stopbtn =
-            (GtkWidget*)gtk_object_get_data(GTK_OBJECT(wb_shell), "stopbtn");
-        if (stopbtn && !GTK_WIDGET_IS_SENSITIVE(stopbtn) &&
-                gtk_object_get_data(GTK_OBJECT(stopbtn), "pressed"))
+            (GtkWidget*)g_object_get_data(G_OBJECT(wb_shell), "stopbtn");
+        if (stopbtn && !gtk_widget_is_sensitive(stopbtn) &&
+                g_object_get_data(G_OBJECT(stopbtn), "pressed"))
             // abort
             return (true);
     }
     else {
         GtkWidget *stopbtn =
-            (GtkWidget*)gtk_object_get_data(GTK_OBJECT(wb_shell), "stopbtn");
-        if (stopbtn && gtk_object_get_data(GTK_OBJECT(stopbtn), "pressed"))
+            (GtkWidget*)g_object_get_data(G_OBJECT(wb_shell), "stopbtn");
+        if (stopbtn && g_object_get_data(G_OBJECT(stopbtn), "pressed"))
             // stop button pressed already
             return (true);
     }
@@ -853,7 +854,7 @@ void
 GTKhelpPopup::set_halt_proc_sens(bool sens)
 {
     GtkWidget *stopbtn =
-        (GtkWidget*)gtk_object_get_data(GTK_OBJECT(wb_shell), "stopbtn");
+        (GtkWidget*)g_object_get_data(G_OBJECT(wb_shell), "stopbtn");
     if (stopbtn)
         gtk_widget_set_sensitive(stopbtn, sens);
 }
@@ -865,8 +866,8 @@ GTKhelpPopup::set_status_line(const char *msg)
     if (h_frame_parent)
         h_frame_parent->set_status_line(msg);
     else {
-        GtkWidget *label = (GtkWidget*)gtk_object_get_data(
-            GTK_OBJECT(wb_shell), "label");
+        GtkWidget *label = (GtkWidget*)g_object_get_data(
+            G_OBJECT(wb_shell), "label");
         if (label)
             gtk_label_set_text(GTK_LABEL(label), msg);
     }
@@ -1026,7 +1027,7 @@ GTKhelpPopup::reuse(HLPtopic *newtop, bool newlink)
         newtop->set_sibling(h_root_topic->lastborn());
         h_root_topic->set_lastborn(newtop);
         newtop->set_parent(h_root_topic);
-        GtkWidget *back = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(wb_shell),
+        GtkWidget *back = (GtkWidget*)g_object_get_data(G_OBJECT(wb_shell),
             "back");
         if (back)
             gtk_widget_set_sensitive(back, true);
@@ -1039,7 +1040,7 @@ GTKhelpPopup::reuse(HLPtopic *newtop, bool newlink)
     // progressive loading mode.
 
     if (!h_viewer->initialized())
-        gtk_timeout_add(200, (GtkFunction)ils_to, this);
+        g_timeout_add(200, ils_to, this);
     else
         reuse_display();
 }
@@ -1075,7 +1076,7 @@ GTKhelpPopup::reuse_display()
 
     delete [] anchor;
     GtkWidget *label =
-        (GtkWidget*)gtk_object_get_data(GTK_OBJECT(wb_shell), "label");
+        (GtkWidget*)g_object_get_data(G_OBJECT(wb_shell), "label");
     if (label)
         gtk_label_set_text(GTK_LABEL(label), h_cur_topic->keyword());
 
@@ -1283,9 +1284,15 @@ void
 GTKhelpPopup::frame_rendering_area(htmRect *rect)
 {
     rect->x = 0;
-    rect->y = h_viewer->top_widget()->allocation.x;
-    rect->width = h_viewer->top_widget()->allocation.width;
-    rect->height = h_viewer->top_widget()->allocation.height;
+
+    GtkAllocation *allocation = g_new0 (GtkAllocation, 1);
+    gtk_widget_get_allocation(GTK_WIDGET(h_viewer->top_widget()), allocation);
+
+    rect->y = allocation->x;
+    rect->width = allocation->width;
+    rect->height = allocation->height;
+
+    g_free (allocation);
 }
 
 
@@ -1427,75 +1434,75 @@ GTKhelpPopup::newtopic(const char *fname, FILE *fp, bool spawn)
 void
 GTKhelpPopup::set_defaults()
 {
-    GtkItemFactory *ifa = h_item_factory;
+    GtkUIManager *ifa = h_item_factory;
     GtkWidget *btn;
-    if (h_params->LoadMode == HLPparams::LoadProgressive) {
-        btn = gtk_item_factory_get_item(ifa, "/Options/Progressive Images");
-        if (btn && !GRX->GetStatus(btn))
-            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(btn), true);
-    }
-    else if (h_params->LoadMode == HLPparams::LoadDelayed) {
-        btn = gtk_item_factory_get_item(ifa, "/Options/Delayed Images");
-        if (btn && !GRX->GetStatus(btn))
-            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(btn), true);
-    }
-    else if (h_params->LoadMode == HLPparams::LoadSync) {
-        btn = gtk_item_factory_get_item(ifa, "/Options/Sync Images");
-        if (btn && !GRX->GetStatus(btn))
-            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(btn), true);
-    }
-    else {
-        h_params->LoadMode = HLPparams::LoadNone;
-        btn = gtk_item_factory_get_item(ifa, "/Options/No Images");
-        if (btn && !GRX->GetStatus(btn))
-            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(btn), true);
-    }
+    // if (h_params->LoadMode == HLPparams::LoadProgressive) {
+    //     btn = gtk_item_factory_get_item(ifa, "/Options/Progressive Images");
+    //     if (btn && !GRX->GetStatus(btn))
+    //         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(btn), true);
+    // }
+    // else if (h_params->LoadMode == HLPparams::LoadDelayed) {
+    //     btn = gtk_item_factory_get_item(ifa, "/Options/Delayed Images");
+    //     if (btn && !GRX->GetStatus(btn))
+    //         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(btn), true);
+    // }
+    // else if (h_params->LoadMode == HLPparams::LoadSync) {
+    //     btn = gtk_item_factory_get_item(ifa, "/Options/Sync Images");
+    //     if (btn && !GRX->GetStatus(btn))
+    //         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(btn), true);
+    // }
+    // else {
+    //     h_params->LoadMode = HLPparams::LoadNone;
+    //     btn = gtk_item_factory_get_item(ifa, "/Options/No Images");
+    //     if (btn && !GRX->GetStatus(btn))
+    //         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(btn), true);
+    // }
 
-    if (h_params->AnchorUnderlineType)
-        h_params->AnchorUnderlined = true;
-    else {
-        h_params->AnchorUnderlined = false;
-        h_params->AnchorUnderlineType = 1;
-    }
+    // if (h_params->AnchorUnderlineType)
+    //     h_params->AnchorUnderlined = true;
+    // else {
+    //     h_params->AnchorUnderlined = false;
+    //     h_params->AnchorUnderlineType = 1;
+    // }
 
-    if (h_params->AnchorButtons) {
-        btn = gtk_item_factory_get_item(ifa, "/Options/Anchor Buttons");
-        if (btn && !GRX->GetStatus(btn))
-            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(btn), true);
-    }
-    else if (h_params->AnchorUnderlined) {
-        btn = gtk_item_factory_get_item(ifa, "/Options/Anchor Underline");
-        if (btn && !GRX->GetStatus(btn))
-            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(btn), true);
-    }
-    else {
-        btn = gtk_item_factory_get_item(ifa, "/Options/Anchor Plain");
-        if (btn && !GRX->GetStatus(btn))
-            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(btn), true);
-    }
+    // if (h_params->AnchorButtons) {
+    //     btn = gtk_item_factory_get_item(ifa, "/Options/Anchor Buttons");
+    //     if (btn && !GRX->GetStatus(btn))
+    //         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(btn), true);
+    // }
+    // else if (h_params->AnchorUnderlined) {
+    //     btn = gtk_item_factory_get_item(ifa, "/Options/Anchor Underline");
+    //     if (btn && !GRX->GetStatus(btn))
+    //         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(btn), true);
+    // }
+    // else {
+    //     btn = gtk_item_factory_get_item(ifa, "/Options/Anchor Plain");
+    //     if (btn && !GRX->GetStatus(btn))
+    //         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(btn), true);
+    // }
 
-    btn = gtk_item_factory_get_item(ifa, "/Options/Anchor Highlight");
-    if (btn)
-        GRX->SetStatus(btn, h_params->AnchorHighlight);
+    // btn = gtk_item_factory_get_item(ifa, "/Options/Anchor Highlight");
+    // if (btn)
+    //     GRX->SetStatus(btn, h_params->AnchorHighlight);
 
-    btn = gtk_item_factory_get_item(ifa, "/Options/Log Transactions");
-    if (btn)
-        GRX->SetStatus(btn, h_params->PrintTransact);
+    // btn = gtk_item_factory_get_item(ifa, "/Options/Log Transactions");
+    // if (btn)
+    //     GRX->SetStatus(btn, h_params->PrintTransact);
 
-    btn = gtk_item_factory_get_item(ifa, "/Options/Bad HTML Warnings");
-    if (btn)
-        GRX->SetStatus(btn, h_params->BadHTMLwarnings);
+    // btn = gtk_item_factory_get_item(ifa, "/Options/Bad HTML Warnings");
+    // if (btn)
+    //     GRX->SetStatus(btn, h_params->BadHTMLwarnings);
 
-    btn = gtk_item_factory_get_item(ifa, "/Options/Freeze Animations");
-    if (btn)
-        GRX->SetStatus(btn, h_params->FreezeAnimations);
+    // btn = gtk_item_factory_get_item(ifa, "/Options/Freeze Animations");
+    // if (btn)
+    //     GRX->SetStatus(btn, h_params->FreezeAnimations);
 
-    btn = gtk_item_factory_get_item(ifa, "/Options/Don't Cache");
-    if (btn)
-        GRX->SetStatus(btn, h_params->NoCache);
-    btn = gtk_item_factory_get_item(ifa, "/Options/No Cookies");
-    if (btn)
-        GRX->SetStatus(btn, h_params->NoCookies);
+    // btn = gtk_item_factory_get_item(ifa, "/Options/Don't Cache");
+    // if (btn)
+    //     GRX->SetStatus(btn, h_params->NoCache);
+    // btn = gtk_item_factory_get_item(ifa, "/Options/No Cookies");
+    // if (btn)
+    //     GRX->SetStatus(btn, h_params->NoCookies);
 
     if (h_params->AnchorButtons)
         h_viewer->set_anchor_style(ANC_BUTTON);
@@ -1616,7 +1623,7 @@ GTKhelpPopup::anchor_track_signal_handler(htmAnchorCallbackStruct *cbs)
 {
     if (!h_cur_topic)
         return;
-    GtkWidget *label = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(wb_shell),
+    GtkWidget *label = (GtkWidget*)g_object_get_data(G_OBJECT(wb_shell),
         "label");
     if (!label)
         return;
@@ -1644,7 +1651,7 @@ GTKhelpPopup::frame_signal_handler(htmFrameCallbackStruct *cbs)
             h_frame_array[i]->set_frame_parent(this);
             h_frame_array[i]->set_frame_name(cbs->frames[i].name);
 
-            gtk_widget_set_usize(h_frame_array[i]->Shell(),
+            gtk_widget_set_size_request(h_frame_array[i]->Shell(),
                 cbs->frames[i].width, cbs->frames[i].height);
             gtk_fixed_put(GTK_FIXED(fixed), h_frame_array[i]->Shell(),
                 cbs->frames[i].x, cbs->frames[i].y);
@@ -1691,7 +1698,7 @@ GTKhelpPopup::frame_signal_handler(htmFrameCallbackStruct *cbs)
     else if (cbs->reason == htm::HTM_FRAMERESIZE) {
         for (int i = 0; i < h_frame_array_size; i++) {
 
-            gtk_widget_set_usize(h_frame_array[i]->Shell(),
+            gtk_widget_set_size_request(h_frame_array[i]->Shell(),
                 cbs->frames[i].width, cbs->frames[i].height);
             gtk_fixed_move(GTK_FIXED(fixed), h_frame_array[i]->Shell(),
                 cbs->frames[i].x, cbs->frames[i].y);
@@ -1729,8 +1736,8 @@ void
 GTKhelpPopup::h_drag_data_received(GtkWidget*, GdkDragContext *context,
     gint, gint, GtkSelectionData *data, guint, guint time, void *hlpptr)
 {
-    if (data->length >= 0 && data->format == 8 && data->data) {
-        char *src = (char*)data->data;
+    if (gtk_selection_data_get_length(data) >= 0 && gtk_selection_data_get_format(data) == 8 && gtk_selection_data_get_data(data)) {
+        char *src = (char*)gtk_selection_data_get_data(data);
         GTKhelpPopup *w = static_cast<GTKhelpPopup*>(hlpptr);
         if (w) {
             if (w->wb_input) {
@@ -1781,7 +1788,7 @@ GTKhelpPopup::h_stop_proc(GtkWidget *btn, void *hlpptr)
     if (w)
         w->stop_image_download();
     gtk_widget_set_sensitive(btn, false);
-    gtk_object_set_data(GTK_OBJECT(btn), "pressed", (void*)1);
+    g_object_set_data(G_OBJECT(btn), "pressed", (void*)1);
 }
 
 
@@ -1809,8 +1816,8 @@ GTKhelpPopup::h_menu_hdlr(GtkWidget *caller, void *hlpptr, unsigned activate)
         return;
     if (activate == HA_CANCEL || activate == HA_QUIT) {
         HLP()->context()->removeTopic(w->h_root_topic);
-        gtk_signal_disconnect_by_func(GTK_OBJECT(w->Shell()),
-            GTK_SIGNAL_FUNC(h_cancel_proc), w);
+        // gtk_signal_disconnect_by_func(G_OBJECT(w->Shell()),
+        //     h_cancel_proc, w);
         delete w;
         HLP()->context()->quitHelp();
     }
@@ -1841,11 +1848,11 @@ GTKhelpPopup::h_menu_hdlr(GtkWidget *caller, void *hlpptr, unsigned activate)
             last->set_topline(w->scroll_position(false));
             top->reuse(top->lastborn(), false);
             GtkWidget *back = (GtkWidget*)
-                gtk_object_get_data(GTK_OBJECT(w->Shell()), "back");
+                g_object_get_data(G_OBJECT(w->Shell()), "back");
             if (back)
                 gtk_widget_set_sensitive(back, top->lastborn() != 0);
             GtkWidget *forw = (GtkWidget*)
-                gtk_object_get_data(GTK_OBJECT(w->Shell()), "forward");
+                g_object_get_data(G_OBJECT(w->Shell()), "forward");
             if (forw)
                 gtk_widget_set_sensitive(forw, true);
        }
@@ -1863,11 +1870,11 @@ GTKhelpPopup::h_menu_hdlr(GtkWidget *caller, void *hlpptr, unsigned activate)
                 top->set_topline(w->scroll_position(false));
             top->reuse(top->lastborn(), false);
             GtkWidget *forw = (GtkWidget*)
-                gtk_object_get_data(GTK_OBJECT(w->Shell()), "forward");
+                g_object_get_data(G_OBJECT(w->Shell()), "forward");
             if (forw)
                 gtk_widget_set_sensitive(forw, top->next() != 0);
             GtkWidget *back = (GtkWidget*)
-                gtk_object_get_data(GTK_OBJECT(w->Shell()), "back");
+                g_object_get_data(G_OBJECT(w->Shell()), "back");
             if (back)
                 gtk_widget_set_sensitive(back, true);
         }
@@ -1941,9 +1948,15 @@ GTKhelpPopup::h_menu_hdlr(GtkWidget *caller, void *hlpptr, unsigned activate)
                 y += 200;
                 int mwid;
                 MonitorGeom(0, 0, 0, &mwid, 0);
-                if (x + Clr->Shell()->requisition.width > mwid)
-                    x = mwid - Clr->Shell()->requisition.width;
-                gtk_widget_set_uposition(Clr->Shell(), x, y);
+
+                GtkRequisition requisition;
+                gtk_widget_get_requisition(GTK_WIDGET(Clr->Shell()), &requisition);
+                requisition.width;
+
+                if (x + requisition.width > mwid)
+                    x = mwid - requisition.width;
+
+                // gtk_widget_set_size_request(Clr->Shell(), x, y);
                 if (w->h_parent)
                     gtk_window_set_transient_for(GTK_WINDOW(Clr->Shell()),
                         GTK_WINDOW(w->h_parent));
@@ -2040,11 +2053,11 @@ GTKhelpPopup::h_menu_hdlr(GtkWidget *caller, void *hlpptr, unsigned activate)
     else if (activate == HA_COMM)
         w->h_params->PrintTransact = GRX->GetStatus(caller);
     else if (activate == HA_BMADD) {
-        GtkWidget *item = gtk_item_factory_get_item(w->h_item_factory,
-            "/Bookmarks");
-        if (!item)
-            return;
-        GtkWidget *menu = GTK_MENU_ITEM(item)->submenu;
+        // GtkWidget *item = gtk_item_factory_get_item(w->h_item_factory,
+        //     "/Bookmarks");
+        // if (!item)
+        //     return;
+        // GtkWidget *menu = GTK_MENU_ITEM(item)->submenu;
         HLPtopic *tp = w->h_cur_topic;
         const char *ptitle = tp->title();
         char *title;
@@ -2068,15 +2081,15 @@ GTKhelpPopup::h_menu_hdlr(GtkWidget *caller, void *hlpptr, unsigned activate)
             title[32] = 0;
         GtkWidget *menu_item = gtk_menu_item_new_with_label(title);
         gtk_widget_set_name(menu_item, title);
-        gtk_menu_append(GTK_MENU(menu), menu_item);
-        gtk_object_set_data_full(GTK_OBJECT(menu_item), "data", url,
+        // gtk_menu_shell_append(GTK_MENU_SHELL(menu), menu_item);
+        g_object_set_data_full(G_OBJECT(menu_item), "data", url,
             h_bm_dest);
-        gtk_signal_connect(GTK_OBJECT(menu_item), "activate",
-            GTK_SIGNAL_FUNC(h_bm_handler), w);
+        // g_signal_connect(G_OBJECT(menu_item), "activate",
+        //     h_bm_handler, w);
         gtk_widget_show(menu_item);
     }
     else if (activate == HA_BMDEL) {
-        gtk_object_set_data(GTK_OBJECT(w->Shell()), "bm_delete",
+        g_object_set_data(G_OBJECT(w->Shell()), "bm_delete",
             (void*)GRX->GetStatus(caller) ? caller : 0);
     }
 }
@@ -2089,13 +2102,13 @@ GTKhelpPopup::h_menu_hdlr(GtkWidget *caller, void *hlpptr, unsigned activate)
 void
 GTKhelpPopup::h_bm_handler(GtkWidget *caller, void *hlpptr)
 {
-    char *url = (char*)gtk_object_get_data(GTK_OBJECT(caller), "data");
+    char *url = (char*)g_object_get_data(G_OBJECT(caller), "data");
     if (!url)
         return;
     GTKhelpPopup *w = static_cast<GTKhelpPopup*>(hlpptr);
     if (!w)
         return;
-    GtkWidget *delbtn = (GtkWidget*)gtk_object_get_data(GTK_OBJECT(w->Shell()),
+    GtkWidget *delbtn = (GtkWidget*)g_object_get_data(G_OBJECT(w->Shell()),
         "bm_delete");
     if (delbtn) {
         // delete button is active, delete entry
@@ -2198,7 +2211,7 @@ GTKhelpPopup::h_do_search_proc(const char *target, void *hlpptr)
     if (w) {
         if (target && *target) {
             ntop *n = new ntop(target, w->h_cur_topic);
-            gtk_timeout_add(100, (GtkFunction)h_ntop_timeout, n);
+            g_timeout_add(100, h_ntop_timeout, n);
         }
         if (w->wb_input)
             w->wb_input->popdown();
@@ -2390,11 +2403,11 @@ void
 GTKhelpPopup::h_sens_set(gtk_bag *w, bool set, int)
 {
     GtkWidget *search =
-        (GtkWidget*)gtk_object_get_data(GTK_OBJECT(w->Shell()), "search");
+        (GtkWidget*)g_object_get_data(G_OBJECT(w->Shell()), "search");
     GtkWidget *save =
-        (GtkWidget*)gtk_object_get_data(GTK_OBJECT(w->Shell()), "save");
+        (GtkWidget*)g_object_get_data(G_OBJECT(w->Shell()), "save");
     GtkWidget *open =
-        (GtkWidget*)gtk_object_get_data(GTK_OBJECT(w->Shell()), "open");
+        (GtkWidget*)g_object_get_data(G_OBJECT(w->Shell()), "open");
     if (set) {
         if (search)
             gtk_widget_set_sensitive(search, true);
@@ -2545,8 +2558,8 @@ GTKhelpPopup::register_fifo(const char *fname)
 #endif
 
     if (h_fifo_tid)
-        gtk_timeout_remove(h_fifo_tid);
-    h_fifo_tid = gtk_timeout_add(100, fifo_check_proc, this);
+        g_source_remove(h_fifo_tid);
+    h_fifo_tid = g_timeout_add(100, fifo_check_proc, this);
 
     return (ret);
 }
@@ -2556,7 +2569,7 @@ void
 GTKhelpPopup::unregister_fifo()
 {
     if (h_fifo_tid) {
-        gtk_timeout_remove(h_fifo_tid);
+        g_source_remove(h_fifo_tid);
         h_fifo_tid = 0;
     }
     if (h_fifo_name) {
@@ -2741,6 +2754,7 @@ sClr::sClr(GRobject caller)
     clr_selection = 0;
 
     wb_shell = gtk_NewPopup(0, "Default Colors", clr_cancel_proc, 0);
+    wb_window = gtk_widget_get_window (wb_shell);
     if (!wb_shell)
         return;
 
@@ -2900,23 +2914,23 @@ sClr::sClr(GRobject caller)
     GtkWidget *button = gtk_toggle_button_new_with_label("Colors");
     gtk_widget_set_name(button, "Colors");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(clr_action_proc), 0);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     clr_action_proc, 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, false, false, 0);
     clr_listbtn = button;
 
     button = gtk_button_new_with_label("Apply");
     gtk_widget_set_name(button, "Apply");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(clr_action_proc), 0);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     clr_action_proc, 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(clr_cancel_proc), 0);
+    // g_signal_connect(G_OBJECT(button), "clicked",
+    //     clr_cancel_proc, 0);
     gtk_box_pack_start(GTK_BOX(hbox), button, true, true, 0);
 
     gtk_table_attach(GTK_TABLE(form), hbox, 0, 2, rowcnt, rowcnt+1,

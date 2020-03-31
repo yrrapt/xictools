@@ -101,8 +101,7 @@ private:
     GtkWidget *name_to_widget(const char*);
 
     static char *strip_accel(const char*);
-    static GtkWidget *new_popup_menu(GtkWidget*, const char* const*,
-        GtkSignalFunc, void*);
+    static GtkWidget *new_popup_menu(GtkWidget*, const char* const*, void*);
     static int button_press(GtkWidget*, GdkEvent*);
     static void gtk_vbox_size_allocate(GtkWidget*, GtkAllocation*);
 
@@ -111,7 +110,7 @@ private:
     GtkWidget *btnPhysMenuWidget;
     GtkWidget *btnElecMenuWidget;
 
-    GtkItemFactory *itemFactory;
+    GtkUIManager *itemFactory;
     GtkWidget *modalShell;
 };
 

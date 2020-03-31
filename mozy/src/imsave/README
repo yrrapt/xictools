@@ -27,7 +27,7 @@ To use, simply create an Image class as follows
 
   Image *im = create_image_from_drawable(window, x, y, w, h);
 
-The window is a GdkWindow or GdkPixmap in Unix/Linux, or an HDC under
+The window is a GdkWindow or cairo_surface_t in Unix/Linux, or an HDC under
 that other operating system.  Then assuming im is not nil (which
 (guess what) indicates a failure,
 

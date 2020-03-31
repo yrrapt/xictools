@@ -6,3 +6,6 @@ errs
 */packages/root
 */packages/Darwin
 */packages/Linux*
+install/
+make_all.log
+make_install.log

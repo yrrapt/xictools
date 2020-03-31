@@ -136,15 +136,17 @@ cExt::PopUpPhysTermEdit(GRobject caller, ShowMode mode, TermEditInfo *tinfo,
 
     int mwid, mhei;
     MonitorGeom(mainBag()->Shell(), 0, 0, &mwid, &mhei);
-    if (x + TE->shell()->requisition.width > mwid)
-        x = mwid - TE->shell()->requisition.width;
-    if (y + TE->shell()->requisition.height > mhei)
-        y = mhei - TE->shell()->requisition.height;
-    gtk_widget_set_uposition(TE->shell(), x, y);
+    GtkRequisition requisition;
+    gtk_widget_get_requisition(GTK_WIDGET(TE->shell()), &requisition);
+    if (x + requisition.width > mwid)
+        x = mwid - requisition.width;
+    if (y + requisition.height > mhei)
+        y = mhei - requisition.height;
+    gtk_widget_set_size_request(TE->shell(), x, y);
     gtk_widget_show(TE->shell());
 
     // OpenSuse-13.1 gtk-2.24.23 bug
-    gtk_widget_set_uposition(TE->shell(), x, y);
+    gtk_widget_set_size_request(TE->shell(), x, y);
 }
 // End of cSced functions.
 
@@ -190,8 +192,8 @@ sTE::sTE(GRobject caller, TermEditInfo *tinfo, void(*action)(TermEditInfo*, CDst
     GtkWidget *button = gtk_button_new_with_label("Help");
     gtk_widget_set_name(button, "Help");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(te_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(te_action_proc), 0);
     gtk_box_pack_end(GTK_BOX(row), button, false, false, 0);
     gtk_table_attach(GTK_TABLE(form), row, 0, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -237,7 +239,7 @@ sTE::sTE(GRobject caller, TermEditInfo *tinfo, void(*action)(TermEditInfo*, CDst
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
 
-    GtkWidget *entry = gtk_option_menu_new();
+    GtkWidget *entry = gtk_combo_box_text_new();
     gtk_widget_set_name(entry, "layer");
     gtk_widget_show(entry);
     te_layer = entry;
@@ -292,15 +294,15 @@ sTE::sTE(GRobject caller, TermEditInfo *tinfo, void(*action)(TermEditInfo*, CDst
     button = gtk_button_new_with_label("Prev");
     gtk_widget_set_name(button, "Prev");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(te_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(te_action_proc), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
 
     button = gtk_button_new_with_label("Next");
     gtk_widget_set_name(button, "Next");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(te_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(te_action_proc), 0);
     gtk_box_pack_start(GTK_BOX(row), button, true, true, 0);
 
     GtkWidget *vsep = gtk_vseparator_new();
@@ -313,8 +315,8 @@ sTE::sTE(GRobject caller, TermEditInfo *tinfo, void(*action)(TermEditInfo*, CDst
     button = gtk_button_new_with_label("To Index");
     gtk_widget_set_name(button, "ToIndex");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(te_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(te_action_proc), 0);
     gtk_box_pack_end(GTK_BOX(row), button, false, false, 0);
 
     gtk_table_attach(GTK_TABLE(form), row, 0, 2, rowcnt, rowcnt+1,
@@ -328,21 +330,21 @@ sTE::sTE(GRobject caller, TermEditInfo *tinfo, void(*action)(TermEditInfo*, CDst
     button = gtk_button_new_with_label("Apply");
     gtk_widget_set_name(button, "Apply");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(te_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(te_action_proc), 0);
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
 
     // Pressing Enter in the entry presses Apply.
-    GTK_WIDGET_SET_FLAGS(button, GTK_CAN_DEFAULT);
+    gtk_widget_set_can_default(button, true);
     gtk_window_set_default(GTK_WINDOW(te_popup), button);
 
     button = gtk_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(te_cancel_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(te_cancel_proc), 0);
     gtk_table_attach(GTK_TABLE(form), button, 1, 2, rowcnt, rowcnt+1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
         (GtkAttachOptions)0, 2, 2);
@@ -380,9 +382,9 @@ sTE::update(TermEditInfo *tinfo, CDsterm *term)
     GtkWidget *mi = gtk_menu_item_new_with_label(anyname);
     gtk_widget_set_name(mi, anyname);
     gtk_widget_show(mi);
-    gtk_menu_append(GTK_MENU(menu), mi);
-    gtk_signal_connect(GTK_OBJECT(mi), "activate",
-        GTK_SIGNAL_FUNC(te_menu_proc), 0);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+    g_signal_connect(G_OBJECT(mi), "activate",
+        G_CALLBACK(te_menu_proc), 0);
     CDl *ld;
     CDlgen lgen(Physical);
     while ((ld = lgen.next()) != 0) {
@@ -391,11 +393,11 @@ sTE::update(TermEditInfo *tinfo, CDsterm *term)
         mi = gtk_menu_item_new_with_label(ld->name());
         gtk_widget_set_name(mi, ld->name());
         gtk_widget_show(mi);
-        gtk_menu_append(GTK_MENU(menu), mi);
-        gtk_signal_connect(GTK_OBJECT(mi), "activate",
-            GTK_SIGNAL_FUNC(te_menu_proc), (void*)ld->name());
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+        g_signal_connect(G_OBJECT(mi), "activate",
+            G_CALLBACK(te_menu_proc), (void*)ld->name());
     }
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(te_layer), menu);
+    // gtk_option_menu_set_menu(GTK_OPTION_MENU(te_layer), menu);
 
     bool hset = false;
     if (tinfo->layer_name() && *tinfo->layer_name()) {
@@ -405,8 +407,8 @@ sTE::update(TermEditInfo *tinfo, CDsterm *term)
             if (!ld->isRouting())
                 continue;
             if (!strcmp(ld->name(), tinfo->layer_name())) {
-                gtk_option_menu_set_history(GTK_OPTION_MENU(te_layer),
-                    cnt);
+                // gtk_option_menu_set_history(GTK_OPTION_MENU(te_layer),
+                //    cnt);
                 hset = true;
                 te_lname = ld->name();
                 break;
@@ -415,7 +417,7 @@ sTE::update(TermEditInfo *tinfo, CDsterm *term)
         }
     }
     if (!hset) {
-        gtk_option_menu_set_history(GTK_OPTION_MENU(te_layer), 0);
+        // gtk_option_menu_set_history(GTK_OPTION_MENU(te_layer), 0);
         te_lname = 0;
     }
 

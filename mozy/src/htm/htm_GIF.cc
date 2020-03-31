@@ -483,7 +483,7 @@ htmImageManager::gifAnimNextFrame(ImageBuffer *ib, int *x, int *y,
         image = DoImage(image, img_data->width, img_data->height);
 
     // save ptr
-    img_data->data = image;
+    img_gtk_selection_data_get_data(data) = image;
 
     // our timeouts are in milliseconds
     *timeout = Gif89.delayTime*10;
@@ -492,7 +492,7 @@ htmImageManager::gifAnimNextFrame(ImageBuffer *ib, int *x, int *y,
     *dispose = Gif89.disposal;
     img_data->bg = Gif89.transparent;
 
-    if (img_data->data == 0) {
+    if (img_gtk_selection_data_get_data(data) == 0) {
         delete GifAnimScreen;
         delete img_data;
         return (0);
@@ -677,7 +677,7 @@ htmImageManager::readGIF(ImageBuffer *ib)
 
     }
     img_data->bg = Gif89.transparent;
-    img_data->data = image;
+    img_gtk_selection_data_get_data(data) = image;
     img_data->color_class = (grayscale != 0 ?
         IMAGE_COLORSPACE_GRAYSCALE : IMAGE_COLORSPACE_INDEXED);
     return (img_data);

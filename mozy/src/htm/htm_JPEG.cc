@@ -252,7 +252,7 @@ htmImageManager::readJPEG(ImageBuffer *ib)
         return (0);
     }
 
-    unsigned char *r = img_data->data;
+    unsigned char *r = img_gtk_selection_data_get_data(data);
 
     JSAMPROW buffer[1];         // row pointer array for read_scanlines
     while (cinfo.output_scanline < cinfo.output_height) {

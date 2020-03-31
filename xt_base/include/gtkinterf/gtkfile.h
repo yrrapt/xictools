@@ -107,8 +107,8 @@ namespace gtkinterf {
         static void fs_upmenu_proc(GtkWidget*, void*);
         static void fs_menu_proc(GtkWidget*, void*, unsigned int);
         static void fs_open_proc(GtkWidget*, void*);
-        static void fs_filter_sel_proc(GtkList*, GtkWidget*, void*);
-        static void fs_filter_unsel_proc(GtkList*, GtkWidget*, void*);
+        static void fs_filter_sel_proc(GtkListStore*, GtkWidget*, void*);
+        static void fs_filter_unsel_proc(GtkListStore*, GtkWidget*, void*);
         static void fs_filter_activate_proc(GtkWidget*, void*);
         static void fs_up_btn_proc(GtkWidget*, void*);
         static void fs_realize_proc(GtkWidget*, void*);
@@ -159,7 +159,7 @@ namespace gtkinterf {
         GtkWidget *fs_anc_btn;
         GtkWidget *fs_filter;
         GtkWidget *fs_scrwin;
-        GtkItemFactory *fs_item_factory;
+        GtkUIManager *fs_item_factory;
 
         sFsBmap *fs_bmap;
         GtkTreePath *fs_curnode;

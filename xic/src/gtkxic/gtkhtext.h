@@ -113,7 +113,7 @@ private:
 
     int pe_id;             // redraw idle function id
     int pe_wid, pe_hei;    // drawing area size
-    GdkPixmap *pe_pixmap;  // backing pixmap
+    cairo_surface_t *pe_pixmap;  // backing pixmap
 
     static hyList *pe_stores[PE_NUMSTORES]; // editor text string registers
 

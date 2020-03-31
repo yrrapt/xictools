@@ -163,6 +163,7 @@ sAT::sAT(GRobject c)
     at_dragging = false;
 
     wb_shell = gtk_NewPopup(0, "Cell Table Listing", at_cancel, 0);
+    wb_window = gtk_widget_get_window(wb_shell);
     if (!wb_shell)
         return;
 
@@ -177,8 +178,8 @@ sAT::sAT(GRobject c)
     gtk_widget_set_name(button, "Add");
     gtk_widget_show(button);
     at_addbtn = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(at_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(at_action_proc), 0);
 
     int rowcnt = 0;
     gtk_table_attach(GTK_TABLE(form), button, 0, 1, rowcnt, rowcnt + 1,
@@ -189,8 +190,8 @@ sAT::sAT(GRobject c)
     gtk_widget_set_name(button, "Remove");
     gtk_widget_show(button);
     at_rembtn = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(at_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(at_action_proc), 0);
 
     gtk_table_attach(GTK_TABLE(form), button, 1, 2, rowcnt, rowcnt + 1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -200,8 +201,8 @@ sAT::sAT(GRobject c)
     gtk_widget_set_name(button, "Clear");
     gtk_widget_show(button);
     at_clearbtn = button;
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(at_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(at_action_proc), 0);
 
     gtk_table_attach(GTK_TABLE(form), button, 2, 3, rowcnt, rowcnt + 1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -210,8 +211,8 @@ sAT::sAT(GRobject c)
     button = gtk_toggle_button_new_with_label("Help");
     gtk_widget_set_name(button, "Help");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(at_action_proc), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(at_action_proc), 0);
 
     gtk_table_attach(GTK_TABLE(form), button, 3, 4, rowcnt, rowcnt + 1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -221,9 +222,9 @@ sAT::sAT(GRobject c)
     button = gtk_radio_button_new_with_label(0, "Override");
     gtk_widget_set_name(button, "Override");
     gtk_widget_show(button);
-    GSList *group = gtk_radio_button_group(GTK_RADIO_BUTTON(button));
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(at_action_proc), 0);
+    GSList *group = gtk_radio_button_get_group(GTK_RADIO_BUTTON(button));
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(at_action_proc), 0);
     at_over = button;
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 2, rowcnt, rowcnt + 1,
@@ -233,9 +234,9 @@ sAT::sAT(GRobject c)
     button = gtk_radio_button_new_with_label(group, "Skip");
     gtk_widget_set_name(button, "Skip");
     gtk_widget_show(button);
-    group = gtk_radio_button_group(GTK_RADIO_BUTTON(button));
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(at_action_proc), 0);
+    group = gtk_radio_button_get_group(GTK_RADIO_BUTTON(button));
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(at_action_proc), 0);
     at_skip = button;
 
     gtk_table_attach(GTK_TABLE(form), button, 2, 4, rowcnt, rowcnt + 1,
@@ -265,25 +266,25 @@ sAT::sAT(GRobject c)
     text_scrollable_new(&contr, &wb_textarea, FNT_FIXED);
 
     gtk_widget_add_events(wb_textarea, GDK_BUTTON_PRESS_MASK);
-    gtk_signal_connect(GTK_OBJECT(wb_textarea), "button-press-event",
-        GTK_SIGNAL_FUNC(at_btn_hdlr), 0);
-    gtk_signal_connect(GTK_OBJECT(wb_textarea), "size-allocate",
-        GTK_SIGNAL_FUNC(at_resize_hdlr), 0);
+    g_signal_connect(G_OBJECT(wb_textarea), "button-press-event",
+        G_CALLBACK(at_btn_hdlr), 0);
+    g_signal_connect(G_OBJECT(wb_textarea), "size-allocate",
+        G_CALLBACK(at_resize_hdlr), 0);
     // init for drag/drop
-    gtk_signal_connect(GTK_OBJECT(wb_textarea), "button-release-event",
-        GTK_SIGNAL_FUNC(at_btn_release_hdlr), 0);
-    gtk_signal_connect(GTK_OBJECT(wb_textarea), "motion-notify-event",
-        GTK_SIGNAL_FUNC(at_motion_hdlr), 0);
-    gtk_signal_connect(GTK_OBJECT(wb_textarea), "drag-data-get",
-        GTK_SIGNAL_FUNC(at_drag_data_get), 0);
-    gtk_signal_connect_after(GTK_OBJECT(wb_textarea), "realize",
-        GTK_SIGNAL_FUNC(at_realize_hdlr), 0);
+    g_signal_connect(G_OBJECT(wb_textarea), "button-release-event",
+        G_CALLBACK(at_btn_release_hdlr), 0);
+    g_signal_connect(G_OBJECT(wb_textarea), "motion-notify-event",
+        G_CALLBACK(at_motion_hdlr), 0);
+    g_signal_connect(G_OBJECT(wb_textarea), "drag-data-get",
+        G_CALLBACK(at_drag_data_get), 0);
+    g_signal_connect_after(G_OBJECT(wb_textarea), "realize",
+        G_CALLBACK(at_realize_hdlr), 0);
 
     // drop site
     gtk_drag_dest_set(wb_textarea, GTK_DEST_DEFAULT_ALL, target_table,
         n_targets, GDK_ACTION_COPY);
-    gtk_signal_connect_after(GTK_OBJECT(wb_textarea), "drag-data-received",
-        GTK_SIGNAL_FUNC(at_drag_data_received), 0);
+    g_signal_connect_after(G_OBJECT(wb_textarea), "drag-data-received",
+        G_CALLBACK(at_drag_data_received), 0);
 
     GtkTextBuffer *textbuf =
         gtk_text_view_get_buffer(GTK_TEXT_VIEW(wb_textarea));
@@ -308,8 +309,8 @@ sAT::sAT(GRobject c)
     button = gtk_toggle_button_new_with_label("Dismiss");
     gtk_widget_set_name(button, "Dismiss");
     gtk_widget_show(button);
-    gtk_signal_connect(GTK_OBJECT(button), "clicked",
-        GTK_SIGNAL_FUNC(at_cancel), 0);
+    g_signal_connect(G_OBJECT(button), "clicked",
+        G_CALLBACK(at_cancel), 0);
 
     gtk_table_attach(GTK_TABLE(form), button, 0, 4, rowcnt, rowcnt + 1,
         (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
@@ -317,7 +318,7 @@ sAT::sAT(GRobject c)
     gtk_window_set_focus(GTK_WINDOW(wb_shell), button);
 
     // Constrain overall widget width so title text isn't truncated.
-    gtk_widget_set_usize(wb_shell, 240, -1);
+    gtk_widget_set_size_request(wb_shell, 240, -1);
 
     check_sens();
 }
@@ -335,21 +336,22 @@ sAT::~sAT()
     if (at_clear_pop)
         at_clear_pop->popdown();
     if (wb_shell)
-        gtk_signal_disconnect_by_func(GTK_OBJECT(wb_shell),
-            GTK_SIGNAL_FUNC(at_cancel), wb_shell);
+        g_signal_handlers_disconnect_by_func(G_OBJECT(wb_shell),
+            (gpointer)at_cancel, wb_shell);
 }
 
 
 void
 sAT::update()
 {
-    if (!wb_textarea || !wb_textarea->window)
+    if (!wb_textarea || !gtk_widget_get_window(wb_textarea))
         return;
     select_range(0, 0);
     CDcellTab *ct = CDcdb()->auxCellTab();
     if (ct) {
         int width, height;
-        gdk_window_get_size(wb_textarea->window, &width, &height);
+        width = gdk_window_get_width(gtk_widget_get_window(wb_textarea));
+        height = gdk_window_get_height(gtk_widget_get_window(wb_textarea));
         int cols = (width-4)/GTKfont::stringWidth(wb_textarea, 0);
         stringlist *s0 = ct->list();
         char *newtext = stringlist::col_format(s0, cols);
@@ -542,7 +544,7 @@ sAT::motion_hdlr(GtkWidget *widget, GdkEvent *event)
         // Strange voodoo to "turn on" motion events, that are
         // otherwise suppressed since GDK_POINTER_MOTION_HINT_MASK
         // is set.  See GdkEventMask doc.
-        gdk_window_get_pointer(widget->window, 0, 0, 0);
+        gdk_window_get_pointer(gtk_widget_get_window(widget), 0, 0, 0);
 #endif
         if ((abs((int)event->motion.x - at_drag_x) > 4 ||
                 abs((int)event->motion.y - at_drag_y) > 4)) {
@@ -675,11 +677,11 @@ sAT::at_drag_data_get(GtkWidget *widget, GdkDragContext*,
 {
     if (GTK_IS_TEXT_VIEW(widget))
     // stop text view native handler
-    gtk_signal_emit_stop_by_name(GTK_OBJECT(widget), "drag-data-get");
+    g_signal_stop_emission_by_name(G_OBJECT(widget), "drag-data-get");
 
     char *string = text_get_selection(widget);
     if (string) {
-        gtk_selection_data_set(selection_data, selection_data->target,
+        gtk_selection_data_set(selection_data, gtk_selection_data_get_target(selection_data),
             8, (unsigned char*)string, strlen(string)+1);
         delete [] string;
     }
@@ -693,9 +695,9 @@ void
 sAT::at_drag_data_received(GtkWidget*, GdkDragContext *context,
     gint, gint, GtkSelectionData *data, guint, guint time)
 {
-    if (data->length >= 0 && data->format == 8 && data->data) {
-        char *src = (char*)data->data;
-        if (data->target == gdk_atom_intern("TWOSTRING", true)) {
+    if (gtk_selection_data_get_length(data) >= 0 && gtk_selection_data_get_format(data) == 8 && gtk_selection_data_get_data(data)) {
+        char *src = (char*)gtk_selection_data_get_data(data);
+        if (gtk_selection_data_get_target(data) == gdk_atom_intern("TWOSTRING", true)) {
             // Drops from content lists may be in the form
             // "fname_or_chd\ncellname".  Keep the cellname.
             char *t = strchr(src, '\n');
